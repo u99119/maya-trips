@@ -17,6 +17,7 @@ class GPS {
       batterySaver: false,
       autoCenter: true
     };
+    this.isFirstPosition = true; // Flag to prevent auto-center on first position
   }
 
   /**
@@ -57,6 +58,7 @@ class GPS {
 
     this.callbacks.onPositionUpdate = onPositionUpdate;
     this.callbacks.onError = onError;
+    this.isFirstPosition = true; // Reset flag when starting GPS
 
     const options = this.getOptions();
 
@@ -115,9 +117,14 @@ class GPS {
       this.accuracyCircle.setRadius(accuracy);
     }
 
-    // Auto-center map if enabled
-    if (this.settings.autoCenter) {
+    // Auto-center map if enabled (but skip on first position to keep route view)
+    if (this.settings.autoCenter && !this.isFirstPosition) {
       map.setView([lat, lng], map.getZoom(), { animate: true });
+    }
+
+    // Clear first position flag after first update
+    if (this.isFirstPosition) {
+      this.isFirstPosition = false;
     }
 
     // Call callback

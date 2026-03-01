@@ -6,6 +6,7 @@
   "description": "Family travel navigation app with offline support for multiple destinations",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
     "build": "vite build",
     "preview": "vite preview"
   },

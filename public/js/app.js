@@ -420,8 +420,10 @@ class App {
       this.onMilestoneClick(milestone, number);
     });
 
-    // Fit map to show all routes
-    layers.fitBounds();
+    // Fit map to show all routes (with slight delay to ensure layers are rendered)
+    setTimeout(() => {
+      layers.fitBounds();
+    }, 100);
   }
 
   /**
