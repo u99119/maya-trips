@@ -198,9 +198,11 @@ class Layers {
     });
 
     if (hasContent) {
-      // Fit bounds without changing zoom - just pan to center
-      const center = bounds.getCenter();
-      this.map.panTo(center, { animate: true });
+      // Fit bounds to show entire route, maintaining current zoom
+      this.map.fitBounds(bounds, {
+        padding: [50, 50],
+        animate: true
+      });
     }
   }
 
