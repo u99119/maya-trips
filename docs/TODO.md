@@ -217,11 +217,41 @@
     - updateTripName(tripId, newName) - Rename trip
   - ✅ Build tested successfully (604.53 KiB precached)
 
-- [ ] **Task 1.5.3**: Build Trip Selection UI
-  - Trip list screen
-  - Create trip modal
-  - Trip card component
-  - Empty state (no trips yet)
+- [x] **Task 1.5.3**: Build Trip Selection UI ✅ COMPLETE
+  - ✅ Trip Selection Screen (index.html):
+    - Full-screen overlay (z-index: 2000)
+    - Centered container (max-width: 600px)
+    - Header with title and subtitle
+    - Trips list container (dynamically populated)
+    - Empty state with icon and message
+    - Create trip button (sticky bottom)
+  - ✅ Create Trip Modal:
+    - Modal overlay with backdrop blur
+    - Route selection dropdown
+    - Trip name input (optional, auto-generates if empty)
+    - Auto-start checkbox
+    - Cancel and Create buttons
+    - Slide-in animation
+  - ✅ Trip Card Component (CSS):
+    - Card layout with hover effects
+    - Trip title and route name
+    - Status badge (planned, in-progress, completed, archived)
+    - Meta information (date, duration, milestones)
+    - Responsive design
+  - ✅ Updated Header:
+    - Back button to return to trip list
+    - Trip name display below route name
+    - Hidden by default (shown when trip active)
+  - ✅ UI State Management:
+    - Map, drawer, recenter button hidden by default
+    - Trip selection screen shown on load
+    - All elements toggle visibility based on state
+  - ✅ Styling (public/css/app.css):
+    - 450+ lines of new CSS
+    - Dark mode support for all new components
+    - Mobile-first responsive design
+    - Smooth animations and transitions
+  - ✅ Build tested successfully (614.94 KiB precached)
 
 - [ ] **Task 1.5.4**: Update App.js
   - Load trip instead of route directly

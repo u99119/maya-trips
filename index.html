@@ -24,10 +24,105 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
 </head>
 <body>
+  <!-- Trip Selection Screen -->
+  <div class="trip-selection-screen" id="tripSelectionScreen">
+    <div class="trip-selection-container">
+      <header class="trip-selection-header">
+        <h1>My Trips</h1>
+        <p class="subtitle">Select a trip or create a new one</p>
+      </header>
+
+      <!-- Empty State (shown when no trips) -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <h2>No trips yet</h2>
+        <p>Create your first trip to get started</p>
+      </div>
+
+      <!-- Trips List -->
+      <div class="trips-list" id="tripsList">
+        <!-- Dynamically populated -->
+      </div>
+
+      <!-- Create Trip Button -->
+      <button class="btn-create-trip" id="btnCreateTrip">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Create New Trip
+      </button>
+    </div>
+  </div>
+
+  <!-- Create Trip Modal -->
+  <div class="modal" id="createTripModal" style="display: none;">
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create New Trip</h2>
+        <button class="modal-close" id="modalClose">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="routeSelect">Select Route</label>
+          <select id="routeSelect" class="form-control">
+            <option value="">Choose a route...</option>
+            <option value="vaishno-devi">Vaishno Devi Yatra</option>
+            <!-- More routes will be added dynamically -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tripNameInput">Trip Name (optional)</label>
+          <input
+            type="text"
+            id="tripNameInput"
+            class="form-control"
+            placeholder="e.g., Summer 2026 Trip"
+          >
+          <small class="form-hint">Leave empty to auto-generate</small>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="autoStartCheckbox" checked>
+            <span>Start trip immediately</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelCreate">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmCreate">Create Trip</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
-  <header class="app-header">
+  <header class="app-header" id="appHeader" style="display: none;">
     <div class="header-content">
-      <h1 class="route-name" id="routeName">Loading...</h1>
+      <button class="btn-back" id="btnBackToTrips" title="Back to trips">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <div class="header-info">
+        <h1 class="route-name" id="routeName">Loading...</h1>
+        <p class="trip-name" id="tripNameHeader">Trip Name</p>
+      </div>
       <div class="status-indicator" id="statusIndicator">
         <span class="status-dot"></span>
         <span class="status-text">Offline Ready</span>
@@ -36,10 +131,10 @@
   </header>
 
   <!-- Map Container -->
-  <div id="map" class="map-container"></div>
+  <div id="map" class="map-container" style="display: none;"></div>
 
   <!-- Bottom Drawer -->
-  <div class="bottom-drawer" id="bottomDrawer">
+  <div class="bottom-drawer" id="bottomDrawer" style="display: none;">
     <div class="drawer-handle"></div>
     
     <div class="drawer-content">
@@ -109,7 +204,7 @@
   </div>
 
   <!-- Recenter Button -->
-  <button class="recenter-btn" id="recenterBtn" title="Recenter Map">
+  <button class="recenter-btn" id="recenterBtn" title="Recenter Map" style="display: none;">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="10"/>
       <circle cx="12" cy="12" r="3"/>
