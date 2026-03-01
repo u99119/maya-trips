@@ -3,34 +3,295 @@
 ## Current Status
 
 ✅ **Phase 1 Complete** - Vaishno Devi route mapping with GPS, milestone toggles, route layers, offline support
+✅ **Deployed to Netlify** - https://maya-trips.netlify.app (auto-deploys from GitHub)
+
+## 🚨 CRITICAL: Phase 1.5 - Trip Instance System (IN PROGRESS)
+
+**Problem Identified**: Current architecture treats routes as single-use, not reusable templates.
+
+**Required Before Phase 2**: Implement trip instance system to support:
+- Multiple trips from same route template
+- Each trip has isolated data (photos, notes, progress)
+- Trip history and management
+
+### Architecture Changes Required
+
+#### 1. Data Model Design
+
+**Route Template** (static, reusable):
+```
+/public/routes/{route-id}/
+  - config.json          # Route metadata
+  - route.geojson        # Path geometry
+  - milestones.geojson   # Checkpoint locations
+```
+
+**Trip Instance** (dynamic, per journey):
+```javascript
+{
+  tripId: "uuid-v4",
+  routeId: "vaishno-devi",
+  tripName: "May 2024 Family Trip",
+  createdAt: "2024-05-15T06:00:00Z",
+  startedAt: "2024-05-15T06:30:00Z",
+  completedAt: null,
+  status: "in-progress", // "planned", "in-progress", "completed", "archived"
+
+  // Trip-specific data
+  visitedMilestones: [
+    { milestoneId: 1, visitedAt: "2024-05-15T07:15:00Z", lat: 32.98944, lng: 74.93333 }
+  ],
+
+  // Settings snapshot
+  settings: {
+    gpsEnabled: true,
+    batterySaver: false,
+    autoCenter: true
+  },
+
+  // Statistics
+  stats: {
+    totalDistance: 0,
+    totalTime: 0,
+    averageSpeed: 0
+  }
+}
+```
+
+**Photos** (attached to trip + milestone):
+```javascript
+{
+  id: "uuid-v4",
+  tripId: "trip-uuid",
+  milestoneId: 1,
+  timestamp: "2024-05-15T07:15:00Z",
+  location: { lat: 32.98944, lng: 74.93333 },
+  blob: Blob,           // Image data
+  thumbnail: Blob,      // Compressed thumbnail
+  caption: "At Katra base camp"
+}
+```
+
+**Notes** (attached to trip + milestone):
+```javascript
+{
+  id: "uuid-v4",
+  tripId: "trip-uuid",
+  milestoneId: 1,
+  timestamp: "2024-05-15T07:15:00Z",
+  location: { lat: 32.98944, lng: 74.93333 },
+  content: "Started early at 6:30 AM. Weather is perfect!",
+  type: "text"          // "text", "voice" (future)
+}
+```
+
+#### 2. Storage Architecture
+
+**IndexedDB Structure** (update storage.js):
+
+```javascript
+// Database: TravelNavDB v2
+{
+  // Object Stores:
+
+  trips: {
+    keyPath: "tripId",
+    indexes: ["routeId", "status", "createdAt"]
+  },
+
+  photos: {
+    keyPath: "id",
+    indexes: ["tripId", "milestoneId", "timestamp"]
+  },
+
+  notes: {
+    keyPath: "id",
+    indexes: ["tripId", "milestoneId", "timestamp"]
+  },
+
+  routes: {
+    keyPath: "id",
+    // Cached route configs for offline use
+  }
+}
+```
+
+**LocalStorage** (for current active trip):
+```javascript
+{
+  "currentTripId": "uuid-v4",
+  "lastRouteId": "vaishno-devi"
+}
+```
+
+**Storage Location**:
+- ✅ **IndexedDB** (browser storage, ~50MB-100MB+ quota)
+- ✅ **Offline-first** - all data stored locally
+- ✅ **No backend required** (Phase 1-3)
+- ⚠️ **Per-device** - data not synced across devices (Phase 4: optional cloud sync)
+
+**Photo Storage Strategy**:
+- Original photos: Compressed to max 1920px width, ~200-500KB each
+- Thumbnails: 200px width, ~20-50KB each
+- Estimated capacity: 100-200 photos per device (depends on browser quota)
+
+#### 3. UI Changes Required
+
+**New Screens/Components**:
+
+1. **Trip Selection Screen** (new landing page):
+   - List of all trips (grouped by route)
+   - "Create New Trip" button
+   - Trip cards showing: name, route, date, progress, thumbnail
+
+2. **Create Trip Modal**:
+   - Select route (dropdown)
+   - Enter trip name (default: "{Route} - {Date}")
+   - Optional: planned start date
+   - Create button
+
+3. **Trip Management**:
+   - Switch between trips
+   - Archive completed trips
+   - Delete trips
+   - Export trip data (Phase 3)
+
+4. **In-Trip UI Updates**:
+   - Show current trip name in header
+   - "Change Trip" button
+   - Trip progress persists per instance
+
+**Route Switching Mid-Trip**:
+- ⚠️ **Design Decision Needed**:
+  - Option A: Allow route change, create new trip automatically
+  - Option B: Allow route change within same trip (multi-route trip)
+  - Option C: Prompt user to save current trip and create new one
+- 📝 **Note**: User wants flexibility to change route mid-journey
+
+#### 4. Implementation Tasks
+
+- [ ] **Task 1.5.1**: Update IndexedDB schema (storage.js)
+  - Add trips object store
+  - Update photos/notes to include tripId
+  - Migration from v1 to v2 schema
+  - Add trip CRUD methods
+
+- [ ] **Task 1.5.2**: Create Trip Management Module (trips.js)
+  - createTrip(routeId, tripName)
+  - getTrip(tripId)
+  - getAllTrips(filters)
+  - updateTrip(tripId, updates)
+  - deleteTrip(tripId)
+  - archiveTrip(tripId)
+
+- [ ] **Task 1.5.3**: Build Trip Selection UI
+  - Trip list screen
+  - Create trip modal
+  - Trip card component
+  - Empty state (no trips yet)
+
+- [ ] **Task 1.5.4**: Update App.js
+  - Load trip instead of route directly
+  - Trip context management
+  - Switch trip functionality
+  - Persist currentTripId
+
+- [ ] **Task 1.5.5**: Update Storage Methods
+  - markMilestoneVisited(tripId, milestoneId)
+  - getVisitedMilestones(tripId)
+  - saveLayerVisibility(tripId, layerStates)
+  - All methods now trip-scoped
+
+- [ ] **Task 1.5.6**: Route Switching Logic
+  - Design decision on mid-trip route change
+  - Implement chosen approach
+  - Handle edge cases (unsaved progress, etc.)
+
+- [ ] **Task 1.5.7**: Testing
+  - Create multiple trips from same route
+  - Verify data isolation
+  - Test trip switching
+  - Test offline functionality
+
+#### 5. Migration Strategy
+
+**For Existing Users** (after deployment):
+- Detect old data format (no tripId)
+- Auto-create first trip: "Vaishno Devi - Migrated Trip"
+- Migrate visited milestones to new trip
+- Preserve all existing progress
 
 ---
 
-## Phase 2: Enhanced Features (Planned)
+## 🔧 Technical Debt & Fixes
 
-### Photo & Notes System
+### NPM Vulnerabilities
+
+**Status**: ⚠️ Partially addressed, 4 high severity remain
+
+**Issue**: serialize-javascript vulnerability in vite-plugin-pwa dependency chain
+- Vulnerability: RCE via RegExp.flags and Date.prototype.toISOString()
+- Affected: @rollup/plugin-terser → workbox-build → vite-plugin-pwa
+
+**Actions Taken**:
+- [x] Ran `npm audit`
+- [x] Attempted `npm audit fix` (no safe fixes available)
+- [x] Attempted `npm audit fix --force` (peer dependency conflicts)
+- [x] Updated vite-plugin-pwa to latest with --legacy-peer-deps
+- [x] Build tested successfully (PWA v1.2.0)
+
+**Current Situation**:
+- Vulnerabilities are in dev dependencies (build-time only)
+- Not exploitable in production (only affects build process)
+- Waiting for upstream fixes in workbox-build/rollup-plugin-terser
+- Build and deployment working correctly
+
+**Monitoring**:
+- [ ] Check for vite-plugin-pwa updates monthly
+- [ ] Re-run `npm audit` after updates
+- [ ] Monitor GitHub advisories
+
+**Risk Assessment**: LOW (dev dependencies, not runtime)
+
+---
+
+## Phase 2: Enhanced Features (Depends on Phase 1.5)
+
+### Photo & Notes System (BLOCKED: Requires Phase 1.5)
 - [ ] Photo capture at milestones using device camera
-- [ ] Photo storage in IndexedDB (structure already created)
-- [ ] Photo gallery view for each milestone
+- [ ] Photo compression (max 1920px, ~200-500KB)
+- [ ] Thumbnail generation (200px, ~20-50KB)
+- [ ] Photo storage in IndexedDB per trip instance
+- [ ] Photo gallery view per trip/milestone
 - [ ] Rich text notes editor
-- [ ] Notes storage in IndexedDB (structure already created)
-- [ ] Attach notes to specific milestones
-- [ ] Export notes as text/PDF
+- [ ] Notes storage in IndexedDB per trip instance
+- [ ] Attach notes/photos to specific trip + milestone
+- [ ] Export trip data (photos + notes) as ZIP/PDF
+- [ ] Storage quota management (warn at 80% capacity)
 
-### Multi-Route Selector
-- [ ] Route selection UI on app start
-- [ ] Browse available routes
-- [ ] Route preview with map
-- [ ] Switch between routes without reload
+### Multi-Route Selector (BLOCKED: Requires Phase 1.5)
+- [ ] Route selection UI when creating trip
+- [ ] Browse available routes (route library)
+- [ ] Route preview with map and details
+- [ ] **Mid-trip route switching** (design decision needed):
+  - Option A: Auto-create new trip on route change
+  - Option B: Allow multi-route within single trip
+  - Option C: Prompt user to save and create new trip
+- [ ] Route switching preserves current trip data
 - [ ] Recent routes history
+- [ ] Route favorites/bookmarks
 
-### Route Statistics & Analytics
-- [ ] Total distance traveled
-- [ ] Time spent on trek
-- [ ] Average speed calculation
-- [ ] Elevation gain/loss tracking
-- [ ] Calories burned estimation
+### Route Statistics & Analytics (BLOCKED: Requires Phase 1.5)
+- [ ] Per-trip statistics:
+  - Total distance traveled
+  - Time spent on trek
+  - Average speed calculation
+  - Elevation gain/loss tracking
+  - Calories burned estimation
+- [ ] Trip comparison (compare multiple trips of same route)
 - [ ] Personal records and achievements
+- [ ] Trip timeline visualization
+- [ ] Export statistics as CSV/JSON
 
 ---
 
@@ -213,6 +474,22 @@
   - Status: Unanswered
   - Context: Coordinates are approximated based on research
   - Recommendation: Verify with actual GPS data from trek
+  - Priority: Low (can be updated later)
+
+- [x] **Q: Where will photos, notes, etc. be stored?**
+  - Status: ✅ ANSWERED
+  - Answer: **IndexedDB** (browser storage, offline-first)
+  - Storage location: Per-device, local browser storage
+  - Capacity: ~50-100MB+ (browser-dependent)
+  - Photo strategy: Compressed originals + thumbnails
+  - Estimated: 100-200 photos per device
+  - Phase 4: Optional cloud sync for cross-device access
+
+- [x] **Q: Need flexibility to change route mid-trip?**
+  - Status: ✅ NOTED - Design decision required
+  - Context: User wants ability to switch routes during active trip
+  - Options documented in Phase 1.5 and Phase 2 Multi-Route Selector
+  - Decision needed before implementation
 
 ### Feature Priorities
 - [ ] **Q: Which Phase 2 feature should be implemented first?**
