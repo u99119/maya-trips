@@ -170,11 +170,23 @@
 
 #### 4. Implementation Tasks
 
-- [ ] **Task 1.5.1**: Update IndexedDB schema (storage.js)
-  - Add trips object store
-  - Update photos/notes to include tripId
-  - Migration from v1 to v2 schema
-  - Add trip CRUD methods
+- [x] **Task 1.5.1**: Update IndexedDB schema (storage.js) ✅ COMPLETE
+  - ✅ Added trips object store with indexes (routeId, status, createdAt)
+  - ✅ Updated photos/notes stores to include tripId index
+  - ✅ Implemented v1 to v2 migration logic (auto-migrates old data)
+  - ✅ Added trip CRUD methods:
+    - createTrip(routeId, tripName)
+    - getTrip(tripId)
+    - getAllTrips(filters)
+    - updateTrip(tripId, updates)
+    - deleteTrip(tripId) - cascades to photos/notes
+    - archiveTrip(tripId)
+    - startTrip(tripId)
+    - completeTrip(tripId)
+    - setCurrentTripId(tripId) / getCurrentTripId()
+    - markMilestoneVisitedForTrip(tripId, milestoneId, location)
+    - getVisitedMilestonesForTrip(tripId)
+  - ✅ Build tested successfully
 
 - [ ] **Task 1.5.2**: Create Trip Management Module (trips.js)
   - createTrip(routeId, tripName)
