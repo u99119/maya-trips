@@ -180,6 +180,11 @@ class Layers {
    * Fit map to show all visible layers and milestones
    */
   fitBounds() {
+    if (!this.map) {
+      console.error('Map not initialized');
+      return;
+    }
+
     const bounds = L.latLngBounds([]);
     let hasContent = false;
 
@@ -187,7 +192,6 @@ class Layers {
     this.layers.forEach((layerData) => {
       if (layerData.visible) {
         const layerBounds = layerData.layer.getBounds();
-        console.log('Layer bounds:', layerBounds);
         bounds.extend(layerBounds);
         hasContent = true;
       }
@@ -196,24 +200,19 @@ class Layers {
     // Include all milestone markers
     this.milestoneMarkers.forEach((marker) => {
       const markerLatLng = marker.getLatLng();
-      console.log('Milestone:', markerLatLng);
       bounds.extend(markerLatLng);
       hasContent = true;
     });
 
-    console.log('Final bounds:', bounds);
-    console.log('Bounds center:', bounds.getCenter());
-    console.log('Bounds valid:', bounds.isValid());
-
     if (hasContent && bounds.isValid()) {
-      // Fit bounds to show entire route with reasonable zoom
-      this.map.fitBounds(bounds, {
-        padding: [50, 50],
-        maxZoom: 14, // Prevent zooming in too much - keep it compact
-        animate: true
-      });
-    } else {
-      console.error('Bounds invalid or no content!');
+      // Small delay to ensure map is fully rendered
+      setTimeout(() => {
+        this.map.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 14,
+          animate: true
+        });
+      }, 50);
     }
   }
 
