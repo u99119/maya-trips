@@ -177,21 +177,31 @@ class Layers {
   }
 
   /**
-   * Fit map to show all visible layers
+   * Fit map to show all visible layers and milestones
    */
   fitBounds() {
     const bounds = L.latLngBounds([]);
-    let hasLayers = false;
+    let hasContent = false;
 
+    // Include visible route layers
     this.layers.forEach((layerData) => {
       if (layerData.visible) {
         bounds.extend(layerData.layer.getBounds());
-        hasLayers = true;
+        hasContent = true;
       }
     });
 
-    if (hasLayers) {
-      this.map.fitBounds(bounds, { padding: [50, 50] });
+    // Include all milestone markers
+    this.milestoneMarkers.forEach((marker) => {
+      bounds.extend(marker.getLatLng());
+      hasContent = true;
+    });
+
+    if (hasContent) {
+      this.map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 15 // Prevent zooming in too much
+      });
     }
   }
 

@@ -510,7 +510,10 @@ class App {
       if (position) {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        mapManager.setView(lat, lng, 15, { animate: true });
+        const map = mapManager.getMap();
+        const currentZoom = map ? map.getZoom() : 15;
+        const targetZoom = Math.max(currentZoom, 15); // At least zoom 15
+        mapManager.setView(lat, lng, targetZoom, { animate: true });
       } else {
         alert('GPS is not enabled or no position available');
       }
