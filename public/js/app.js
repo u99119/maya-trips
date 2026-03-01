@@ -6,14 +6,15 @@ import mapManager from './map.js';
 import gps from './gps.js';
 import layers from './layers.js';
 import storage from './storage.js';
+import tripManager from './trips.js';
 
 class App {
   constructor() {
     this.currentRoute = null;
     this.routeConfig = null;
     this.milestones = null;
-    this.visitedMilestones = [];
-    this.currentMilestoneIndex = 0;
+    this.currentTrip = null;
+    this.isMapView = false; // Track if we're in map view or trip selection
   }
 
   /**
@@ -27,17 +28,21 @@ class App {
       // Initialize storage
       await storage.init();
 
-      // Load route configuration
-      await this.loadRoute('vaishno-devi');
+      // Initialize trip manager
+      await tripManager.init();
 
-      // Initialize map
-      this.initMap();
+      // Initialize trip selection UI
+      this.initTripSelectionUI();
 
-      // Initialize UI controls
-      this.initControls();
-
-      // Load saved state
-      this.loadSavedState();
+      // Check if there's a current trip
+      const currentTrip = tripManager.getCurrentTrip();
+      if (currentTrip) {
+        // Load the current trip
+        await this.loadTrip(currentTrip.tripId);
+      } else {
+        // Show trip selection screen
+        await this.showTripSelection();
+      }
 
       // Hide loading overlay
       this.showLoading(false);
@@ -46,6 +51,221 @@ class App {
     } catch (error) {
       console.error('Error initializing app:', error);
       this.showError('Failed to initialize application');
+    }
+  }
+
+  /**
+   * Initialize trip selection UI event handlers
+   */
+  initTripSelectionUI() {
+    // Create Trip Button
+    const btnCreateTrip = document.getElementById('btnCreateTrip');
+    btnCreateTrip.addEventListener('click', () => this.showCreateTripModal());
+
+    // Modal Close Buttons
+    const modalClose = document.getElementById('modalClose');
+    const btnCancelCreate = document.getElementById('btnCancelCreate');
+    const modalOverlay = document.getElementById('modalOverlay');
+
+    modalClose.addEventListener('click', () => this.hideCreateTripModal());
+    btnCancelCreate.addEventListener('click', () => this.hideCreateTripModal());
+    modalOverlay.addEventListener('click', () => this.hideCreateTripModal());
+
+    // Create Trip Confirm Button
+    const btnConfirmCreate = document.getElementById('btnConfirmCreate');
+    btnConfirmCreate.addEventListener('click', () => this.handleCreateTrip());
+
+    // Back to Trips Button
+    const btnBackToTrips = document.getElementById('btnBackToTrips');
+    btnBackToTrips.addEventListener('click', () => this.showTripSelection());
+  }
+
+  /**
+   * Show trip selection screen
+   */
+  async showTripSelection() {
+    this.isMapView = false;
+
+    // Hide map view elements
+    document.getElementById('appHeader').style.display = 'none';
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('bottomDrawer').style.display = 'none';
+    document.getElementById('recenterBtn').style.display = 'none';
+
+    // Show trip selection screen
+    document.getElementById('tripSelectionScreen').style.display = 'block';
+
+    // Stop GPS if running
+    gps.stop();
+
+    // Load and display trips
+    await this.loadTripsList();
+  }
+
+  /**
+   * Load and display trips list
+   */
+  async loadTripsList() {
+    const hasTrips = await tripManager.hasAnyTrips();
+    const emptyState = document.getElementById('emptyState');
+    const tripsList = document.getElementById('tripsList');
+
+    if (!hasTrips) {
+      emptyState.style.display = 'flex';
+      tripsList.innerHTML = '';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+
+    // Get all trips grouped by route
+    const groupedTrips = await tripManager.getAllTripsGrouped();
+
+    // Render trips
+    tripsList.innerHTML = '';
+    for (const group of groupedTrips) {
+      // Add route header
+      const routeHeader = document.createElement('h3');
+      routeHeader.className = 'route-group-header';
+      routeHeader.textContent = group.routeName;
+      routeHeader.style.cssText = 'margin: 20px 0 12px; font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;';
+      tripsList.appendChild(routeHeader);
+
+      // Add trip cards
+      for (const trip of group.trips) {
+        const tripCard = this.createTripCard(trip);
+        tripsList.appendChild(tripCard);
+      }
+    }
+  }
+
+  /**
+   * Create trip card element
+   */
+  createTripCard(trip) {
+    const card = document.createElement('div');
+    card.className = 'trip-card';
+    card.dataset.tripId = trip.tripId;
+
+    const stats = tripManager.getTripStats(trip);
+    const statusClass = trip.status.replace('_', '-');
+
+    card.innerHTML = `
+      <div class="trip-card-header">
+        <div class="trip-card-title">
+          <h3>${trip.tripName}</h3>
+          <p>${tripManager.formatDate(trip.createdAt)}</p>
+        </div>
+        <span class="trip-status-badge ${statusClass}">${trip.status}</span>
+      </div>
+      <div class="trip-card-meta">
+        <div class="trip-card-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>${stats.duration}</span>
+        </div>
+        <div class="trip-card-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>${stats.visitedCount} / ${stats.totalMilestones} milestones</span>
+        </div>
+      </div>
+    `;
+
+    // Click to load trip
+    card.addEventListener('click', () => this.loadTrip(trip.tripId));
+
+    return card;
+  }
+
+  /**
+   * Show create trip modal
+   */
+  showCreateTripModal() {
+    document.getElementById('createTripModal').style.display = 'flex';
+    document.getElementById('routeSelect').value = '';
+    document.getElementById('tripNameInput').value = '';
+    document.getElementById('autoStartCheckbox').checked = true;
+  }
+
+  /**
+   * Hide create trip modal
+   */
+  hideCreateTripModal() {
+    document.getElementById('createTripModal').style.display = 'none';
+  }
+
+  /**
+   * Handle create trip
+   */
+  async handleCreateTrip() {
+    const routeId = document.getElementById('routeSelect').value;
+    const tripName = document.getElementById('tripNameInput').value.trim();
+    const autoStart = document.getElementById('autoStartCheckbox').checked;
+
+    if (!routeId) {
+      this.showError('Please select a route');
+      return;
+    }
+
+    try {
+      this.showLoading(true);
+
+      // Create trip
+      const trip = await tripManager.createTrip(routeId, tripName || null, autoStart);
+
+      // Hide modal
+      this.hideCreateTripModal();
+
+      // Load the new trip
+      await this.loadTrip(trip.tripId);
+
+      this.showLoading(false);
+    } catch (error) {
+      console.error('Error creating trip:', error);
+      this.showError('Failed to create trip');
+      this.showLoading(false);
+    }
+  }
+
+  /**
+   * Load trip and show map view
+   */
+  async loadTrip(tripId) {
+    try {
+      this.showLoading(true);
+
+      // Set active trip
+      await tripManager.setActiveTrip(tripId);
+      this.currentTrip = tripManager.getCurrentTrip();
+
+      // Load route data
+      await this.loadRoute(this.currentTrip.routeId);
+
+      // Initialize or update map
+      if (!this.isMapView) {
+        this.initMap();
+        this.initControls();
+      } else {
+        // Update existing map
+        this.updateMapForTrip();
+      }
+
+      // Load trip state
+      this.loadTripState();
+
+      // Show map view
+      this.showMapView();
+
+      this.showLoading(false);
+    } catch (error) {
+      console.error('Error loading trip:', error);
+      this.showError('Failed to load trip');
+      this.showLoading(false);
     }
   }
 
@@ -73,14 +293,31 @@ class App {
         routes: routeData
       };
 
-      // Update header
-      document.getElementById('routeName').textContent = this.routeConfig.name;
-
       return this.currentRoute;
     } catch (error) {
       console.error('Error loading route:', error);
       throw error;
     }
+  }
+
+  /**
+   * Show map view
+   */
+  showMapView() {
+    this.isMapView = true;
+
+    // Hide trip selection screen
+    document.getElementById('tripSelectionScreen').style.display = 'none';
+
+    // Show map view elements
+    document.getElementById('appHeader').style.display = 'flex';
+    document.getElementById('map').style.display = 'block';
+    document.getElementById('bottomDrawer').style.display = 'block';
+    document.getElementById('recenterBtn').style.display = 'flex';
+
+    // Update header
+    document.getElementById('routeName').textContent = this.routeConfig.name;
+    document.getElementById('tripNameHeader').textContent = this.currentTrip.tripName;
   }
 
   /**
@@ -97,6 +334,21 @@ class App {
     layers.init(map);
 
     // Add route layers
+    this.addRouteLayers();
+
+    // Add milestones
+    layers.addMilestones(this.milestones, (milestone, number) => {
+      this.onMilestoneClick(milestone, number);
+    });
+
+    // Fit map to show all routes
+    layers.fitBounds();
+  }
+
+  /**
+   * Add route layers to map
+   */
+  addRouteLayers() {
     this.currentRoute.routes.features.forEach((feature) => {
       const routeConfig = this.routeConfig.routes.find(r => r.id === feature.properties.id);
       if (routeConfig) {
@@ -115,14 +367,29 @@ class App {
         }
       }
     });
+  }
 
-    // Add milestones
+  /**
+   * Update map for current trip (when switching trips)
+   */
+  updateMapForTrip() {
+    // Clear existing layers
+    layers.clear();
+
+    // Re-add route layers
+    this.addRouteLayers();
+
+    // Re-add milestones
     layers.addMilestones(this.milestones, (milestone, number) => {
       this.onMilestoneClick(milestone, number);
     });
 
-    // Fit map to show all routes
+    // Fit bounds
     layers.fitBounds();
+
+    // Update UI
+    this.populateLayerToggles();
+    this.populateMilestonesList();
   }
 
   /**
@@ -139,14 +406,14 @@ class App {
     const batterySaverToggle = document.getElementById('batterySaverToggle');
     batterySaverToggle.addEventListener('change', (e) => {
       gps.updateSettings({ batterySaver: e.target.checked });
-      storage.saveGPSSettings({ batterySaver: e.target.checked });
+      this.saveTripSettings({ batterySaver: e.target.checked });
     });
 
     // Auto Center Toggle
     const autoCenterToggle = document.getElementById('autoCenterToggle');
     autoCenterToggle.addEventListener('change', (e) => {
       gps.updateSettings({ autoCenter: e.target.checked });
-      storage.saveGPSSettings({ autoCenter: e.target.checked });
+      this.saveTripSettings({ autoCenter: e.target.checked });
     });
 
     // Recenter Button
@@ -230,7 +497,7 @@ class App {
   }
 
   /**
-   * Toggle GPS tracking
+   * Toggle GPS tracking (trip-scoped)
    */
   toggleGPS(enabled) {
     if (enabled) {
@@ -243,7 +510,7 @@ class App {
 
       if (started) {
         document.getElementById('gpsInfo').textContent = 'Active';
-        storage.saveGPSSettings({ enabled: true });
+        this.saveTripSettings({ gpsEnabled: true });
       } else {
         document.getElementById('gpsToggle').checked = false;
         this.showError('GPS not available');
@@ -251,7 +518,7 @@ class App {
     } else {
       gps.stop();
       document.getElementById('gpsInfo').textContent = 'Inactive';
-      storage.saveGPSSettings({ enabled: false });
+      this.saveTripSettings({ gpsEnabled: false });
     }
   }
 
@@ -316,7 +583,7 @@ class App {
   }
 
   /**
-   * Check if user is near any milestone
+   * Check if user is near any milestone (trip-scoped)
    */
   checkMilestoneProximity(userLat, userLng) {
     const autoMarkDistance = this.routeConfig.milestones.auto_mark_distance || 30;
@@ -325,19 +592,26 @@ class App {
       const coords = feature.geometry.coordinates;
       const distance = gps.calculateDistance(userLat, userLng, coords[1], coords[0]);
 
-      if (distance <= autoMarkDistance && !this.visitedMilestones.includes(feature.properties.id)) {
+      if (distance <= autoMarkDistance && !tripManager.isMilestoneVisited(feature.properties.id)) {
         this.markMilestoneVisited(feature.properties.id, index);
       }
     });
   }
 
   /**
-   * Mark milestone as visited
+   * Mark milestone as visited (trip-scoped)
    */
-  markMilestoneVisited(milestoneId, index) {
-    if (!this.visitedMilestones.includes(milestoneId)) {
-      this.visitedMilestones.push(milestoneId);
-      storage.markMilestoneVisited(this.currentRoute.id, milestoneId);
+  async markMilestoneVisited(milestoneId, index) {
+    if (!tripManager.isMilestoneVisited(milestoneId)) {
+      // Get current position for location data
+      const position = gps.getCurrentPosition();
+      const location = position ? {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      } : null;
+
+      // Mark in trip manager
+      await tripManager.markMilestoneVisited(milestoneId, location);
 
       // Update UI
       const milestoneItem = document.querySelector(`[data-milestone-id="${milestoneId}"]`);
@@ -356,19 +630,21 @@ class App {
   }
 
   /**
-   * Update progress display
+   * Update progress display (trip-scoped)
    */
   updateProgress() {
+    const visitedMilestones = tripManager.getVisitedMilestones();
     const total = this.milestones.features.length;
-    const visited = this.visitedMilestones.length;
+    const visited = visitedMilestones.length;
     const percentage = (visited / total) * 100;
 
     document.querySelector('.progress-text').textContent = `Milestone ${visited} / ${total}`;
     document.getElementById('progressFill').style.width = `${percentage}%`;
 
     // Update next milestone
+    const visitedIds = visitedMilestones.map(m => m.milestoneId);
     const nextMilestone = this.milestones.features.find(
-      (f) => !this.visitedMilestones.includes(f.properties.id)
+      (f) => !visitedIds.includes(f.properties.id)
     );
 
     if (nextMilestone) {
@@ -389,48 +665,62 @@ class App {
   }
 
   /**
-   * Load saved state from storage
+   * Load trip state (trip-scoped)
    */
-  loadSavedState() {
-    // Load GPS settings
-    const gpsSettings = storage.getGPSSettings();
-    document.getElementById('gpsToggle').checked = gpsSettings.enabled || false;
-    document.getElementById('batterySaverToggle').checked = gpsSettings.batterySaver || false;
-    document.getElementById('autoCenterToggle').checked = gpsSettings.autoCenter !== false;
+  loadTripState() {
+    // Load trip settings
+    const tripSettings = this.currentTrip.settings || {};
+    document.getElementById('gpsToggle').checked = tripSettings.gpsEnabled || false;
+    document.getElementById('batterySaverToggle').checked = tripSettings.batterySaver || false;
+    document.getElementById('autoCenterToggle').checked = tripSettings.autoCenter !== false;
 
     gps.updateSettings({
-      batterySaver: gpsSettings.batterySaver || false,
-      autoCenter: gpsSettings.autoCenter !== false
+      batterySaver: tripSettings.batterySaver || false,
+      autoCenter: tripSettings.autoCenter !== false
     });
 
-    // Load visited milestones
-    this.visitedMilestones = storage.getVisitedMilestones(this.currentRoute.id);
-    this.visitedMilestones.forEach((milestoneId) => {
-      const milestoneItem = document.querySelector(`[data-milestone-id="${milestoneId}"]`);
+    // Load visited milestones for this trip
+    const visitedMilestones = tripManager.getVisitedMilestones();
+    visitedMilestones.forEach((visited) => {
+      const milestoneItem = document.querySelector(`[data-milestone-id="${visited.milestoneId}"]`);
       if (milestoneItem) {
         milestoneItem.classList.add('visited');
       }
-      layers.updateMilestoneStyle(milestoneId, 'visited');
+      layers.updateMilestoneStyle(visited.milestoneId, 'visited');
     });
 
     // Update progress
     this.updateProgress();
 
     // Auto-start GPS if it was enabled
-    if (gpsSettings.enabled) {
+    if (tripSettings.gpsEnabled) {
       this.toggleGPS(true);
     }
   }
 
   /**
-   * Save layer visibility state
+   * Save trip settings
+   */
+  async saveTripSettings(updates) {
+    if (!this.currentTrip) return;
+
+    const currentSettings = this.currentTrip.settings || {};
+    const newSettings = { ...currentSettings, ...updates };
+
+    await storage.updateTrip(this.currentTrip.tripId, { settings: newSettings });
+    this.currentTrip.settings = newSettings;
+  }
+
+  /**
+   * Save layer visibility state (trip-scoped)
    */
   saveLayerState() {
     const layerStates = {};
     this.routeConfig.routes.forEach((route) => {
       layerStates[route.id] = layers.getLayerVisibility(route.id);
     });
-    storage.saveLayerVisibility(this.currentRoute.id, layerStates);
+    // Store in trip settings
+    this.saveTripSettings({ layerVisibility: layerStates });
   }
 
   /**

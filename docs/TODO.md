@@ -253,11 +253,39 @@
     - Smooth animations and transitions
   - ✅ Build tested successfully (614.94 KiB precached)
 
-- [ ] **Task 1.5.4**: Update App.js
-  - Load trip instead of route directly
-  - Trip context management
-  - Switch trip functionality
-  - Persist currentTripId
+- [x] **Task 1.5.4**: Update App.js ✅ COMPLETE
+  - ✅ Import tripManager module
+  - ✅ Initialize tripManager on app load
+  - ✅ Trip Selection UI Event Handlers:
+    - Create trip button → show modal
+    - Modal close/cancel → hide modal
+    - Confirm create → handleCreateTrip()
+    - Back button → showTripSelection()
+  - ✅ Trip Selection Flow:
+    - showTripSelection() - hide map, show trip list
+    - loadTripsList() - fetch and render trip cards
+    - createTripCard() - render individual trip cards
+    - showCreateTripModal() / hideCreateTripModal()
+    - handleCreateTrip() - validate, create trip, load trip
+  - ✅ Trip Loading:
+    - loadTrip(tripId) - set active trip, load route, init/update map
+    - showMapView() - hide trip selection, show map/header/drawer
+    - updateMapForTrip() - clear and re-render map layers
+  - ✅ Trip-Scoped State Management:
+    - markMilestoneVisited() - uses tripManager.markMilestoneVisited()
+    - checkMilestoneProximity() - uses tripManager.isMilestoneVisited()
+    - updateProgress() - uses tripManager.getVisitedMilestones()
+    - loadTripState() - loads trip settings and visited milestones
+  - ✅ Trip-Scoped Settings:
+    - saveTripSettings() - saves to trip.settings
+    - toggleGPS() - saves gpsEnabled to trip
+    - Battery saver / auto center - saves to trip settings
+    - saveLayerState() - saves layer visibility to trip settings
+  - ✅ UI State Management:
+    - isMapView flag to track current view
+    - Show/hide appropriate elements based on state
+    - Update header with route name and trip name
+  - ✅ Build tested successfully (623.37 KiB precached)
 
 - [ ] **Task 1.5.5**: Update Storage Methods
   - markMilestoneVisited(tripId, milestoneId)
