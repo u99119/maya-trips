@@ -420,8 +420,10 @@ class App {
       this.onMilestoneClick(milestone, number);
     });
 
-    // Fit map to show all routes (with slight delay to ensure layers are rendered)
+    // Force map to recalculate size and fit bounds
+    // This fixes the race condition where map container size isn't finalized yet
     setTimeout(() => {
+      map.invalidateSize(); // Force Leaflet to recalculate container size
       layers.fitBounds();
     }, 100);
   }
