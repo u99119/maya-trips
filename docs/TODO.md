@@ -169,9 +169,11 @@
 
 ### Deployment & Setup
 - [x] **Q: Help you deploy to Netlify?**
-  - Status: ✅ ANSWERED - Ready to deploy
+  - Status: ✅ ANSWERED - Git setup complete, ready to push
   - Context: App tested on dev server, icons generated, app name configured
-  - Answer: User will deploy when ready
+  - Answer: Git initialized, committed, remote added (u99119/maya-trips)
+  - Next: User needs to create GitHub repo and push, then connect to Netlify
+  - Guide: See DEPLOYMENT.md for step-by-step instructions
 
 - [x] **Q: Generate the PWA icons?**
   - Status: ✅ ANSWERED - Icons generated and added
