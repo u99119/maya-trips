@@ -320,12 +320,15 @@
     - Creates new trip with auto-start
   - ✅ Build tested successfully (629.50 KiB precached)
 
-- [ ] **Task 1.5.7**: Testing
-  - Create multiple trips from same route
-  - Verify data isolation
-  - Test trip switching
-  - Test route switching (mid-trip)
-  - Test offline functionality
+- [/] **Task 1.5.7**: Testing (IN PROGRESS)
+  - ✅ Map centering fixed (invalidateSize() race condition)
+  - ✅ View Route button works without DevTools
+  - ✅ Milestone clicks work without DevTools
+  - [ ] Create multiple trips from same route
+  - [ ] Verify data isolation
+  - [ ] Test trip switching
+  - [ ] Test route switching (mid-trip)
+  - [ ] Test offline functionality
 
 #### 5. Migration Strategy
 
