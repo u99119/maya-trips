@@ -198,9 +198,10 @@ class Layers {
     });
 
     if (hasContent) {
-      // Fit bounds to show entire route, maintaining current zoom
+      // Fit bounds to show entire route with reasonable zoom
       this.map.fitBounds(bounds, {
         padding: [50, 50],
+        maxZoom: 14, // Prevent zooming in too much - keep it compact
         animate: true
       });
     }

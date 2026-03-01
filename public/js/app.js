@@ -577,7 +577,11 @@ class App {
 
       milestoneItem.addEventListener('click', () => {
         const coords = feature.geometry.coordinates;
-        mapManager.setView(coords[1], coords[0], 16, { animate: true });
+        // GeoJSON coords are [lng, lat], Leaflet needs [lat, lng]
+        const lat = coords[1];
+        const lng = coords[0];
+        console.log(`Milestone ${props.name}: coords=[${coords}], lat=${lat}, lng=${lng}`);
+        mapManager.setView(lat, lng, 16, { animate: true });
       });
 
       container.appendChild(milestoneItem);
