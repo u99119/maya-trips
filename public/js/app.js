@@ -78,6 +78,23 @@ class App {
     // Back to Trips Button
     const btnBackToTrips = document.getElementById('btnBackToTrips');
     btnBackToTrips.addEventListener('click', () => this.showTripSelection());
+
+    // Switch Route Button
+    const btnSwitchRoute = document.getElementById('btnSwitchRoute');
+    btnSwitchRoute.addEventListener('click', () => this.showSwitchRouteModal());
+
+    // Switch Route Modal
+    const switchRouteClose = document.getElementById('switchRouteClose');
+    const btnCancelSwitch = document.getElementById('btnCancelSwitch');
+    const switchRouteOverlay = document.getElementById('switchRouteOverlay');
+
+    switchRouteClose.addEventListener('click', () => this.hideSwitchRouteModal());
+    btnCancelSwitch.addEventListener('click', () => this.hideSwitchRouteModal());
+    switchRouteOverlay.addEventListener('click', () => this.hideSwitchRouteModal());
+
+    // Confirm Switch Button
+    const btnConfirmSwitch = document.getElementById('btnConfirmSwitch');
+    btnConfirmSwitch.addEventListener('click', () => this.handleSwitchRoute());
   }
 
   /**
@@ -197,6 +214,68 @@ class App {
    */
   hideCreateTripModal() {
     document.getElementById('createTripModal').style.display = 'none';
+  }
+
+  /**
+   * Show switch route modal
+   */
+  showSwitchRouteModal() {
+    document.getElementById('switchRouteModal').style.display = 'flex';
+    document.getElementById('switchRouteSelect').value = '';
+    document.getElementById('switchTripNameInput').value = '';
+    document.getElementById('completeCurrentTripCheckbox').checked = false;
+  }
+
+  /**
+   * Hide switch route modal
+   */
+  hideSwitchRouteModal() {
+    document.getElementById('switchRouteModal').style.display = 'none';
+  }
+
+  /**
+   * Handle route switch
+   */
+  async handleSwitchRoute() {
+    const newRouteId = document.getElementById('switchRouteSelect').value;
+    const newTripName = document.getElementById('switchTripNameInput').value.trim();
+    const completeCurrentTrip = document.getElementById('completeCurrentTripCheckbox').checked;
+
+    if (!newRouteId) {
+      this.showError('Please select a route');
+      return;
+    }
+
+    if (newRouteId === this.currentTrip.routeId) {
+      this.showError('You are already on this route');
+      return;
+    }
+
+    try {
+      this.showLoading(true);
+
+      // Complete current trip if requested
+      if (completeCurrentTrip) {
+        await tripManager.completeCurrentTrip();
+      }
+
+      // Create new trip for the new route
+      const newTrip = await tripManager.createTrip(newRouteId, newTripName || null, true);
+
+      // Hide modal
+      this.hideSwitchRouteModal();
+
+      // Load the new trip
+      await this.loadTrip(newTrip.tripId);
+
+      this.showLoading(false);
+
+      console.log(`Switched from ${this.currentTrip.routeId} to ${newRouteId}`);
+    } catch (error) {
+      console.error('Error switching route:', error);
+      this.showError('Failed to switch route');
+      this.showLoading(false);
+    }
   }
 
   /**

@@ -162,11 +162,11 @@
    - Trip progress persists per instance
 
 **Route Switching Mid-Trip**:
-- ⚠️ **Design Decision Needed**:
-  - Option A: Allow route change, create new trip automatically
-  - Option B: Allow route change within same trip (multi-route trip)
-  - Option C: Prompt user to save current trip and create new one
-- 📝 **Note**: User wants flexibility to change route mid-journey
+- ✅ **Design Decision Made**: Option C with enhancement
+  - Prompt user to save current trip and create new one
+  - Enhancement: User can choose to mark current trip as completed or keep in-progress
+  - Implemented in Task 1.5.6
+- 📝 **Note**: User wants flexibility to change route mid-journey ✅ IMPLEMENTED
 
 #### 4. Implementation Tasks
 
@@ -287,16 +287,38 @@
     - Update header with route name and trip name
   - ✅ Build tested successfully (623.37 KiB precached)
 
-- [ ] **Task 1.5.5**: Update Storage Methods
-  - markMilestoneVisited(tripId, milestoneId)
-  - getVisitedMilestones(tripId)
-  - saveLayerVisibility(tripId, layerStates)
-  - All methods now trip-scoped
+- [x] **Task 1.5.5**: Update Storage Methods ✅ COMPLETE
+  - ✅ All app.js methods now use trip-scoped storage via tripManager
+  - ✅ Deprecated legacy route-scoped methods in storage.js:
+    - markMilestoneVisited() → markMilestoneVisitedForTrip()
+    - getVisitedMilestones() → getVisitedMilestonesForTrip()
+    - saveLayerVisibility() → trip.settings.layerVisibility
+    - saveGPSSettings() → trip.settings
+    - getGPSSettings() → trip.settings
+    - saveRouteState() / getRouteState() → trip object
+  - ✅ Legacy methods kept for v1 to v2 migration only
+  - ✅ Added @deprecated JSDoc comments to all legacy methods
+  - ✅ Build tested successfully (624.14 KiB precached)
 
-- [ ] **Task 1.5.6**: Route Switching Logic
-  - Design decision on mid-trip route change
-  - Implement chosen approach
-  - Handle edge cases (unsaved progress, etc.)
+- [x] **Task 1.5.6**: Route Switching Logic ✅ COMPLETE
+  - ✅ Design decision: Option C with enhancement
+    - Prompt user to save current trip and create new one
+    - Option to mark current trip as completed or keep in-progress
+  - ✅ Added "Switch Route" button to header
+  - ✅ Created switch route modal with:
+    - New route selection dropdown
+    - New trip name input (optional)
+    - Checkbox to complete current trip
+  - ✅ Implemented JavaScript handlers:
+    - showSwitchRouteModal() - Shows modal with form
+    - hideSwitchRouteModal() - Hides modal
+    - handleSwitchRoute() - Validates input, optionally completes current trip, creates new trip, switches to new trip
+  - ✅ Edge cases handled:
+    - Validates route selection
+    - Prevents switching to same route
+    - Optionally completes current trip before switching
+    - Creates new trip with auto-start
+  - ✅ Build tested successfully (629.50 KiB precached)
 
 - [ ] **Task 1.5.7**: Testing
   - Create multiple trips from same route

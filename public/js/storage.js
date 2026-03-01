@@ -131,7 +131,7 @@ class Storage {
   }
 
   /**
-   * Route state management
+   * @deprecated Route state now stored in trip object
    */
   saveRouteState(routeId, state) {
     const routeStates = this.getItem(STORAGE_KEYS.ROUTE_STATE, {});
@@ -142,13 +142,25 @@ class Storage {
     return this.setItem(STORAGE_KEYS.ROUTE_STATE, routeStates);
   }
 
+  /**
+   * @deprecated Route state now stored in trip object
+   */
   getRouteState(routeId) {
     const routeStates = this.getItem(STORAGE_KEYS.ROUTE_STATE, {});
     return routeStates[routeId] || null;
   }
 
   /**
-   * Visited milestones management
+   * ========================================
+   * LEGACY ROUTE-SCOPED METHODS (v1)
+   * ========================================
+   * These methods are kept for backward compatibility and migration only.
+   * New code should use trip-scoped methods instead.
+   * @deprecated Use trip-scoped methods via TripManager
+   */
+
+  /**
+   * @deprecated Use markMilestoneVisitedForTrip() instead
    */
   markMilestoneVisited(routeId, milestoneId) {
     const visited = this.getVisitedMilestones(routeId);
@@ -161,11 +173,17 @@ class Storage {
     return true;
   }
 
+  /**
+   * @deprecated Use getVisitedMilestonesForTrip() instead
+   */
   getVisitedMilestones(routeId) {
     const allVisited = this.getItem(STORAGE_KEYS.VISITED_MILESTONES, {});
     return allVisited[routeId] || [];
   }
 
+  /**
+   * @deprecated Legacy method
+   */
   clearVisitedMilestones(routeId) {
     const allVisited = this.getItem(STORAGE_KEYS.VISITED_MILESTONES, {});
     delete allVisited[routeId];
@@ -173,7 +191,7 @@ class Storage {
   }
 
   /**
-   * Layer visibility management
+   * @deprecated Layer visibility now stored in trip.settings.layerVisibility
    */
   saveLayerVisibility(routeId, layerStates) {
     const allLayers = this.getItem(STORAGE_KEYS.LAYER_VISIBILITY, {});
@@ -181,18 +199,24 @@ class Storage {
     return this.setItem(STORAGE_KEYS.LAYER_VISIBILITY, allLayers);
   }
 
+  /**
+   * @deprecated Layer visibility now stored in trip.settings.layerVisibility
+   */
   getLayerVisibility(routeId) {
     const allLayers = this.getItem(STORAGE_KEYS.LAYER_VISIBILITY, {});
     return allLayers[routeId] || {};
   }
 
   /**
-   * GPS settings management
+   * @deprecated GPS settings now stored in trip.settings
    */
   saveGPSSettings(settings) {
     return this.setItem(STORAGE_KEYS.GPS_SETTINGS, settings);
   }
 
+  /**
+   * @deprecated GPS settings now stored in trip.settings
+   */
   getGPSSettings() {
     return this.getItem(STORAGE_KEYS.GPS_SETTINGS, {
       enabled: false,
