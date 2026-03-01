@@ -198,10 +198,9 @@ class Layers {
     });
 
     if (hasContent) {
-      this.map.fitBounds(bounds, {
-        padding: [50, 50],
-        maxZoom: 15 // Prevent zooming in too much
-      });
+      // Fit bounds without changing zoom - just pan to center
+      const center = bounds.getCenter();
+      this.map.panTo(center, { animate: true });
     }
   }
 

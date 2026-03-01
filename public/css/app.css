@@ -370,7 +370,7 @@ input:checked + .toggle-slider:before {
 .map-controls {
   position: fixed;
   bottom: calc(var(--drawer-height) + 16px);
-  right: 16px;
+  right: 76px; /* Shifted left to avoid zoom controls */
   display: flex;
   flex-direction: column;
   gap: 12px;
