@@ -186,24 +186,34 @@ class Layers {
     // Include visible route layers
     this.layers.forEach((layerData) => {
       if (layerData.visible) {
-        bounds.extend(layerData.layer.getBounds());
+        const layerBounds = layerData.layer.getBounds();
+        console.log('Layer bounds:', layerBounds);
+        bounds.extend(layerBounds);
         hasContent = true;
       }
     });
 
     // Include all milestone markers
     this.milestoneMarkers.forEach((marker) => {
-      bounds.extend(marker.getLatLng());
+      const markerLatLng = marker.getLatLng();
+      console.log('Milestone:', markerLatLng);
+      bounds.extend(markerLatLng);
       hasContent = true;
     });
 
-    if (hasContent) {
+    console.log('Final bounds:', bounds);
+    console.log('Bounds center:', bounds.getCenter());
+    console.log('Bounds valid:', bounds.isValid());
+
+    if (hasContent && bounds.isValid()) {
       // Fit bounds to show entire route with reasonable zoom
       this.map.fitBounds(bounds, {
         padding: [50, 50],
         maxZoom: 14, // Prevent zooming in too much - keep it compact
         animate: true
       });
+    } else {
+      console.error('Bounds invalid or no content!');
     }
   }
 
