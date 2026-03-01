@@ -264,13 +264,23 @@
     </div>
   </div>
 
-  <!-- Recenter Button -->
-  <button class="recenter-btn" id="recenterBtn" title="Recenter Map" style="display: none;">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  </button>
+  <!-- Map Control Buttons -->
+  <div class="map-controls" id="mapControls" style="display: none;">
+    <!-- View Route Button -->
+    <button class="map-control-btn" id="viewRouteBtn" title="View Full Route">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </button>
+
+    <!-- Recenter on Location Button -->
+    <button class="map-control-btn" id="recenterBtn" title="Center on My Location">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">

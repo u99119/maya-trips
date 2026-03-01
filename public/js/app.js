@@ -107,7 +107,7 @@ class App {
     document.getElementById('appHeader').style.display = 'none';
     document.getElementById('map').style.display = 'none';
     document.getElementById('bottomDrawer').style.display = 'none';
-    document.getElementById('recenterBtn').style.display = 'none';
+    document.getElementById('mapControls').style.display = 'none';
 
     // Show trip selection screen
     document.getElementById('tripSelectionScreen').style.display = 'block';
@@ -392,7 +392,7 @@ class App {
     document.getElementById('appHeader').style.display = 'flex';
     document.getElementById('map').style.display = 'block';
     document.getElementById('bottomDrawer').style.display = 'block';
-    document.getElementById('recenterBtn').style.display = 'flex';
+    document.getElementById('mapControls').style.display = 'flex';
 
     // Update header
     document.getElementById('routeName').textContent = this.routeConfig.name;
@@ -497,7 +497,13 @@ class App {
       this.saveTripSettings({ autoCenter: e.target.checked });
     });
 
-    // Recenter Button
+    // View Route Button
+    const viewRouteBtn = document.getElementById('viewRouteBtn');
+    viewRouteBtn.addEventListener('click', () => {
+      layers.fitBounds();
+    });
+
+    // Recenter on Location Button
     const recenterBtn = document.getElementById('recenterBtn');
     recenterBtn.addEventListener('click', () => {
       const position = gps.getCurrentPosition();
@@ -506,7 +512,7 @@ class App {
         const lng = position.coords.longitude;
         mapManager.setView(lat, lng, 15, { animate: true });
       } else {
-        layers.fitBounds();
+        alert('GPS is not enabled or no position available');
       }
     });
 

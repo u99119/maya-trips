@@ -366,11 +366,18 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
 }
 
-/* Recenter Button */
-.recenter-btn {
+/* Map Control Buttons */
+.map-controls {
   position: fixed;
   bottom: calc(var(--drawer-height) + 16px);
   right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 998;
+}
+
+.map-control-btn {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -382,16 +389,15 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 998;
   transition: var(--transition);
 }
 
-.recenter-btn:hover {
+.map-control-btn:hover {
   background: var(--primary-dark);
   transform: scale(1.05);
 }
 
-.recenter-btn:active {
+.map-control-btn:active {
   transform: scale(0.95);
 }
 
