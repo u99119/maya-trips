@@ -510,11 +510,8 @@ class App {
       if (position) {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        const map = mapManager.getMap();
-        if (map) {
-          // Pan to location without changing zoom
-          map.panTo([lat, lng], { animate: true });
-        }
+        // Use setView to ensure proper centering
+        mapManager.setView(lat, lng, 16, { animate: true });
       } else {
         alert('GPS is not enabled or no position available');
       }
