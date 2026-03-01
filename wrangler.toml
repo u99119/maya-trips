@@ -1,0 +1,16 @@
+name = "maya-trips"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./dist"
+
+# Pages configuration
+pages_build_output_dir = "./dist"
+
+# Build configuration
+[build]
+command = "npm run build"
+
+[build.environment]
+NODE_VERSION = "18"
+

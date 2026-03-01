@@ -79,13 +79,33 @@ The app will be available at `http://localhost:5173`
 
 ## Deployment
 
-### Netlify
+### Cloudflare Pages (Recommended)
+
+**Unlimited bandwidth, no credit limits!**
+
+See [CLOUDFLARE-DEPLOYMENT.md](CLOUDFLARE-DEPLOYMENT.md) for detailed instructions.
+
+**Quick Deploy:**
+```bash
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Login
+wrangler login
+
+# Build and deploy
+npm run build
+wrangler pages deploy dist --project-name=maya-trips
+```
+
+**Important:** Disable auto-deployments in Cloudflare dashboard to avoid unnecessary builds.
+
+### Netlify (Alternative)
 
 1. Connect your repository to Netlify
 2. Build settings are configured in `netlify.toml`
-3. Deploy automatically on push to main branch
-
-Or use Netlify CLI:
+3. **Disable auto-deploy** to avoid credit limits
+4. Deploy manually when ready
 
 ```bash
 npm install -g netlify-cli
