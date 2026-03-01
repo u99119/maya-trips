@@ -205,14 +205,15 @@ class Layers {
     });
 
     if (hasContent && bounds.isValid()) {
-      // Small delay to ensure map is fully rendered
+      // Small delay to ensure map is fully rendered (race condition fix)
+      // TODO: Test if this can be reduced from 200ms to 50-100ms
       setTimeout(() => {
         this.map.fitBounds(bounds, {
           padding: [50, 50],
           maxZoom: 14,
           animate: true
         });
-      }, 50);
+      }, 200);
     }
   }
 

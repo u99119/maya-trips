@@ -893,6 +893,16 @@ Alternative from C: C → N → P → E (rejoins at E)
   - Recommendation: Verify with actual GPS data from trek
   - Priority: Low (can be updated later)
 
+- [ ] **Q: Can we reduce fitBounds() delay from 200ms to 50-100ms?**
+  - Status: Unanswered - needs testing
+  - Context: Race condition fix for map centering (layers.js line 215)
+  - Current: 200ms delay to ensure map is fully rendered
+  - Issue: Map centering only worked when DevTools was open (slower execution)
+  - Fix: Added setTimeout() delay before fitBounds()
+  - Question: Can we reduce delay to 50-100ms for better UX?
+  - Testing: Test on multiple devices/browsers without DevTools open
+  - Priority: Low (200ms works reliably, optimization can wait)
+
 - [x] **Q: Where will photos, notes, etc. be stored?**
   - Status: ✅ ANSWERED
   - Answer: **IndexedDB** (browser storage, offline-first)
