@@ -205,15 +205,30 @@ class Layers {
     });
 
     if (hasContent && bounds.isValid()) {
-      // Small delay to ensure map is fully rendered (race condition fix)
-      // TODO: Test if this can be reduced from 200ms to 50-100ms
-      setTimeout(() => {
-        this.map.fitBounds(bounds, {
-          padding: [50, 50],
-          maxZoom: 14,
-          animate: true
-        });
-      }, 200);
+      // Use requestAnimationFrame to ensure DOM is ready, then add delay for map rendering
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (this.map && this.map._loaded) {
+            this.map.fitBounds(bounds, {
+              padding: [50, 50],
+              maxZoom: 14,
+              animate: true
+            });
+          } else {
+            console.error('Map not loaded yet, retrying...');
+            // Retry after another delay
+            setTimeout(() => {
+              if (this.map) {
+                this.map.fitBounds(bounds, {
+                  padding: [50, 50],
+                  maxZoom: 14,
+                  animate: true
+                });
+              }
+            }, 300);
+          }
+        }, 200);
+      });
     }
   }
 
