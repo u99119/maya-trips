@@ -502,6 +502,10 @@ class App {
     // View Route Button
     const viewRouteBtn = document.getElementById('viewRouteBtn');
     viewRouteBtn.addEventListener('click', () => {
+      const map = mapManager.getMap();
+      if (map) {
+        map.invalidateSize(); // Ensure map size is correct before fitting bounds
+      }
       layers.fitBounds();
     });
 
@@ -579,6 +583,10 @@ class App {
 
       milestoneItem.addEventListener('click', () => {
         const coords = feature.geometry.coordinates;
+        const map = mapManager.getMap();
+        if (map) {
+          map.invalidateSize(); // Ensure map size is correct before centering
+        }
         // GeoJSON coords are [lng, lat], Leaflet needs [lat, lng]
         mapManager.setView(coords[1], coords[0], 16, { animate: true });
       });
