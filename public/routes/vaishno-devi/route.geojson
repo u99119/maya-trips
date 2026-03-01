@@ -1,0 +1,122 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "main-trek",
+        "name": "Main Trek Route",
+        "difficulty": "moderate",
+        "distance": 13.5,
+        "estimated_time": "4-6 hours",
+        "description": "Traditional walking route from Katra to Bhawan via all major checkpoints"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [74.93333, 32.98944],
+          [74.93500, 32.99100],
+          [74.93800, 32.99300],
+          [74.94100, 32.99500],
+          [74.94500, 32.99800],
+          [74.94700, 32.99950],
+          [74.94900, 33.00100],
+          [74.95200, 33.00500],
+          [74.95400, 33.00700],
+          [74.95600, 33.00900],
+          [74.95800, 33.01200],
+          [74.96000, 33.01800],
+          [74.96200, 33.02000],
+          [74.96400, 33.02300],
+          [74.96600, 33.02600],
+          [74.96800, 33.02800],
+          [74.97000, 33.03000],
+          [74.97200, 33.03200],
+          [74.97500, 33.03500],
+          [74.97700, 33.03400],
+          [74.97900, 33.03200],
+          [74.98000, 33.03000]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "shortcut-route",
+        "name": "Shortcut Route (via Himkoti)",
+        "difficulty": "moderate-hard",
+        "distance": 11.0,
+        "estimated_time": "3-5 hours",
+        "description": "Shorter but steeper route bypassing some checkpoints"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [74.93333, 32.98944],
+          [74.93600, 32.99200],
+          [74.94000, 32.99600],
+          [74.94500, 32.99800],
+          [74.95000, 33.00300],
+          [74.95500, 33.00900],
+          [74.96000, 33.01800],
+          [74.96500, 33.02500],
+          [74.97000, 33.03000],
+          [74.97500, 33.03500],
+          [74.98000, 33.03000]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "battery-car-route",
+        "name": "Battery Car Route",
+        "difficulty": "easy",
+        "distance": 11.5,
+        "estimated_time": "1-2 hours",
+        "description": "Motorable route for battery cars and electric vehicles from Katra to Sanjichhat"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [74.93333, 32.98944],
+          [74.93700, 32.99250],
+          [74.94200, 32.99650],
+          [74.94500, 32.99800],
+          [74.94800, 33.00050],
+          [74.95200, 33.00500],
+          [74.95500, 33.00850],
+          [74.95900, 33.01600],
+          [74.96000, 33.01800],
+          [74.96300, 33.02200],
+          [74.96700, 33.02700],
+          [74.96800, 33.02800],
+          [74.97100, 33.03100],
+          [74.97500, 33.03500]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "bhairon-route",
+        "name": "Bhawan to Bhairon Temple",
+        "difficulty": "moderate",
+        "distance": 2.5,
+        "estimated_time": "45-60 minutes",
+        "description": "Trek from Bhawan to Bhairon Temple. Ropeway also available (3 minutes)"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [74.98000, 33.03000],
+          [74.98100, 33.03200],
+          [74.98200, 33.03400],
+          [74.98300, 33.03600],
+          [74.98500, 33.03800]
+        ]
+      }
+    }
+  ]
+}
+

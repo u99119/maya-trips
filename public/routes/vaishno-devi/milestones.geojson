@@ -1,0 +1,134 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "name": "Katra (Base Camp)",
+        "elevation": 875,
+        "type": "start",
+        "description": "Starting point of the Vaishno Devi pilgrimage. Registration and base camp facilities available.",
+        "facilities": ["registration", "hotels", "restaurants", "medical"],
+        "distance_from_start": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.93333, 32.98944]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "name": "Banganga",
+        "elevation": 1050,
+        "type": "checkpoint",
+        "description": "First major stop. Holy river where pilgrims take a ritual bath. Temple and refreshment facilities available.",
+        "facilities": ["temple", "water", "refreshments", "restrooms"],
+        "distance_from_start": 1.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.94500, 32.99800]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "name": "Charan Paduka",
+        "elevation": 1250,
+        "type": "checkpoint",
+        "description": "Sacred rock with footprints of Mata Vaishno Devi. Beautiful viewpoint with refreshment stalls.",
+        "facilities": ["viewpoint", "refreshments", "restrooms", "photography"],
+        "distance_from_start": 3.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.95200, 33.00500]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 4,
+        "name": "Ardhkuwari",
+        "elevation": 1450,
+        "type": "major_checkpoint",
+        "description": "Halfway point with cave temple. Important religious site where Mata meditated for 9 months. Accommodation and food available.",
+        "facilities": ["temple", "accommodation", "food", "medical", "restrooms"],
+        "distance_from_start": 6.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.96000, 33.01800]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 5,
+        "name": "Himkoti",
+        "elevation": 1650,
+        "type": "checkpoint",
+        "description": "Scenic point with panoramic mountain views. Refreshment facilities and rest area.",
+        "facilities": ["viewpoint", "refreshments", "restrooms"],
+        "distance_from_start": 9.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.96800, 33.02800]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 6,
+        "name": "Sanjichhat",
+        "elevation": 1850,
+        "type": "major_checkpoint",
+        "description": "Highest point of the trek. Helicopter service point. Medical facilities and refreshments available.",
+        "facilities": ["helicopter", "medical", "refreshments", "restrooms", "viewpoint"],
+        "distance_from_start": 11.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.97500, 33.03500]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 7,
+        "name": "Bhawan (Holy Cave)",
+        "elevation": 1585,
+        "type": "destination",
+        "description": "Main shrine of Mata Vaishno Devi. Holy cave with three natural rock formations (Pindies). Darshan and prasad facilities.",
+        "facilities": ["shrine", "darshan", "prasad", "accommodation", "food", "medical"],
+        "distance_from_start": 13.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.98000, 33.03000]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 8,
+        "name": "Bhairon Temple",
+        "elevation": 1950,
+        "type": "optional",
+        "description": "Optional trek from Bhawan. Pilgrimage considered incomplete without visiting Bhairon Baba. Ropeway available.",
+        "facilities": ["temple", "ropeway", "viewpoint", "refreshments"],
+        "distance_from_start": 16.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [74.98500, 33.03800]
+      }
+    }
+  ]
+}
+

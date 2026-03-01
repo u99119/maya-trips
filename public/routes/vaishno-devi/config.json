@@ -1,0 +1,96 @@
+{
+  "id": "vaishno-devi",
+  "name": "Vaishno Devi Yatra",
+  "description": "Sacred pilgrimage to Mata Vaishno Devi shrine in Trikuta Mountains, Jammu & Kashmir",
+  "location": {
+    "state": "Jammu & Kashmir",
+    "country": "India",
+    "region": "Trikuta Mountains"
+  },
+  "center": {
+    "lat": 33.01,
+    "lng": 74.96,
+    "zoom": 13
+  },
+  "bounds": {
+    "north": 33.04,
+    "south": 32.98,
+    "east": 74.99,
+    "west": 74.93
+  },
+  "routes": [
+    {
+      "id": "main-trek",
+      "name": "Main Trek Route",
+      "file": "route.geojson",
+      "color": "#2196F3",
+      "visible": true,
+      "weight": 4
+    },
+    {
+      "id": "shortcut-route",
+      "name": "Shortcut Route",
+      "file": "route.geojson",
+      "color": "#FF9800",
+      "visible": false,
+      "weight": 3
+    },
+    {
+      "id": "battery-car-route",
+      "name": "Battery Car Route",
+      "file": "route.geojson",
+      "color": "#4CAF50",
+      "visible": false,
+      "weight": 3
+    },
+    {
+      "id": "bhairon-route",
+      "name": "Bhairon Temple Route",
+      "file": "route.geojson",
+      "color": "#9C27B0",
+      "visible": false,
+      "weight": 3
+    }
+  ],
+  "milestones": {
+    "file": "milestones.geojson",
+    "auto_mark_distance": 30
+  },
+  "info": {
+    "total_distance": "13.5 km",
+    "elevation_gain": "710 m",
+    "difficulty": "Moderate",
+    "estimated_time": "4-6 hours (one way)",
+    "best_season": "March to October, December to January",
+    "facilities": [
+      "Registration at Katra",
+      "Medical facilities at major checkpoints",
+      "Accommodation at Ardhkuwari and Bhawan",
+      "Battery car service available",
+      "Helicopter service from Katra to Sanjichhat",
+      "Ropeway from Bhawan to Bhairon Temple"
+    ],
+    "tips": [
+      "Register at Katra before starting the trek",
+      "Carry valid ID proof",
+      "Wear comfortable walking shoes",
+      "Carry water and light snacks",
+      "Avoid heavy meals before trekking",
+      "Use walking sticks if needed",
+      "Follow the designated route",
+      "Respect the religious sentiments",
+      "Keep the environment clean"
+    ],
+    "emergency_contacts": [
+      {
+        "name": "Shrine Board Control Room",
+        "phone": "+91-1991-234000"
+      },
+      {
+        "name": "Emergency Services",
+        "phone": "112"
+      }
+    ]
+  }
+}
+
