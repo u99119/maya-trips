@@ -127,7 +127,7 @@ class TripManager {
    */
   async getAllTripsGrouped() {
     const allTrips = await storage.getAllTrips();
-    
+
     const grouped = {};
     for (const trip of allTrips) {
       if (!grouped[trip.routeId]) {
@@ -148,7 +148,8 @@ class TripManager {
       }
     }
 
-    return grouped;
+    // Convert object to array
+    return Object.values(grouped);
   }
 
   /**

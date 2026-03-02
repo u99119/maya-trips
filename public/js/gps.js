@@ -15,7 +15,7 @@ class GPS {
     };
     this.settings = {
       batterySaver: false,
-      autoCenter: true
+      autoCenter: false // Disabled by default - user can manually center with button
     };
     this.isFirstPosition = true; // Flag to prevent auto-center on first position
   }

@@ -127,6 +127,8 @@ class App {
     const emptyState = document.getElementById('emptyState');
     const tripsList = document.getElementById('tripsList');
 
+    console.log('Loading trips list. Has trips:', hasTrips);
+
     if (!hasTrips) {
       emptyState.style.display = 'flex';
       tripsList.innerHTML = '';
@@ -137,6 +139,7 @@ class App {
 
     // Get all trips grouped by route
     const groupedTrips = await tripManager.getAllTripsGrouped();
+    console.log('Grouped trips:', groupedTrips);
 
     // Render trips
     tripsList.innerHTML = '';
@@ -150,10 +153,12 @@ class App {
 
       // Add trip cards
       for (const trip of group.trips) {
+        console.log('Creating trip card for:', trip.tripName);
         const tripCard = this.createTripCard(trip);
         tripsList.appendChild(tripCard);
       }
     }
+    console.log('Trips list populated. Total cards:', tripsList.children.length);
   }
 
   /**
