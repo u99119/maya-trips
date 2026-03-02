@@ -14,6 +14,9 @@ class Layers {
    * Initialize layers with map instance
    */
   init(map) {
+    // Clear existing layers and markers when reinitializing
+    this.layers.clear();
+    this.milestoneMarkers.clear();
     this.map = map;
   }
 

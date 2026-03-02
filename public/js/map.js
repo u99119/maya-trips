@@ -28,6 +28,12 @@ class MapManager {
    * Initialize the map
    */
   init(containerId, options = {}) {
+    // Destroy existing map instance if it exists
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+
     const defaultOptions = {
       center: [32.98944, 74.93333], // Katra coordinates
       zoom: 13,
