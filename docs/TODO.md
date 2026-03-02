@@ -7,6 +7,16 @@
 ✅ **Deployed to Cloudflare Pages** - https://maya-trips.pages.dev/ (auto-deploys from GitHub main branch)
 ✅ **Deployed to Netlify** - https://maya-trips.netlify.app (auto-deploys from GitHub)
 
+## 🚧 ACTIVE: Phase 1.6 - Multi-Route Architecture (IN PROGRESS)
+
+**Branch Strategy:**
+- `dev-junction` - Junction-based graph architecture (ACTIVE - Option A)
+- `dev-linear` - Linear route with sub-milestones (BACKUP - Option B)
+- `dev` - Merged from stable branch after testing
+- `main` - Production deployment
+
+**Current Work:** Implementing Option A (Full Junction-Based Architecture) in `dev-junction` branch
+
 ## ✅ COMPLETE: Phase 1.5 - Trip Instance System
 
 **Problem Identified**: Current architecture treats routes as single-use, not reusable templates.
@@ -349,24 +359,36 @@
 
 ---
 
-### Phase 1.6: Multi-Route Trip Architecture (PLANNED)
+## 🚧 Phase 1.6: Multi-Route Trip Architecture (IN PROGRESS)
 
-**Goal**: Support complex multi-route trips with side trips, alternative routes, and junction-based navigation
+**Goal**: Support complex multi-route trips with dynamic route selection, multiple transport modes, and junction-based navigation
 
-**Status**: 📋 PLANNED - Detailed design complete, awaiting implementation decision
+**Status**: � IN PROGRESS - Implementing Option A (Junction-Based) in `dev-junction` branch
+
+**Branch Strategy:**
+- **`dev-junction`** (ACTIVE): Full junction-based graph architecture
+- **`dev-linear`** (BACKUP): Simpler linear route with sub-milestones
+- **`dev`**: Merge target after testing
+- **`main`**: Production deployment
 
 **Key Concepts:**
 - **Route Graph**: Node-based architecture (junctions + segments)
-- **Junction Points**: Locations where routes branch/merge
-- **Route Segments**: Individual route pieces with relationships (main, alternative, side-trip)
-- **Context-Aware Navigation**: Auto-suggest routes based on current location
+- **Junction Points**: Decision points where routes branch/merge
+- **Route Segments**: Paths between junctions with transport modes (walking, driving, flying, battery-car, ropeway, helicopter)
+- **Dynamic Route Selection**: Choose route at each junction based on real-time conditions
 - **Multi-Segment Tracking**: Track which segments were taken in trip history
+- **Mixed Transport**: Support treks, drives, flights, and combinations
 
-**Example Use Case:**
+**Example Use Cases:**
 ```
-Main Route: A → B → C → D → E → F
-Side Trip from B: B → M → B (returns to main)
-Alternative from C: C → N → P → E (rejoins at E)
+Use Case 1: Dynamic Route Selection
+A (Katra) → B (Banganga) → [CHOICE: C (Main) or X (Shortcut)] → D (Bhawan)
+
+Use Case 2: Mixed Transport
+A (Katra) → B (walk) → C (battery car) → D (Bhawan)
+
+Use Case 3: Complex Multi-Path
+A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
 ```
 
 #### 1. Design Decisions (User Confirmed)
@@ -395,54 +417,72 @@ Alternative from C: C → N → P → E (rejoins at E)
 - v2 routes can still represent simple single-route trips
 - All v1 functionality achievable with v2 structure
 
-#### 2. New Route Config Schema (v2.0)
+#### 2. Route Config Schema v2.0 (Junction-Based)
+
+**Full Schema Documentation:** See `docs/ROUTE-SCHEMA-V2.md` (to be created)
 
 **Route Structure:**
 ```javascript
 {
-  "id": "route-id",
-  "name": "Route Name",
+  "id": "vaishno-devi",
+  "name": "Vaishno Devi Yatra",
   "version": "2.0",
 
-  // Junction points (nodes in the graph)
+  // Junction points (decision points)
   "junctions": [
     {
-      "id": "junction-id",
-      "name": "Junction Name",
-      "location": [lng, lat],
-      "type": "start" | "junction" | "end",
-      "availableSegments": ["segment-id-1", "segment-id-2"],
-      "proximityRadius": 30 // meters for detection
+      "id": "katra",
+      "name": "Katra",
+      "location": [74.93333, 32.98944], // [lng, lat]
+      "type": "start", // "start" | "junction" | "end"
+      "elevation": 2500,
+      "facilities": ["food", "water", "medical", "accommodation"],
+      "outgoingSegments": ["katra-banganga"] // Available segments from here
+    },
+    {
+      "id": "banganga",
+      "name": "Banganga",
+      "location": [74.94000, 32.99500],
+      "type": "junction", // Decision point!
+      "elevation": 2600,
+      "facilities": ["food", "water"],
+      "outgoingSegments": ["banganga-ardhkuwari", "banganga-shortcut"]
     }
   ],
 
-  // Route segments (edges in the graph)
+  // Route segments (paths between junctions)
   "segments": [
     {
-      "id": "segment-id",
-      "name": "Segment Name",
-      "type": "main" | "alternative" | "side-trip",
-      "from": "junction-id-start",
-      "to": "junction-id-end",
-      "geojson": "path/to/segment.geojson",
-      "distance": 1500, // meters
-      "estimatedTime": 1800, // seconds
-      "difficulty": "easy" | "moderate" | "hard",
-      "elevation": { "gain": 100, "loss": 50 },
-
-      // Relationships
-      "alternativeTo": "other-segment-id", // if type=alternative
+      "id": "katra-banganga",
+      "name": "Katra to Banganga",
+      "from": "katra",
+      "to": "banganga",
+      "geojson": "routes/vaishno-devi/segments/katra-banganga.geojson",
+      "distance": 3000, // meters
+      "estimatedTime": 3600, // seconds
+      "transportMode": "walking", // "walking" | "driving" | "flying" | "battery-car" | "ropeway" | "helicopter"
+      "difficulty": "easy", // "easy" | "moderate" | "hard"
+      "elevation": { "gain": 100, "loss": 0 },
+      "tags": ["main-route", "walking"],
       "requiresTicket": false,
-      "optional": true, // for side trips
+      "ticketInfo": null,
 
-      // Milestones along this segment
+      // Visual style
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+
+      // Sub-milestones along this segment
       "milestones": [
         {
-          "id": "milestone-id",
-          "name": "Milestone Name",
-          "location": [lng, lat],
-          "distance": 500, // from segment start
-          "facilities": ["water", "restroom", "food"]
+          "id": "darshani-deodhi",
+          "name": "Darshani Deodhi",
+          "location": [74.93500, 32.99000],
+          "distanceFromStart": 500, // meters from segment start
+          "facilities": ["water"]
         }
       ]
     }
@@ -451,173 +491,286 @@ Alternative from C: C → N → P → E (rejoins at E)
   // Recommended paths (for comparison)
   "recommendedPaths": [
     {
+      "id": "main",
+      "name": "Main Traditional Route",
+      "segments": ["katra-banganga", "banganga-ardhkuwari", "ardhkuwari-bhawan"],
+      "totalDistance": 13000,
+      "estimatedTime": 18000
+    },
+    {
       "id": "fastest",
       "name": "Fastest Route",
-      "segments": ["seg-1", "seg-2", "seg-3"],
-      "totalDistance": 5000,
-      "estimatedTime": 7200
+      "segments": ["katra-banganga", "banganga-shortcut", "shortcut-bhawan"],
+      "totalDistance": 10000,
+      "estimatedTime": 12000
     }
-  ],
-
-  // Map layers (same as v1)
-  "layers": [...]
+  ]
 }
 ```
 
-#### 3. Updated Trip Data Model
+#### 3. Updated Trip Data Model (v2.0)
 
-**Trip object additions:**
+**Trip object with segment tracking:**
 ```javascript
 {
-  tripId: "...",
-  routeId: "...",
+  tripId: "trip_123",
+  routeId: "vaishno-devi",
+  tripName: "May 2024 Family Trip",
+  createdAt: "2024-05-15T06:00:00Z",
+  startedAt: "2024-05-15T06:30:00Z",
+  completedAt: null,
+  status: "in-progress",
+
+  // NEW: Current state
+  currentJunction: "banganga", // Current junction ID (null if on segment)
+  currentSegment: null, // Current segment ID (null if at junction)
 
   // NEW: Segment tracking
-  segmentHistory: [
+  completedSegments: [
     {
-      segmentId: "main-a-b",
-      startedAt: "2026-03-01T10:00:00Z",
-      completedAt: "2026-03-01T10:30:00Z",
-      distance: 1500,
-      duration: 1800
+      segmentId: "katra-banganga",
+      startedAt: "2024-05-15T06:00:00Z",
+      completedAt: "2024-05-15T07:00:00Z",
+      actualDistance: 3100, // GPS tracked
+      actualTime: 3600,
+      transportMode: "walking"
     }
   ],
-
-  // NEW: Current active segments
-  activeSegments: ["main-b-c", "side-b-m"], // Can have multiple if at junction
 
   // NEW: Junction history
   junctionChoices: [
     {
-      junctionId: "junction-b",
-      arrivedAt: "2026-03-01T10:30:00Z",
-      chosenSegment: "main-b-c",
-      availableSegments: ["main-b-c", "side-b-m"]
+      junctionId: "banganga",
+      arrivedAt: "2024-05-15T07:00:00Z",
+      chosenSegment: "banganga-shortcut",
+      availableSegments: ["banganga-ardhkuwari", "banganga-shortcut"]
     }
   ],
 
-  // Existing fields
-  visitedMilestones: [...],
-  settings: {...},
-  stats: {
-    totalDistance: 3000,
-    totalTime: 3600,
+  // Existing: Visited milestones (main junctions + sub-milestones)
+  visitedMilestones: [
+    { milestoneId: "katra", visitedAt: "2024-05-15T06:00:00Z", lat: 32.98944, lng: 74.93333 },
+    { milestoneId: "darshani-deodhi", visitedAt: "2024-05-15T06:15:00Z", lat: 32.99000, lng: 74.93500 }
+  ],
 
-    // NEW: Comparison stats
-    recommendedPathId: "fastest",
-    distanceVsRecommended: +500, // 500m more than recommended
-    timeVsRecommended: -300 // 5 min faster than recommended
+  // Existing: Settings
+  settings: {
+    gpsEnabled: true,
+    batterySaver: false,
+    autoCenter: false
+  },
+
+  // NEW: Enhanced statistics
+  stats: {
+    totalDistance: 3100,
+    totalTime: 3600,
+    segmentsCompleted: 1,
+    segmentsRemaining: 3,
+
+    // Comparison with recommended path
+    recommendedPathId: "main",
+    distanceVsRecommended: -900, // 900m shorter (took shortcut)
+    timeVsRecommended: -1200 // 20 min faster
   }
 }
 ```
 
-#### 4. Implementation Tasks
+#### 4. Implementation Tasks - Option A (Junction-Based) 🔨 ACTIVE
 
-- [ ] **Task 1.6.1**: Design & Document Route Graph Schema
-  - Finalize junction structure
-  - Finalize segment structure with relationships
-  - Define segment types and their behaviors
-  - Document route.json v2.0 schema
+**Branch:** `dev-junction`
+
+- [ ] **Task 1.6.1**: Design & Document Route Graph Schema (2-3 hours)
+  - Create `docs/ROUTE-SCHEMA-V2.md` with full schema documentation
+  - Finalize junction structure with all fields
+  - Finalize segment structure with transport modes
+  - Define transport modes: walking, driving, flying, battery-car, ropeway, helicopter
+  - Document sub-milestone structure within segments
   - Create schema validation rules
   - Document migration guide from v1 to v2
 
-- [ ] **Task 1.6.2**: Update Route Config Loader
-  - Add v2 route config parser
-  - Add junction loading and validation
-  - Add segment loading with relationship parsing
-  - Add route graph validation (detect cycles, orphaned nodes)
-  - Add recommended path validation
-  - Update route cache to support v2 structure
+- [ ] **Task 1.6.2**: Update Route Config Loader (4-5 hours)
+  - Create `public/js/route-loader-v2.js` module
+  - Parse v2 route config (junctions + segments)
+  - Build route graph in memory (adjacency list)
+  - Validate graph structure:
+    - Detect orphaned junctions
+    - Detect invalid segment references
+    - Validate outgoingSegments exist
+  - Load and cache segment GeoJSON files
+  - Validate recommended paths
+  - Add backward compatibility check (detect v1 vs v2)
 
-- [ ] **Task 1.6.3**: Convert Vaishno Devi Route to v2
-  - Identify junctions (Katra, Ban Ganga, Ardhkuwari, Sanji Chhat, Bhawan)
+- [ ] **Task 1.6.3**: Convert Vaishno Devi Route to v2 (6-8 hours)
+  - Identify all junctions from actual data:
+    - 1. Katra (start)
+    - 2. Darshani Deodhi (junction)
+    - 3. Banganga (junction)
+    - 4. Charan Paduka (junction)
+    - 5. Ardhkuwari (junction)
+    - 6. Himkoti (junction)
+    - 7. Sanjichhat (junction)
+    - 8. Bhawan (junction/end)
+    - 9. Bhairavnath Temple (end)
   - Split existing routes into segments
-  - Define segment relationships (main, alternatives, side trips)
-  - Create segment GeoJSON files
-  - Define recommended paths
+  - Create segment GeoJSON files for each path
+  - Add sub-milestones (5a Garbh Joon Cave, 5b Battery Car Terminal, etc.)
+  - Define transport modes per segment
+  - Define recommended paths (main, fastest, senior-friendly)
   - Test route loading and validation
 
-- [ ] **Task 1.6.4**: Implement Junction Detection System
-  - GPS proximity detection for junctions
-  - Determine available segments at current junction
+- [ ] **Task 1.6.4**: Implement Junction Detection System (4-5 hours)
+  - Create `public/js/junction-detector.js` module
+  - GPS proximity detection for junctions (30m radius)
   - Junction approach notification (100m warning)
-  - Junction arrival detection (30m radius)
-  - Load segment options and metadata
-  - Handle junction state in app.js
+  - Junction arrival detection and state update
+  - Determine available segments at current junction
+  - Load segment metadata for comparison
+  - Update trip state (currentJunction, currentSegment)
+  - Handle edge cases (GPS loss, backtracking)
 
-- [ ] **Task 1.6.5**: Build Route Selection UI
-  - Junction arrival modal (auto-show)
-  - Available segments list with cards
-  - Segment comparison display:
-    - Distance comparison
-    - Time estimate comparison
+- [ ] **Task 1.6.5**: Build Route Selection UI (6-8 hours)
+  - Create junction arrival modal component
+  - Auto-show modal when reaching junction
+  - Display available segments as cards with:
+    - Segment name and description
+    - Distance and estimated time
+    - Transport mode icon
     - Difficulty indicator
-    - Elevation profile preview
+    - Elevation gain/loss
+    - Ticket requirement (if any)
+  - Segment comparison view (side-by-side)
   - Segment selection handler
-  - "Continue on current route" option
+  - Update trip with chosen segment
   - Modal animations and transitions
+  - "Continue on current route" option (if applicable)
 
-- [ ] **Task 1.6.6**: Implement Multi-Segment Trip Tracking
-  - Update trip model with segment tracking fields
-  - Segment activation logic (when entering segment)
-  - Segment completion detection (reached end junction)
-  - Junction choice recording
-  - Side trip auto-return logic
-  - Trip statistics calculation:
-    - Per-segment stats
-    - Total trip stats
+- [ ] **Task 1.6.6**: Implement Multi-Segment Trip Tracking (5-6 hours)
+  - Update trip data model in `trips.js`
+  - Add segment tracking fields to IndexedDB schema
+  - Segment activation logic (when user chooses segment)
+  - Segment completion detection (GPS reaches end junction)
+  - Record junction choices in trip history
+  - Calculate trip statistics:
+    - Per-segment distance/time
+    - Total trip distance/time
     - Comparison with recommended path
-  - Update storage.js with new trip methods
+  - Update `storage.js` with new methods:
+    - `addCompletedSegment(tripId, segmentData)`
+    - `recordJunctionChoice(tripId, junctionData)`
+    - `updateCurrentState(tripId, junction, segment)`
 
-- [ ] **Task 1.6.7**: Enhanced Map Visualization
+- [ ] **Task 1.6.7**: Enhanced Map Visualization (5-6 hours)
+  - Update `layers.js` to render segments
   - Render all segments with different styles:
-    - Main segments: solid blue
-    - Alternative segments: dashed orange
-    - Side trips: dotted green
-    - Completed segments: solid green
-    - Active segment: bold blue
-  - Junction markers with special icons
-  - Show available segments at current junction (highlight)
-  - Segment labels with distance/time
-  - Toggle segment visibility by type
-  - Legend for segment types
+    - Main route: solid blue (#2196F3)
+    - Shortcut: dashed orange (#FF9800)
+    - Transport (battery/ropeway/heli): solid green (#4CAF50)
+    - Completed segments: solid green with checkmarks
+    - Active segment: bold blue with animation
+  - Junction markers with special icons (decision point icon)
+  - Highlight available segments at current junction
+  - Segment labels (distance, time, transport mode)
+  - Layer toggle for segment types (show/hide by transport mode)
+  - Map legend for segment types
+  - Sub-milestone markers (smaller dots, clickable popup)
 
-- [ ] **Task 1.6.8**: Update Progress Tracking
-  - Milestone tracking per segment
-  - Progress bar per segment
-  - Overall trip progress (across all segments)
-  - Segment completion notifications
-  - Update drawer UI to show:
-    - Current segment info
+- [ ] **Task 1.6.8**: Update Progress Tracking (4-5 hours)
+  - Update milestone drawer to show:
+    - Current junction name
+    - Current segment info (if on segment)
     - Completed segments list
-    - Upcoming junctions
-    - Alternative routes available
+    - Next junction info
+    - Available routes at next junction
+  - Progress bar per segment
+  - Overall trip progress (% of recommended path)
+  - Segment completion notifications
+  - Update milestone list to show only main junctions (numbered)
+  - Sub-milestones shown only on map (not in drawer)
 
-- [ ] **Task 1.6.9**: Trip Statistics & Comparison
+- [ ] **Task 1.6.9**: Trip Statistics & Comparison (3-4 hours)
+  - Create trip statistics view
   - Calculate actual vs. recommended path
-  - Distance comparison display
-  - Time comparison display
-  - Segments taken vs. recommended
-  - Efficiency score (optional)
+  - Display distance comparison (actual vs. recommended)
+  - Display time comparison (actual vs. recommended)
+  - Show segments taken vs. recommended segments
   - Trip summary with segment breakdown
+  - Export trip history as JSON
+  - Visual comparison chart (optional)
 
-- [ ] **Task 1.6.10**: Testing
-  - Test junction detection accuracy
-  - Test route selection at junctions
-  - Test side trip completion and auto-return
-  - Test alternative route switching mid-segment
-  - Test segment tracking and history
+- [ ] **Task 1.6.10**: Testing (6-8 hours)
+  - Test junction detection accuracy (simulate GPS at junctions)
+  - Test route selection modal at each junction
+  - Test segment tracking and completion
   - Test trip statistics calculation
   - Test map visualization of all segment types
-  - Test offline functionality with v2 routes
+  - Test different transport modes
   - Test complex multi-segment trips
+  - Test offline functionality with v2 routes
+  - Test on mobile device
+  - Test edge cases (GPS loss, backtracking, skipping junctions)
 
-#### 5. Technical Considerations
+**Total Estimated Effort:** 45-55 hours (~2-3x Phase 1.5)
+
+#### 5. Implementation Tasks - Option B (Linear) 🔖 BACKUP
+
+**Branch:** `dev-linear`
+
+**Note:** This is a simpler fallback approach if Option A proves too complex.
+
+- [ ] **Task 1.6B.1**: Design Linear Route Schema (1-2 hours)
+  - Main route with numbered milestones (1, 2, 3...)
+  - Sub-milestones (5a, 5b, 7a, 8a, 8b, 9a)
+  - Route layers as toggleable overlays
+  - Document schema in `docs/ROUTE-SCHEMA-V2-LINEAR.md`
+
+- [ ] **Task 1.6B.2**: Update Route Config Loader (2-3 hours)
+  - Parse main milestones and sub-milestones
+  - Load route layers (main, shortcut, battery-car, ropeway, helicopter)
+  - No junction detection needed
+
+- [ ] **Task 1.6B.3**: Convert Vaishno Devi to Linear v2 (3-4 hours)
+  - Main milestones: 1-9 (Katra to Bhairavnath)
+  - Sub-milestones: 5a, 5b, 7a, 8a, 8b, 9a
+  - Route layers as separate GeoJSON files
+
+- [ ] **Task 1.6B.4**: Implement Sub-Milestone Rendering (2-3 hours)
+  - Smaller markers for sub-milestones
+  - Clickable popup with info
+  - Not shown in drawer list
+
+- [ ] **Task 1.6B.5**: Update Milestone Drawer (2-3 hours)
+  - Show only main milestones (numbered)
+  - Only main milestones can be ticked
+
+- [ ] **Task 1.6B.6**: Add Route Layer Toggle UI (3-4 hours)
+  - Checkboxes in drawer to show/hide layers
+  - Different colors for each layer
+
+- [ ] **Task 1.6B.7**: Testing (3-4 hours)
+  - Test sub-milestone rendering
+  - Test route layer toggles
+  - Test milestone ticking (main only)
+
+**Total Estimated Effort:** 16-23 hours (~1.5x Phase 1.5)
+
+**Pros:**
+- ✅ Faster to implement
+- ✅ Simpler architecture
+- ✅ Lower risk
+
+**Cons:**
+- ❌ No dynamic route selection
+- ❌ No junction-based navigation
+- ❌ Limited to static route display
+
+---
+
+#### 6. Technical Considerations (Option A)
 
 **Route Graph Validation:**
 - Detect disconnected junctions (orphaned nodes)
 - Detect circular dependencies in side trips
-- Validate segment relationships (alternativeTo must exist)
+- Validate segment relationships
 - Ensure all segments have valid from/to junctions
 
 **Performance:**
@@ -637,22 +790,97 @@ Alternative from C: C → N → P → E (rejoins at E)
 - No automatic v1 to v2 migration (breaking change)
 - Provide conversion tool/script for route authors
 - Document manual conversion process
-- Keep v1 Vaishno Devi as reference
-
-#### 6. Estimated Effort
-
-**Total Tasks**: 10 tasks
-**Complexity**: High (graph-based architecture, context-aware logic)
-**Estimated Time**: 2-3x Phase 1.5 effort
-
-**Dependencies:**
-- Phase 1.5 must be complete and tested
-- Route graph design must be finalized
-- At least one v2 route (Vaishno Devi) for testing
+- Keep v1 Vaishno Devi as reference in separate folder
 
 ---
 
-## 🔧 Technical Debt & Fixes
+#### 7. Decision Summary
+
+**Chosen Approach:** Option A (Junction-Based) in `dev-junction` branch
+
+**Rationale:**
+- ✅ Supports dynamic route selection mid-trip
+- ✅ Supports multiple transport modes
+- ✅ Foundation for any future route (treks, drives, flights, mixed)
+- ✅ Richer trip data and statistics
+- ✅ Better user experience
+
+**Backup Plan:** Option B (Linear) in `dev-linear` branch if Option A proves too complex
+
+**Next Steps:**
+1. Create `dev-junction` and `dev-linear` branches
+2. Start implementation in `dev-junction`
+3. Complete Task 1.6.1 (schema design)
+4. Test incrementally after each task
+
+---
+
+## � Phase 1.7: Smart Features (PLANNED)
+
+**Status**: 📋 PLANNED - Depends on Phase 1.6 completion
+
+**Goal**: Add intelligent features to enhance user experience
+
+**Branch**: `dev` (merge from `dev-junction` after 1.6 complete)
+
+### Features
+
+#### 1. Best Next Halt Suggestion
+- [ ] Analyze current location + time of day
+- [ ] Suggest next recommended stop
+- [ ] Display: "Next recommended stop: Banganga (500m, 15 min)"
+- [ ] Consider user's pace and fatigue
+- [ ] Adjust suggestions based on time (e.g., suggest accommodation if evening)
+
+#### 2. Senior-Friendly Route Toggle
+- [ ] Add "Senior-Friendly Mode" toggle in settings
+- [ ] Highlight easier paths (battery car, ropeway, helicopter)
+- [ ] Filter out steep/difficult routes
+- [ ] Show rest points more prominently
+- [ ] Suggest longer breaks at facilities
+
+#### 3. Emergency Medical Points Highlight
+- [ ] Add medical points to route config
+- [ ] Red cross markers on map
+- [ ] Quick access in drawer ("Nearest Medical: 500m")
+- [ ] Distance to nearest medical point
+- [ ] Emergency contact quick dial
+
+#### 4. Enhanced Night Mode
+- [ ] Adjust map tiles for night visibility
+- [ ] Highlight lit paths
+- [ ] Show accommodation options
+- [ ] Warn about unsafe areas at night
+- [ ] Adjust UI brightness
+
+**Estimated Effort:** ~1x Phase 1.5 (20-25 hours)
+
+---
+
+## 📡 Phase 1.8: Offline Map Tiles (LOW PRIORITY)
+
+**Status**: 📋 PLANNED - Low priority, future enhancement
+
+**Goal**: True offline capability with cached map tiles
+
+**Branch**: `dev` (after 1.7 or as separate feature)
+
+### Features
+
+- [ ] Cache map tiles for route area
+- [ ] Download tiles for offline use (user-initiated)
+- [ ] Storage management (tiles can be large, 50-200MB)
+- [ ] Update tiles when online
+- [ ] Show download progress
+- [ ] Option to delete cached tiles
+
+**Estimated Effort:** ~0.5x Phase 1.5 (10-15 hours)
+
+**Note:** Low priority - current offline mode works for route data, only map tiles need internet on first load
+
+---
+
+## �🔧 Technical Debt & Fixes
 
 ### NPM Vulnerabilities
 
