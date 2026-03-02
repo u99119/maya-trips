@@ -324,11 +324,18 @@
   - ✅ Map centering fixed (invalidateSize() race condition)
   - ✅ View Route button works without DevTools
   - ✅ Milestone clicks work without DevTools
-  - [ ] Create multiple trips from same route
-  - [ ] Verify data isolation
-  - [ ] Test trip switching
-  - [ ] Test route switching (mid-trip)
+  - ✅ Fixed trip list not showing (getAllTripsGrouped returns array)
+  - ✅ Fixed GPS auto-center jumping (disabled by default)
+  - ✅ Added milestone checkmark buttons
+  - ✅ Moved auto-center to map control button (green=ON, blue=OFF)
+  - ✅ Create multiple trips from same route
+  - ✅ Trip list shows all trips with progress
+  - ✅ Can open existing trips from list
+  - ✅ Verify data isolation (tested: Trip 1 milestones ≠ Trip 2 milestones)
+  - ✅ Test trip switching (works correctly)
+  - [ ] Test route switching (mid-trip) - SKIP (only 1 route available)
   - [ ] Test offline functionality
+  - [ ] Test on mobile device
 
 #### 5. Migration Strategy
 
@@ -716,6 +723,15 @@ Alternative from C: C → N → P → E (rejoins at E)
 ---
 
 ## Phase 3: Advanced Features (Planned)
+
+### Cloud Backup & Sync
+- [ ] Cloud backup for trip data (photos, notes, progress)
+- [ ] Cross-device sync (phone, tablet, laptop)
+- [ ] Options: Google Drive, Dropbox, or custom backend
+- [ ] Automatic backup on trip completion
+- [ ] Manual backup/restore functionality
+- [ ] Conflict resolution for offline edits
+- [ ] **Note**: Currently data stored in IndexedDB (per-device, persistent, not deleted with cookies)
 
 ### GPX Import/Export
 - [ ] Import GPX files from GPS devices
