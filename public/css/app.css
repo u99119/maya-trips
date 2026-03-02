@@ -366,6 +366,47 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
 }
 
+.milestone-checkmark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--text-secondary);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  padding: 0;
+}
+
+.milestone-checkmark svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.3;
+}
+
+.milestone-checkmark:hover {
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.milestone-checkmark:hover svg {
+  opacity: 1;
+}
+
+.milestone-item.visited .milestone-checkmark {
+  border-color: var(--success-color);
+  background: var(--success-color);
+  color: white;
+}
+
+.milestone-item.visited .milestone-checkmark svg {
+  opacity: 1;
+}
+
 /* Map Control Buttons */
 .map-controls {
   position: fixed;

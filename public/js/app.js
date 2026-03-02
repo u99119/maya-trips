@@ -569,6 +569,12 @@ class App {
       milestoneItem.className = 'milestone-item';
       milestoneItem.dataset.milestoneId = props.id;
 
+      // Check if milestone is visited
+      const isVisited = tripManager.isMilestoneVisited(props.id);
+      if (isVisited) {
+        milestoneItem.classList.add('visited');
+      }
+
       milestoneItem.innerHTML = `
         <div class="milestone-number">${index + 1}</div>
         <div class="milestone-info">
@@ -579,9 +585,16 @@ class App {
           </div>
         </div>
         <div class="milestone-distance" id="distance-${props.id}">--</div>
+        <button class="milestone-checkmark" data-milestone-id="${props.id}" data-milestone-index="${index}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
       `;
 
-      milestoneItem.addEventListener('click', () => {
+      // Click on milestone info to center map
+      const milestoneInfo = milestoneItem.querySelector('.milestone-info');
+      milestoneInfo.addEventListener('click', () => {
         const coords = feature.geometry.coordinates;
         const map = mapManager.getMap();
         if (map) {
@@ -589,6 +602,13 @@ class App {
         }
         // GeoJSON coords are [lng, lat], Leaflet needs [lat, lng]
         mapManager.setView(coords[1], coords[0], 16, { animate: true });
+      });
+
+      // Click on checkmark to mark as visited
+      const checkmark = milestoneItem.querySelector('.milestone-checkmark');
+      checkmark.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering map center
+        this.markMilestoneVisited(props.id, index);
       });
 
       container.appendChild(milestoneItem);
