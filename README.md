@@ -167,6 +167,7 @@ await this.loadRoute('your-route-name');
 
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Get started in 3 steps
 - **[Development Guide](docs/DEVELOPMENT.md)** - Detailed development documentation
+- **[Git Workflow Guide](docs/GIT-WORKFLOW.md)** - Branch strategy and deployment workflow
 - **[TODO & Future Plans](docs/TODO.md)** - Roadmap and unanswered questions
 - **[Vaishno Devi Info](docs/VAISHNO.DEVI.YATRA.Info.md)** - Complete route information
 

@@ -846,6 +846,24 @@ Alternative from C: C → N → P → E (rejoins at E)
 
 ---
 
+## GIT WORKFLOW
+
+**Branch Strategy:**
+- **`dev`** - Development branch (work here daily, unlimited commits)
+- **`main`** - Production branch (deploy only when ready, triggers Cloudflare build)
+
+**Daily workflow:**
+1. Work on `dev` branch
+2. Commit as many times as needed (no builds triggered)
+3. Test locally with `npm run dev`
+4. When ready to deploy: merge `dev` → `main` and push
+
+**See:** `docs/GIT-WORKFLOW.md` for detailed commands and best practices
+
+**Build minutes saved:** ~1000 minutes/month by not building on every commit!
+
+---
+
 ## UNANSWERED QUESTIONS
 
 ### Deployment & Setup
