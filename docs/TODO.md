@@ -3,9 +3,11 @@
 ## Current Status
 
 ✅ **Phase 1 Complete** - Vaishno Devi route mapping with GPS, milestone toggles, route layers, offline support
+✅ **Phase 1.5 Complete** - Trip instance system with multiple trips, data isolation, trip management
+✅ **Deployed to Cloudflare Pages** - https://maya-trips.pages.dev/ (auto-deploys from GitHub main branch)
 ✅ **Deployed to Netlify** - https://maya-trips.netlify.app (auto-deploys from GitHub)
 
-## 🚨 CRITICAL: Phase 1.5 - Trip Instance System (IN PROGRESS)
+## ✅ COMPLETE: Phase 1.5 - Trip Instance System
 
 **Problem Identified**: Current architecture treats routes as single-use, not reusable templates.
 
@@ -320,7 +322,7 @@
     - Creates new trip with auto-start
   - ✅ Build tested successfully (629.50 KiB precached)
 
-- [/] **Task 1.5.7**: Testing (IN PROGRESS)
+- [x] **Task 1.5.7**: Testing (COMPLETE)
   - ✅ Map centering fixed (invalidateSize() race condition)
   - ✅ View Route button works without DevTools
   - ✅ Milestone clicks work without DevTools
@@ -333,9 +335,9 @@
   - ✅ Can open existing trips from list
   - ✅ Verify data isolation (tested: Trip 1 milestones ≠ Trip 2 milestones)
   - ✅ Test trip switching (works correctly)
-  - [ ] Test route switching (mid-trip) - SKIP (only 1 route available)
-  - [ ] Test offline functionality
-  - [ ] Test on mobile device
+  - ✅ Test offline functionality (milestones marked in airplane mode persist after reconnect)
+  - ✅ Test on mobile device (works correctly)
+  - ⏭️ Test route switching (mid-trip) - SKIPPED (only 1 route available, will test in Phase 1.6)
 
 #### 5. Migration Strategy
 
