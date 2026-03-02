@@ -235,15 +235,6 @@
           </label>
           <span class="control-label">Battery Saver</span>
         </div>
-
-        <!-- Auto Center -->
-        <div class="control-item">
-          <label class="toggle-switch">
-            <input type="checkbox" id="autoCenterToggle" checked>
-            <span class="toggle-slider"></span>
-          </label>
-          <span class="control-label">Auto Center</span>
-        </div>
       </div>
 
       <!-- Route Layers Section -->
@@ -277,6 +268,14 @@
     <button class="map-control-btn" id="recenterBtn" title="Center on My Location">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+
+    <!-- Auto-Center Toggle Button -->
+    <button class="map-control-btn" id="autoCenterBtn" title="Auto-Center: OFF" data-active="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
         <circle cx="12" cy="12" r="3"/>
       </svg>
     </button>

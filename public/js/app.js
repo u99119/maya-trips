@@ -497,13 +497,6 @@ class App {
       this.saveTripSettings({ batterySaver: e.target.checked });
     });
 
-    // Auto Center Toggle
-    const autoCenterToggle = document.getElementById('autoCenterToggle');
-    autoCenterToggle.addEventListener('change', (e) => {
-      gps.updateSettings({ autoCenter: e.target.checked });
-      this.saveTripSettings({ autoCenter: e.target.checked });
-    });
-
     // View Route Button
     const viewRouteBtn = document.getElementById('viewRouteBtn');
     viewRouteBtn.addEventListener('click', () => {
@@ -526,6 +519,19 @@ class App {
       } else {
         alert('GPS is not enabled or no position available');
       }
+    });
+
+    // Auto-Center Toggle Button
+    const autoCenterBtn = document.getElementById('autoCenterBtn');
+    autoCenterBtn.addEventListener('click', () => {
+      const isActive = autoCenterBtn.dataset.active === 'true';
+      const newState = !isActive;
+
+      autoCenterBtn.dataset.active = newState;
+      autoCenterBtn.title = `Auto-Center: ${newState ? 'ON' : 'OFF'}`;
+
+      // Update GPS settings
+      gps.updateSettings({ autoCenter: newState });
     });
 
     // Populate layer toggles
@@ -796,11 +802,16 @@ class App {
     const tripSettings = this.currentTrip.settings || {};
     document.getElementById('gpsToggle').checked = tripSettings.gpsEnabled || false;
     document.getElementById('batterySaverToggle').checked = tripSettings.batterySaver || false;
-    document.getElementById('autoCenterToggle').checked = tripSettings.autoCenter !== false;
+
+    // Update auto-center button state
+    const autoCenterState = tripSettings.autoCenter || false;
+    const autoCenterBtn = document.getElementById('autoCenterBtn');
+    autoCenterBtn.dataset.active = autoCenterState;
+    autoCenterBtn.title = `Auto-Center: ${autoCenterState ? 'ON' : 'OFF'}`;
 
     gps.updateSettings({
       batterySaver: tripSettings.batterySaver || false,
-      autoCenter: tripSettings.autoCenter !== false
+      autoCenter: autoCenterState
     });
 
     // Load visited milestones for this trip

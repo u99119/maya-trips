@@ -442,6 +442,14 @@ input:checked + .toggle-slider:before {
   transform: scale(0.95);
 }
 
+.map-control-btn[data-active="true"] {
+  background: var(--success-color);
+}
+
+.map-control-btn[data-active="true"]:hover {
+  background: #45a049;
+}
+
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;
