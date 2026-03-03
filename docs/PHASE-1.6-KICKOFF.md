@@ -12,10 +12,16 @@ Build a junction-based route graph system that supports:
 
 ### Active Branches
 
+**`master`** (STABLE - Always Working)
+- Stable working version
+- Your safety net - always deployable
+- Created from current production state
+
 **`dev-junction`** (ACTIVE - Option A)
 - Full junction-based graph architecture
 - 10 tasks, ~45-55 hours effort
 - Current working branch
+- Can break things during development
 
 **`dev-linear`** (BACKUP - Option B)
 - Simpler linear route with sub-milestones
@@ -33,7 +39,9 @@ Build a junction-based route graph system that supports:
 ### Workflow
 
 ```
-dev-junction (work here)
+master (stable - always working)
+    ↓
+dev-junction (work here - can break)
     ↓
   test locally
     ↓
