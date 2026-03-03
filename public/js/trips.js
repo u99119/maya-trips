@@ -79,12 +79,27 @@ class TripManager {
     }
 
     try {
+      // Phase 1.6: Try v2 config first
+      try {
+        const v2Response = await fetch(`/routes/${routeId}/config-v2.json`);
+        if (v2Response.ok) {
+          const config = await v2Response.json();
+          this.routeConfigs.set(routeId, config);
+          console.log(`✅ Loaded v2 config for route: ${routeId}`);
+          return config;
+        }
+      } catch (v2Error) {
+        // v2 not found, try v1
+      }
+
+      // Fallback to v1 config
       const response = await fetch(`/routes/${routeId}/config.json`);
       if (!response.ok) {
         throw new Error(`Route config not found: ${routeId}`);
       }
       const config = await response.json();
       this.routeConfigs.set(routeId, config);
+      console.log(`✅ Loaded v1 config for route: ${routeId}`);
       return config;
     } catch (error) {
       console.error('Error loading route config:', error);
