@@ -458,11 +458,10 @@ class App {
     // Initialize layers manager
     layers.init(map);
 
-    // Phase 1.6: Skip v1-specific layers for v2 routes
+    // Phase 1.6: Add v2 route visualization
     if (this.useV2Architecture) {
-      console.log('📍 v2 route - map initialized, layers will be added dynamically');
-      // TODO: Add junction markers
-      // TODO: Add segment layers as user progresses
+      console.log('📍 v2 route - adding junctions and segments to map');
+      this.addV2RouteLayers();
     } else {
       // v1 route - add all layers upfront
       this.addRouteLayers();
@@ -475,14 +474,16 @@ class App {
     // This fixes the race condition where map container size isn't finalized yet
     setTimeout(() => {
       map.invalidateSize(); // Force Leaflet to recalculate container size
-      if (!this.useV2Architecture) {
+      if (this.useV2Architecture) {
+        layers.fitBoundsV2();
+      } else {
         layers.fitBounds();
       }
     }, 100);
   }
 
   /**
-   * Add route layers to map
+   * Add route layers to map (v1 routes)
    */
   addRouteLayers() {
     this.currentRoute.routes.features.forEach((feature) => {
@@ -503,6 +504,48 @@ class App {
         }
       }
     });
+  }
+
+  /**
+   * Add v2 route layers to map (Phase 1.6)
+   * Loads junctions, segments, and sub-milestones
+   */
+  async addV2RouteLayers() {
+    if (!this.routeV2) {
+      console.error('No v2 route loaded');
+      return;
+    }
+
+    console.log('🗺️ Adding v2 route visualization...');
+
+    // 1. Add junction markers
+    console.log(`  Adding ${this.routeV2.junctions.length} junctions...`);
+    layers.addJunctions(this.routeV2.junctions);
+
+    // 2. Load and add all segment layers
+    console.log(`  Loading ${this.routeV2.segments.length} segments...`);
+    const segmentPromises = this.routeV2.segments.map(async (segment) => {
+      try {
+        const response = await fetch(segment.geojson);
+        if (!response.ok) {
+          throw new Error(`Failed to load segment: ${segment.id}`);
+        }
+        const geojson = await response.json();
+        layers.addSegmentLayer(segment, geojson);
+
+        // 3. Add sub-milestones for this segment
+        if (segment.milestones && segment.milestones.length > 0) {
+          segment.milestones.forEach(subMilestone => {
+            layers.addSubMilestoneMarker(subMilestone, segment.id);
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to load segment ${segment.id}:`, error);
+      }
+    });
+
+    await Promise.all(segmentPromises);
+    console.log('✅ v2 route visualization complete');
   }
 
   /**
