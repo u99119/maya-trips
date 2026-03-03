@@ -838,6 +838,17 @@ class App {
    * Update progress display (trip-scoped)
    */
   updateProgress() {
+    // Phase 1.6: Skip for v2 routes (progress handled differently)
+    if (this.useV2Architecture) {
+      console.log('📍 v2 route - progress display not implemented yet');
+      // TODO: Show segment-based progress in Task 1.6.8
+      document.querySelector('.progress-text').textContent = 'In Progress';
+      document.getElementById('progressFill').style.width = '0%';
+      const nextEl = document.querySelector('#nextMilestone span');
+      nextEl.textContent = 'Start your journey';
+      return;
+    }
+
     const visitedMilestones = tripManager.getVisitedMilestones();
     const total = this.milestones.features.length;
     const visited = visitedMilestones.length;
@@ -889,15 +900,18 @@ class App {
       autoCenter: autoCenterState
     });
 
-    // Load visited milestones for this trip
-    const visitedMilestones = tripManager.getVisitedMilestones();
-    visitedMilestones.forEach((visited) => {
-      const milestoneItem = document.querySelector(`[data-milestone-id="${visited.milestoneId}"]`);
-      if (milestoneItem) {
-        milestoneItem.classList.add('visited');
-      }
-      layers.updateMilestoneStyle(visited.milestoneId, 'visited');
-    });
+    // Phase 1.6: Skip milestone loading for v2 routes
+    if (!this.useV2Architecture) {
+      // Load visited milestones for this trip
+      const visitedMilestones = tripManager.getVisitedMilestones();
+      visitedMilestones.forEach((visited) => {
+        const milestoneItem = document.querySelector(`[data-milestone-id="${visited.milestoneId}"]`);
+        if (milestoneItem) {
+          milestoneItem.classList.add('visited');
+        }
+        layers.updateMilestoneStyle(visited.milestoneId, 'visited');
+      });
+    }
 
     // Update progress
     this.updateProgress();
