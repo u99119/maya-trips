@@ -920,8 +920,7 @@ class App {
   async initV2Modules() {
     console.log('🚀 Initializing v2 modules...');
 
-    // Initialize junction detector with route graph
-    junctionDetector.setRouteGraph(routeLoaderV2.getGraph());
+    // Junction detector uses routeLoaderV2 directly, no need to set graph
 
     // Set up junction detector event listeners
     junctionDetector.on('junctionApproach', (data) => {
