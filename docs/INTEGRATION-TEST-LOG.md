@@ -135,7 +135,14 @@
 ## Issues Found
 
 ### Critical Issues
-*None yet*
+
+#### Issue #1: Route config loading error ✅ FIXED
+**Severity:** Critical
+**Description:** `trips.js` was trying to load `/routes/vaishno-devi/config.json` (v1) but route now uses `config-v2.json`
+**Error:** `Route not found: vaishno-devi` when creating trip
+**Fix:** Updated `loadRouteConfig()` in `trips.js` to try `config-v2.json` first, fallback to `config.json`
+**Commit:** b842294
+**Status:** ✅ FIXED
 
 ### Non-Critical Issues
 *None yet*
