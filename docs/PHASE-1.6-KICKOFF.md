@@ -130,7 +130,7 @@ dev-junction (work here - can break)
 
 ## 🚀 Progress Tracker
 
-**Overall Progress: 4/10 tasks complete (40%)**
+**Overall Progress: 5/10 tasks complete (50%)**
 
 ### ✅ Completed Tasks
 
@@ -161,13 +161,25 @@ dev-junction (work here - can break)
    - Recommended segment calculation
    - ETA calculation and formatting
 
+5. **Task 1.6.5** - Route Selection UI ✅
+   - Added route selection modal HTML to `index.html`
+   - Created CSS styles for segment cards (205 lines)
+   - Created `public/js/route-selector.js` (323 lines)
+   - Segment comparison cards with distance, time, transport mode, difficulty
+   - Transport mode icons (6 modes: walking, driving, battery-car, ropeway, helicopter, flying)
+   - Difficulty badges (easy, moderate, hard) with color coding
+   - Recommended segment highlighting
+   - Ticket requirement display
+   - Auto-selection for single-option junctions
+   - Integration with junction-detector events
+
 ### ⏳ Next Task
 
-5. **Task 1.6.5** - Route Selection UI (6-8 hours)
-   - Create junction arrival modal
-   - Segment comparison cards
-   - Display distance, time, transport mode, difficulty
-   - Segment selection handler
+6. **Task 1.6.6** - Segment Tracking (5-6 hours)
+   - Track user progress along selected segment
+   - Detect segment completion
+   - Update trip instance with completed segments
+   - Handle segment switching
 
 ## 📖 Reference Documents
 
