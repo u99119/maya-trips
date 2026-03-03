@@ -1,0 +1,510 @@
+{
+  "id": "vaishno-devi",
+  "name": "Vaishno Devi Yatra",
+  "version": "2.0",
+  "description": "Sacred pilgrimage to Mata Vaishno Devi shrine in Trikuta Mountains, Jammu & Kashmir",
+  "region": "Trikuta Mountains",
+  "country": "India",
+  "difficulty": "moderate",
+  "estimatedDuration": 18000,
+  "totalDistance": 13500,
+
+  "junctions": [
+    {
+      "id": "katra",
+      "name": "Katra (Base Camp)",
+      "location": [74.93333, 32.98944],
+      "type": "start",
+      "elevation": 875,
+      "facilities": ["registration", "hotels", "restaurants", "medical"],
+      "description": "Starting point of the Vaishno Devi pilgrimage. Registration and base camp facilities available.",
+      "outgoingSegments": ["katra-darshani"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "darshani-deodhi",
+      "name": "Darshani Deodhi",
+      "location": [74.93800, 32.99300],
+      "type": "junction",
+      "elevation": 950,
+      "facilities": ["water", "restrooms"],
+      "description": "Gateway arch marking the beginning of the sacred trek.",
+      "outgoingSegments": ["darshani-banganga"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "banganga",
+      "name": "Banganga",
+      "location": [74.94500, 32.99800],
+      "type": "junction",
+      "elevation": 1050,
+      "facilities": ["temple", "water", "refreshments", "restrooms"],
+      "description": "First major stop. Holy river where pilgrims take a ritual bath.",
+      "outgoingSegments": ["banganga-charan", "banganga-ardhkuwari-shortcut"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "charan-paduka",
+      "name": "Charan Paduka",
+      "location": [74.95200, 33.00500],
+      "type": "junction",
+      "elevation": 1250,
+      "facilities": ["viewpoint", "refreshments", "restrooms", "photography"],
+      "description": "Sacred rock with footprints of Mata Vaishno Devi.",
+      "outgoingSegments": ["charan-ardhkuwari"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "ardhkuwari",
+      "name": "Ardhkuwari",
+      "location": [74.96000, 33.01800],
+      "type": "junction",
+      "elevation": 1450,
+      "facilities": ["temple", "accommodation", "food", "medical", "restrooms"],
+      "description": "Halfway point with cave temple where Mata meditated for 9 months.",
+      "outgoingSegments": ["ardhkuwari-himkoti"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "himkoti",
+      "name": "Himkoti (New Track)",
+      "location": [74.96800, 33.02800],
+      "type": "junction",
+      "elevation": 1650,
+      "facilities": ["viewpoint", "refreshments", "restrooms"],
+      "description": "Scenic point with panoramic mountain views.",
+      "outgoingSegments": ["himkoti-sanjichhat"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "sanjichhat",
+      "name": "Sanjichhat",
+      "location": [74.97500, 33.03500],
+      "type": "junction",
+      "elevation": 1850,
+      "facilities": ["helicopter", "medical", "refreshments", "restrooms", "viewpoint"],
+      "description": "Highest point of the trek. Helicopter service point.",
+      "outgoingSegments": ["sanjichhat-bhawan-walk", "sanjichhat-bhawan-battery"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "bhawan",
+      "name": "Bhawan (Holy Cave)",
+      "location": [74.98000, 33.03000],
+      "type": "junction",
+      "elevation": 1585,
+      "facilities": ["shrine", "darshan", "prasad", "accommodation", "food", "medical"],
+      "description": "Main shrine of Mata Vaishno Devi. Holy cave with three natural rock formations.",
+      "outgoingSegments": ["bhawan-bhairon-walk", "bhawan-bhairon-ropeway"],
+      "proximityRadius": 30
+    },
+    {
+      "id": "bhairon-temple",
+      "name": "Bhairavnath Temple",
+      "location": [74.98500, 33.03800],
+      "type": "end",
+      "elevation": 1950,
+      "facilities": ["temple", "viewpoint", "refreshments"],
+      "description": "Pilgrimage considered incomplete without visiting Bhairon Baba.",
+      "outgoingSegments": [],
+      "proximityRadius": 30
+    }
+  ],
+
+  "segments": [
+    {
+      "id": "katra-darshani",
+      "name": "Katra to Darshani Deodhi",
+      "from": "katra",
+      "to": "darshani-deodhi",
+      "geojson": "routes/vaishno-devi/segments/katra-darshani.geojson",
+      "distance": 500,
+      "estimatedTime": 600,
+      "transportMode": "walking",
+      "difficulty": "easy",
+      "elevation": { "gain": 75, "loss": 0 },
+      "tags": ["main-route", "walking"],
+      "requiresTicket": false,
+      "description": "Initial gentle walk from base camp to the gateway arch.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": []
+    },
+    {
+      "id": "darshani-banganga",
+      "name": "Darshani Deodhi to Banganga",
+      "from": "darshani-deodhi",
+      "to": "banganga",
+      "geojson": "routes/vaishno-devi/segments/darshani-banganga.geojson",
+      "distance": 1000,
+      "estimatedTime": 1200,
+      "transportMode": "walking",
+      "difficulty": "easy",
+      "elevation": { "gain": 100, "loss": 0 },
+      "tags": ["main-route", "walking"],
+      "requiresTicket": false,
+      "description": "Walk to the holy river Banganga.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": []
+    },
+    {
+      "id": "banganga-charan",
+      "name": "Banganga to Charan Paduka",
+      "from": "banganga",
+      "to": "charan-paduka",
+      "geojson": "routes/vaishno-devi/segments/banganga-charan.geojson",
+      "distance": 1500,
+      "estimatedTime": 1800,
+      "transportMode": "walking",
+      "difficulty": "moderate",
+      "elevation": { "gain": 200, "loss": 0 },
+      "tags": ["main-route", "walking"],
+      "requiresTicket": false,
+      "description": "Moderate climb to the sacred footprints.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": []
+    },
+    {
+      "id": "banganga-ardhkuwari-shortcut",
+      "name": "Banganga to Ardhkuwari (Shortcut)",
+      "from": "banganga",
+      "to": "ardhkuwari",
+      "geojson": "routes/vaishno-devi/segments/banganga-ardhkuwari-shortcut.geojson",
+      "distance": 4500,
+      "estimatedTime": 5400,
+      "transportMode": "walking",
+      "difficulty": "hard",
+      "elevation": { "gain": 400, "loss": 0 },
+      "tags": ["shortcut", "walking", "steep"],
+      "requiresTicket": false,
+      "description": "Steeper shortcut bypassing Charan Paduka.",
+      "style": {
+        "color": "#FF9800",
+        "weight": 3,
+        "opacity": 0.7,
+        "dashArray": "5, 5"
+      },
+      "milestones": []
+    },
+    {
+      "id": "charan-ardhkuwari",
+      "name": "Charan Paduka to Ardhkuwari",
+      "from": "charan-paduka",
+      "to": "ardhkuwari",
+      "geojson": "routes/vaishno-devi/segments/charan-ardhkuwari.geojson",
+      "distance": 3000,
+      "estimatedTime": 3600,
+      "transportMode": "walking",
+      "difficulty": "moderate",
+      "elevation": { "gain": 200, "loss": 0 },
+      "tags": ["main-route", "walking"],
+      "requiresTicket": false,
+      "description": "Continued climb to the halfway cave temple.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": [
+        {
+          "id": "garbh-joon",
+          "name": "Garbh Joon Cave",
+          "location": [74.95600, 33.01200],
+          "distanceFromStart": 1500,
+          "facilities": ["temple", "water"],
+          "description": "Sacred cave along the route."
+        },
+        {
+          "id": "battery-car-terminal",
+          "name": "Battery Car Terminal",
+          "location": [74.95800, 33.01500],
+          "distanceFromStart": 2000,
+          "facilities": ["battery-car", "restrooms"],
+          "description": "Battery car pickup point."
+        }
+      ]
+    },
+    {
+      "id": "ardhkuwari-himkoti",
+      "name": "Ardhkuwari to Himkoti",
+      "from": "ardhkuwari",
+      "to": "himkoti",
+      "geojson": "routes/vaishno-devi/segments/ardhkuwari-himkoti.geojson",
+      "distance": 3000,
+      "estimatedTime": 3600,
+      "transportMode": "walking",
+      "difficulty": "moderate",
+      "elevation": { "gain": 200, "loss": 0 },
+      "tags": ["main-route", "walking"],
+      "requiresTicket": false,
+      "description": "Scenic walk through mountain paths.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": []
+    },
+    {
+      "id": "himkoti-sanjichhat",
+      "name": "Himkoti to Sanjichhat",
+      "from": "himkoti",
+      "to": "sanjichhat",
+      "geojson": "routes/vaishno-devi/segments/himkoti-sanjichhat.geojson",
+      "distance": 2500,
+      "estimatedTime": 3000,
+      "transportMode": "walking",
+      "difficulty": "moderate",
+      "elevation": { "gain": 200, "loss": 0 },
+      "tags": ["main-route", "walking"],
+      "requiresTicket": false,
+      "description": "Final climb to the highest point.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": [
+        {
+          "id": "helicopter-terminal",
+          "name": "Helicopter Terminal",
+          "location": [74.97200, 33.03200],
+          "distanceFromStart": 1500,
+          "facilities": ["helicopter", "medical"],
+          "description": "Helicopter landing point."
+        }
+      ]
+    },
+    {
+      "id": "sanjichhat-bhawan-walk",
+      "name": "Sanjichhat to Bhawan (Walk)",
+      "from": "sanjichhat",
+      "to": "bhawan",
+      "geojson": "routes/vaishno-devi/segments/sanjichhat-bhawan-walk.geojson",
+      "distance": 2000,
+      "estimatedTime": 2400,
+      "transportMode": "walking",
+      "difficulty": "easy",
+      "elevation": { "gain": 0, "loss": 265 },
+      "tags": ["main-route", "walking", "descent"],
+      "requiresTicket": false,
+      "description": "Descent to the holy cave.",
+      "style": {
+        "color": "#2196F3",
+        "weight": 4,
+        "opacity": 0.8,
+        "dashArray": null
+      },
+      "milestones": [
+        {
+          "id": "accommodation-complex",
+          "name": "Accommodation Complex",
+          "location": [74.97700, 33.03200],
+          "distanceFromStart": 500,
+          "facilities": ["accommodation", "food"],
+          "description": "Pilgrim accommodation facilities."
+        },
+        {
+          "id": "darshan-queue",
+          "name": "Main Darshan Queue",
+          "location": [74.97900, 33.03100],
+          "distanceFromStart": 1500,
+          "facilities": ["queue", "restrooms"],
+          "description": "Queue area for darshan."
+        }
+      ]
+    },
+    {
+      "id": "sanjichhat-bhawan-battery",
+      "name": "Sanjichhat to Bhawan (Battery Car)",
+      "from": "sanjichhat",
+      "to": "bhawan",
+      "geojson": "routes/vaishno-devi/segments/sanjichhat-bhawan-battery.geojson",
+      "distance": 2000,
+      "estimatedTime": 600,
+      "transportMode": "battery-car",
+      "difficulty": "easy",
+      "elevation": { "gain": 0, "loss": 265 },
+      "tags": ["battery-car", "alternative"],
+      "requiresTicket": true,
+      "ticketInfo": "Battery car ticket required (₹50-100)",
+      "description": "Quick battery car ride to the holy cave.",
+      "style": {
+        "color": "#4CAF50",
+        "weight": 3,
+        "opacity": 0.7,
+        "dashArray": "10, 5"
+      },
+      "milestones": []
+    },
+    {
+      "id": "bhawan-bhairon-walk",
+      "name": "Bhawan to Bhairavnath (Walk)",
+      "from": "bhawan",
+      "to": "bhairon-temple",
+      "geojson": "routes/vaishno-devi/segments/bhawan-bhairon-walk.geojson",
+      "distance": 2500,
+      "estimatedTime": 3000,
+      "transportMode": "walking",
+      "difficulty": "moderate",
+      "elevation": { "gain": 365, "loss": 0 },
+      "tags": ["optional", "walking", "bhairon"],
+      "requiresTicket": false,
+      "description": "Optional trek to Bhairon Baba temple.",
+      "style": {
+        "color": "#9C27B0",
+        "weight": 3,
+        "opacity": 0.7,
+        "dashArray": null
+      },
+      "milestones": [
+        {
+          "id": "ropeway-base",
+          "name": "Ropeway Base Station",
+          "location": [74.98200, 33.03400],
+          "distanceFromStart": 1000,
+          "facilities": ["ropeway", "restrooms"],
+          "description": "Ropeway station to Bhairon temple."
+        }
+      ]
+    },
+    {
+      "id": "bhawan-bhairon-ropeway",
+      "name": "Bhawan to Bhairavnath (Ropeway)",
+      "from": "bhawan",
+      "to": "bhairon-temple",
+      "geojson": "routes/vaishno-devi/segments/bhawan-bhairon-ropeway.geojson",
+      "distance": 1500,
+      "estimatedTime": 300,
+      "transportMode": "ropeway",
+      "difficulty": "easy",
+      "elevation": { "gain": 365, "loss": 0 },
+      "tags": ["optional", "ropeway", "bhairon"],
+      "requiresTicket": true,
+      "ticketInfo": "Ropeway ticket required (₹100-150)",
+      "description": "Quick ropeway ride to Bhairon Baba temple.",
+      "style": {
+        "color": "#E91E63",
+        "weight": 2,
+        "opacity": 0.6,
+        "dashArray": "2, 8"
+      },
+      "milestones": []
+    }
+  ],
+
+  "recommendedPaths": [
+    {
+      "id": "main-traditional",
+      "name": "Main Traditional Route",
+      "description": "Traditional walking route via all major checkpoints",
+      "segments": [
+        "katra-darshani",
+        "darshani-banganga",
+        "banganga-charan",
+        "charan-ardhkuwari",
+        "ardhkuwari-himkoti",
+        "himkoti-sanjichhat",
+        "sanjichhat-bhawan-walk",
+        "bhawan-bhairon-walk"
+      ],
+      "totalDistance": 16000,
+      "estimatedTime": 21600,
+      "difficulty": "moderate",
+      "tags": ["main", "recommended", "traditional"]
+    },
+    {
+      "id": "shortcut-route",
+      "name": "Shortcut Route",
+      "description": "Faster route bypassing Charan Paduka",
+      "segments": [
+        "katra-darshani",
+        "darshani-banganga",
+        "banganga-ardhkuwari-shortcut",
+        "ardhkuwari-himkoti",
+        "himkoti-sanjichhat",
+        "sanjichhat-bhawan-walk"
+      ],
+      "totalDistance": 13500,
+      "estimatedTime": 16200,
+      "difficulty": "hard",
+      "tags": ["shortcut", "faster", "steep"]
+    },
+    {
+      "id": "senior-friendly",
+      "name": "Senior-Friendly Route",
+      "description": "Easier route using battery car and ropeway",
+      "segments": [
+        "katra-darshani",
+        "darshani-banganga",
+        "banganga-charan",
+        "charan-ardhkuwari",
+        "ardhkuwari-himkoti",
+        "himkoti-sanjichhat",
+        "sanjichhat-bhawan-battery",
+        "bhawan-bhairon-ropeway"
+      ],
+      "totalDistance": 13000,
+      "estimatedTime": 15300,
+      "difficulty": "easy",
+      "tags": ["senior-friendly", "battery-car", "ropeway"]
+    }
+  ],
+
+  "emergencyPoints": [
+    {
+      "id": "katra-medical",
+      "name": "Katra Medical Center",
+      "location": [74.93333, 32.98944],
+      "type": "medical",
+      "facilities": ["hospital", "ambulance", "doctor"],
+      "contact": "+91-1991-234000",
+      "description": "Main medical facility at base camp"
+    },
+    {
+      "id": "ardhkuwari-medical",
+      "name": "Ardhkuwari Medical Post",
+      "location": [74.96000, 33.01800],
+      "type": "medical",
+      "facilities": ["first-aid", "doctor"],
+      "contact": "+91-1991-234000",
+      "description": "Medical post at halfway point"
+    },
+    {
+      "id": "sanjichhat-medical",
+      "name": "Sanjichhat Medical Post",
+      "location": [74.97500, 33.03500],
+      "type": "medical",
+      "facilities": ["first-aid", "doctor", "oxygen"],
+      "contact": "+91-1991-234000",
+      "description": "Medical post at highest point"
+    },
+    {
+      "id": "bhawan-medical",
+      "name": "Bhawan Medical Center",
+      "location": [74.98000, 33.03000],
+      "type": "medical",
+      "facilities": ["hospital", "doctor", "ambulance"],
+      "contact": "+91-1991-234000",
+      "description": "Main medical facility at shrine"
+    }
+  ]
+}
+

@@ -1,0 +1,17 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "sanjichhat-bhawan-walk",
+    "name": "Sanjichhat to Bhawan (Walk)"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.97500, 33.03500],
+      [74.97700, 33.03400],
+      [74.97900, 33.03200],
+      [74.98000, 33.03000]
+    ]
+  }
+}
+

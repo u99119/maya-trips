@@ -1,0 +1,18 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "charan-ardhkuwari",
+    "name": "Charan Paduka to Ardhkuwari"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.95200, 33.00500],
+      [74.95400, 33.00700],
+      [74.95600, 33.00900],
+      [74.95800, 33.01200],
+      [74.96000, 33.01800]
+    ]
+  }
+}
+

@@ -1,0 +1,16 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "bhawan-bhairon-ropeway",
+    "name": "Bhawan to Bhairavnath (Ropeway)"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.98000, 33.03000],
+      [74.98250, 33.03400],
+      [74.98500, 33.03800]
+    ]
+  }
+}
+

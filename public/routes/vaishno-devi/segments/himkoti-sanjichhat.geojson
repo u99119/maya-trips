@@ -1,0 +1,17 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "himkoti-sanjichhat",
+    "name": "Himkoti to Sanjichhat"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.96800, 33.02800],
+      [74.97000, 33.03000],
+      [74.97200, 33.03200],
+      [74.97500, 33.03500]
+    ]
+  }
+}
+
