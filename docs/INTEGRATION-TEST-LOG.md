@@ -144,6 +144,26 @@
 **Commit:** b842294
 **Status:** ✅ FIXED
 
+#### Issue #2: getGraph is not a function ✅ FIXED
+**Severity:** Critical
+**Description:** `RouteLoaderV2` class didn't have a `getGraph()` method, but `initV2Modules()` was calling `routeLoaderV2.getGraph()`
+**Error:** `(intermediate value).getGraph is not a function`
+**Fix:** Added `getGraph()` method to `RouteLoaderV2` class that returns `this.graph`
+**Commit:** c63c5fa
+**Status:** ✅ FIXED
+
+#### Issue #3: Fallback to v1 after successful v2 load ✅ FIXED
+**Severity:** Critical
+**Description:** v2 route loaded successfully but then fell back to v1, causing JSON parse errors
+**Error:** `JSON.parse: unexpected character at line 1 column 1 of the JSON data`
+**Root Cause:** When `initV2Modules()` threw an error (due to missing `getGraph()`), the catch block triggered v1 fallback. Also, no early return after successful v2 load.
+**Fix:**
+1. Fixed `getGraph()` issue (Issue #2)
+2. Added early return statement after successful v2 initialization
+3. Added console log `✅ v2 route fully initialized` for debugging
+**Commit:** c63c5fa
+**Status:** ✅ FIXED
+
 ### Non-Critical Issues
 *None yet*
 
