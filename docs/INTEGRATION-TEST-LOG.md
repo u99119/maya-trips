@@ -38,15 +38,17 @@
 
 ---
 
-### ⏳ Task 2: Core Flow Testing (1-2 hours)
-**Status:** IN PROGRESS
+### ✅ Task 2: Core Flow Testing (1-2 hours)
+**Status:** PARTIAL - Route Loading Complete
 
-#### Test 2.1: Route Loading
-- [ ] Create new trip with Vaishno Devi route
-- [ ] Verify v2 route loads (check console for "✅ Loaded v2 route")
-- [ ] Verify junction count (should be 9)
-- [ ] Verify segment count (should be 11)
-- [ ] Verify route graph builds correctly
+#### Test 2.1: Route Loading ✅ COMPLETE
+- [✅] Create new trip with Vaishno Devi route
+- [✅] Verify v2 route loads (check console for "✅ Loaded v2 route")
+- [✅] Verify junction count (should be 9)
+- [✅] Verify segment count (should be 11)
+- [✅] Verify route graph builds correctly
+- [✅] Map loads centered on Katra
+- [✅] No errors in console
 
 #### Test 2.2: Junction Detection
 - [ ] Enable GPS
@@ -164,17 +166,99 @@
 **Commit:** c63c5fa
 **Status:** ✅ FIXED
 
+#### Issue #4: setRouteGraph is not a function ✅ FIXED
+**Severity:** Critical
+**Description:** `app.js` was calling `junctionDetector.setRouteGraph()` but that method doesn't exist
+**Error:** `setRouteGraph is not a function`
+**Root Cause:** Junction detector uses `routeLoaderV2` directly, doesn't need `setRouteGraph()` method
+**Fix:** Removed unnecessary `setRouteGraph()` call from `initV2Modules()`
+**Commit:** b097bbb
+**Status:** ✅ FIXED
+
+#### Issue #5: v1 route layers for v2 routes ✅ FIXED
+**Severity:** Critical
+**Description:** `initMap()` was trying to add v1 route layers for v2 routes
+**Error:** `can't access property 'routes', this.currentRoute is null`
+**Root Cause:** v2 routes don't have `this.currentRoute` object
+**Fix:** Added `useV2Architecture` check in `initMap()` to skip v1 layer loading
+**Commit:** e8b5b95
+**Status:** ✅ FIXED
+
+#### Issue #6: v1 UI population for v2 routes ✅ FIXED
+**Severity:** Critical
+**Description:** `populateLayerToggles()` and `populateMilestonesList()` trying to access v1 data
+**Error:** `can't access property 'forEach', this.routeConfig.routes is undefined`
+**Root Cause:** v2 routes don't have `routeConfig.routes` array
+**Fix:** Added `useV2Architecture` checks to skip v1 UI population
+**Commit:** 5b12bce
+**Status:** ✅ FIXED
+
+#### Issue #7: v1 milestone/progress for v2 routes ✅ FIXED
+**Severity:** Critical
+**Description:** `updateProgress()` and `loadTripState()` trying to access v1 milestones
+**Error:** `can't access property 'features', this.milestones is null`
+**Root Cause:** v2 routes don't have `this.milestones` object
+**Fix:** Added `useV2Architecture` checks with placeholder progress text
+**Commit:** 6adda53
+**Status:** ✅ FIXED
+
 ### Non-Critical Issues
 *None yet*
 
 ---
 
+## Summary
+
+**Integration Checkpoint - Task 1: Module Integration** ✅ **COMPLETE**
+
+All v2 modules are now successfully integrated into the main app with no errors!
+
+**What Works:**
+- ✅ v2 route loading (config-v2.json)
+- ✅ Graph building and validation (9 junctions, 11 segments)
+- ✅ v2 module initialization (junction detector, route selector, segment tracker)
+- ✅ Map initialization (centered on Katra)
+- ✅ v1/v2 architecture detection and fallback
+- ✅ Trip creation with v2 routes
+- ✅ All v1-specific code paths properly skipped for v2 routes
+
+**What's Not Implemented Yet (Expected):**
+- ⏳ Junction markers on map (Task 1.6.7)
+- ⏳ Segment paths on map (Task 1.6.7)
+- ⏳ Milestones list in drawer (Task 1.6.8)
+- ⏳ Segment-based progress tracking UI (Task 1.6.8)
+- ⏳ Layer toggles for v2 routes (Task 1.6.7)
+
+**Issues Found & Fixed:** 7 critical issues, all resolved
+
 ## Next Steps
 
-1. Complete core flow testing (Task 2)
-2. Test error handling scenarios (Task 3)
-3. Deploy to dev environment (Task 4)
-4. Mobile device testing (Task 5)
-5. Document findings and update TODO.md
-6. Proceed with Tasks 1.6.7-1.6.10 if integration successful
+**Recommended:** Proceed with remaining Phase 1.6 tasks now that integration is successful:
+
+1. **Task 1.6.7** - Enhanced Map Visualization (5-6 hours)
+   - Add junction markers to map
+   - Add segment paths with different styles
+   - Add sub-milestone markers
+   - Implement layer toggles for v2
+
+2. **Task 1.6.8** - Update Progress Tracking UI (4-5 hours)
+   - Show completed segments in drawer
+   - Show current segment progress
+   - Update progress bar for segment-based tracking
+   - Show junction choices history
+
+3. **Task 1.6.9** - Trip Statistics & Comparison (3-4 hours)
+   - Calculate actual vs expected distance/time
+   - Show route choices made
+   - Compare with recommended paths
+
+4. **Task 1.6.10** - Final Testing & Polish (6-8 hours)
+   - GPS-based junction detection testing
+   - Route selection modal testing
+   - Segment tracking testing
+   - Mobile device testing
+   - Error handling
+   - Performance optimization
+
+**Alternative:** Continue with remaining integration testing (Tasks 2-5) before proceeding to new features
 
