@@ -165,6 +165,43 @@
     </div>
   </div>
 
+  <!-- Route Selection Modal (Junction Arrival) -->
+  <div class="modal" id="routeSelectionModal" style="display: none;">
+    <div class="modal-overlay" id="routeSelectionOverlay"></div>
+    <div class="modal-content route-selection-modal">
+      <div class="modal-header">
+        <div class="junction-header">
+          <div class="junction-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
+            </svg>
+          </div>
+          <div class="junction-info">
+            <h2 id="junctionName">Junction Name</h2>
+            <p class="junction-subtitle" id="junctionSubtitle">Choose your route</p>
+          </div>
+        </div>
+        <button class="modal-close" id="routeSelectionClose">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="route-options" id="routeOptions">
+          <!-- Segment cards will be dynamically inserted here -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnSkipSelection">Skip for Now</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="app-header" id="appHeader" style="display: none;">
     <div class="header-content">

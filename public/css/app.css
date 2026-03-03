@@ -852,6 +852,203 @@ input:checked + .toggle-slider:before {
   border-top: 1px solid var(--border-color);
 }
 
+/* Route Selection Modal */
+.route-selection-modal {
+  max-width: 600px;
+}
+
+.junction-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.junction-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.junction-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.junction-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.junction-info h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.junction-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.route-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.segment-card {
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.segment-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+  transform: translateY(-2px);
+}
+
+.segment-card.recommended {
+  border-color: var(--success-color);
+  background: linear-gradient(to right, rgba(76, 175, 80, 0.05), transparent);
+}
+
+.segment-card.recommended::before {
+  content: 'RECOMMENDED';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--success-color);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.segment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.segment-destination {
+  flex: 1;
+  min-width: 0;
+  padding-right: 80px; /* Space for recommended badge */
+}
+
+.segment-destination h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transport-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.segment-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.detail-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.detail-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Difficulty badges */
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.difficulty-badge.easy {
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--success-color);
+}
+
+.difficulty-badge.moderate {
+  background: rgba(255, 152, 0, 0.1);
+  color: var(--warning-color);
+}
+
+.difficulty-badge.hard {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--danger-color);
+}
+
+/* Ticket requirement */
+.ticket-required {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--warning-color);
+  margin-top: 8px;
+}
+
+.ticket-required svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 /* Form Elements */
 .form-group {
   margin-bottom: 20px;
