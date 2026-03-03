@@ -708,20 +708,30 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
     - [ ] Test on mobile (touch interactions)
     - [ ] Test with 2, 3, 4+ segment options
 
-- [ ] **Task 1.6.6**: Implement Multi-Segment Trip Tracking (5-6 hours)
-  - Update trip data model in `trips.js`
-  - Add segment tracking fields to IndexedDB schema
-  - Segment activation logic (when user chooses segment)
-  - Segment completion detection (GPS reaches end junction)
-  - Record junction choices in trip history
-  - Calculate trip statistics:
-    - Per-segment distance/time
-    - Total trip distance/time
-    - Comparison with recommended path
-  - Update `storage.js` with new methods:
-    - `addCompletedSegment(tripId, segmentData)`
-    - `recordJunctionChoice(tripId, junctionData)`
-    - `updateCurrentState(tripId, junction, segment)`
+- [✅] **Task 1.6.6**: Implement Multi-Segment Trip Tracking (5-6 hours) - COMPLETE
+  - ✅ Created `public/js/segment-tracker.js` module (472 lines)
+  - ✅ Segment tracking with GPS progress monitoring
+  - ✅ Distance calculation using Haversine formula
+  - ✅ Progress percentage calculation
+  - ✅ Segment completion detection (when reaching destination junction)
+  - ✅ Recording completed segments to trip instance
+  - ✅ Recording junction choices to trip history
+  - ✅ Event system (segmentStarted, segmentProgress, segmentCompleted, segmentAbandoned)
+  - ✅ Updated route-selector.js to integrate with segment tracker
+  - ✅ Added tripId tracking to route selector
+  - ✅ Integrated segment tracking start on segment selection
+  - 🔗 **Integration Pending:** Not connected to GPS module yet
+  - 🧪 **Testing Pending:**
+    - [ ] Test segment tracking starts on segment selection
+    - [ ] Test GPS progress updates calculate distance correctly
+    - [ ] Test segment completion detection at destination junction
+    - [ ] Test completedSegments saved to trip instance
+    - [ ] Test junctionChoices saved to trip instance
+    - [ ] Test trip stats updated (totalDistance, totalTime)
+    - [ ] Test segment abandonment (user goes off-route)
+    - [ ] Test ETA calculation accuracy
+    - [ ] Test with different transport modes
+    - [ ] Test with varying GPS accuracy
 
 - [ ] **Task 1.6.7**: Enhanced Map Visualization (5-6 hours)
   - Update `layers.js` to render segments

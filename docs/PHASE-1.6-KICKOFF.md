@@ -173,13 +173,29 @@ dev-junction (work here - can break)
    - Auto-selection for single-option junctions
    - Integration with junction-detector events
 
-### ⏳ Next Task
+6. **Task 1.6.6** - Segment Tracking ✅
+   - Created `public/js/segment-tracker.js` (472 lines)
+   - Segment tracking with GPS progress monitoring
+   - Distance calculation using Haversine formula
+   - Progress percentage and ETA calculation
+   - Segment completion detection
+   - Recording completed segments to trip instance
+   - Recording junction choices to trip history
+   - Event system (segmentStarted, segmentProgress, segmentCompleted, segmentAbandoned)
+   - Updated route-selector.js to integrate with segment tracker
 
-6. **Task 1.6.6** - Segment Tracking (5-6 hours)
-   - Track user progress along selected segment
-   - Detect segment completion
-   - Update trip instance with completed segments
-   - Handle segment switching
+### ⚠️ INTEGRATION CHECKPOINT REQUIRED
+
+**Current Progress:** 6/10 tasks complete (60%)
+
+Before continuing with Tasks 1.6.7-1.6.10, we need to:
+1. **Integrate all v2 modules** into main app
+2. **Test core flow** (route loading → junction detection → segment selection → tracking)
+3. **Test error handling** (GPS failures, network issues, invalid data)
+4. **Build and deploy** to dev environment
+5. **Mobile testing** on actual devices
+
+See docs/TODO.md lines 736-841 for detailed integration checkpoint tasks.
 
 ## 📖 Reference Documents
 
