@@ -286,6 +286,14 @@ class RouteLoaderV2 {
   }
 
   /**
+   * Get the route graph (adjacency list)
+   * @returns {Map} Graph as adjacency list
+   */
+  getGraph() {
+    return this.graph;
+  }
+
+  /**
    * Get route metadata
    * @returns {Object} Route metadata
    */

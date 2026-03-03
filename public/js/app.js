@@ -391,7 +391,8 @@ class App {
           }
         };
 
-        return this.routeV2;
+        console.log(`✅ v2 route fully initialized`);
+        return this.routeV2; // Return early, don't fall through to v1
       } catch (v2Error) {
         console.log(`ℹ️ v2 route not found, falling back to v1: ${v2Error.message}`);
         this.useV2Architecture = false;
