@@ -458,19 +458,26 @@ class App {
     // Initialize layers manager
     layers.init(map);
 
-    // Add route layers
-    this.addRouteLayers();
-
-    // Add milestones
-    layers.addMilestones(this.milestones, (milestone, number) => {
-      this.onMilestoneClick(milestone, number);
-    });
+    // Phase 1.6: Skip v1-specific layers for v2 routes
+    if (this.useV2Architecture) {
+      console.log('📍 v2 route - map initialized, layers will be added dynamically');
+      // TODO: Add junction markers
+      // TODO: Add segment layers as user progresses
+    } else {
+      // v1 route - add all layers upfront
+      this.addRouteLayers();
+      layers.addMilestones(this.milestones, (milestone, number) => {
+        this.onMilestoneClick(milestone, number);
+      });
+    }
 
     // Force map to recalculate size and fit bounds
     // This fixes the race condition where map container size isn't finalized yet
     setTimeout(() => {
       map.invalidateSize(); // Force Leaflet to recalculate container size
-      layers.fitBounds();
+      if (!this.useV2Architecture) {
+        layers.fitBounds();
+      }
     }, 100);
   }
 
