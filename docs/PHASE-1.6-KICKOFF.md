@@ -130,7 +130,7 @@ dev-junction (work here - can break)
 
 ## 🚀 Progress Tracker
 
-**Overall Progress: 3/10 tasks complete (30%)**
+**Overall Progress: 4/10 tasks complete (40%)**
 
 ### ✅ Completed Tasks
 
@@ -153,13 +153,21 @@ dev-junction (work here - can break)
    - Added 4 emergency medical points
    - Moved v1 files to legacy folder
 
+4. **Task 1.6.4** - Junction Detection ✅
+   - Created `public/js/junction-detector.js` (322 lines)
+   - GPS proximity detection (30m arrival, 100m approach)
+   - Event system (approach, arrival, departure)
+   - Available segments determination
+   - Recommended segment calculation
+   - ETA calculation and formatting
+
 ### ⏳ Next Task
 
-4. **Task 1.6.4** - Junction Detection (4-5 hours)
-   - Create `public/js/junction-detector.js`
-   - GPS proximity detection
-   - Junction approach notifications
-   - Available segments determination
+5. **Task 1.6.5** - Route Selection UI (6-8 hours)
+   - Create junction arrival modal
+   - Segment comparison cards
+   - Display distance, time, transport mode, difficulty
+   - Segment selection handler
 
 ## 📖 Reference Documents
 

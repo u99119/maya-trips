@@ -365,11 +365,12 @@
 
 **Status**: � IN PROGRESS - Implementing Option A (Junction-Based) in `dev-junction` branch
 
-**Progress**: 3/10 tasks complete (30%)
+**Progress**: 4/10 tasks complete (40%)
 - ✅ Task 1.6.1 - Route Schema v2.0 designed and documented
 - ✅ Task 1.6.2 - Route loader v2 module created with graph validation
 - ✅ Task 1.6.3 - Vaishno Devi converted to v2 format (9 junctions, 11 segments)
-- ⏳ Task 1.6.4 - Junction Detection (NEXT)
+- ✅ Task 1.6.4 - Junction detection module with GPS proximity and events
+- ⏳ Task 1.6.5 - Route Selection UI (NEXT)
 
 **Branch Strategy:**
 - **`dev-junction`** (ACTIVE): Full junction-based graph architecture
