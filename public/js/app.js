@@ -596,6 +596,12 @@ class App {
     const container = document.getElementById('layerToggles');
     container.innerHTML = '';
 
+    // Phase 1.6: Skip for v2 routes (no layer toggles yet)
+    if (this.useV2Architecture) {
+      console.log('📍 v2 route - layer toggles not implemented yet');
+      return;
+    }
+
     this.routeConfig.routes.forEach((route) => {
       const layerItem = document.createElement('div');
       layerItem.className = 'layer-item';
@@ -621,6 +627,12 @@ class App {
   populateMilestonesList() {
     const container = document.getElementById('milestonesList');
     container.innerHTML = '';
+
+    // Phase 1.6: Skip for v2 routes (milestones handled differently)
+    if (this.useV2Architecture) {
+      console.log('📍 v2 route - milestones list not implemented yet');
+      return;
+    }
 
     this.milestones.features.forEach((feature, index) => {
       const props = feature.properties;
