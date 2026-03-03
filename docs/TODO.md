@@ -372,6 +372,34 @@
 - ✅ Task 1.6.4 - Junction detection module with GPS proximity and events
 - ✅ Task 1.6.5 - Route Selection UI with segment comparison cards
 - ⏳ Task 1.6.6 - Segment Tracking (NEXT)
+- 🔄 **INTEGRATION CHECKPOINT** after Task 1.6.6 (see below)
+
+**⚠️ IMPORTANT - Implementation vs Testing Status:**
+
+**What's Been Done (Tasks 1.6.1-1.6.5):**
+- ✅ Module code written (route-loader-v2.js, junction-detector.js, route-selector.js)
+- ✅ HTML/CSS created for route selection modal
+- ✅ Vaishno Devi v2 config and GeoJSON files created
+- ✅ Documentation updated
+
+**What's NOT Done Yet (Critical):**
+- ❌ **Integration** - Modules not imported/initialized in main app
+- ❌ **Testing** - No manual or automated testing performed
+- ❌ **Error Handling** - GPS failures, network issues, invalid data
+- ❌ **Mobile Testing** - Not tested on actual devices
+- ❌ **Build Verification** - Not tested in production build
+- ❌ **Real GPS Testing** - Detection radii not validated with real coordinates
+
+**Time Estimates Explained:**
+- Original estimates (2-8 hours per task) included: Design + Implementation + Testing + Integration + Iteration
+- Actual time spent (20-45 min per task) was: Design + Implementation only
+- Remaining work per task: Testing (1-2h) + Integration (30min-1h) + Bug fixes (1-2h)
+
+**Approach: Hybrid (Option 3) - ACTIVE:**
+1. ✅ Complete Tasks 1.6.1-1.6.5 (implementation only)
+2. ⏳ Complete Task 1.6.6 (Segment Tracking implementation)
+3. 🔄 **INTEGRATION CHECKPOINT** - Stop and integrate/test everything
+4. ✅ Continue Tasks 1.6.7-1.6.10 after validation
 
 **Branch Strategy:**
 - **`dev-junction`** (ACTIVE): Full junction-based graph architecture
@@ -587,70 +615,98 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
 
 **Branch:** `dev-junction`
 
-- [ ] **Task 1.6.1**: Design & Document Route Graph Schema (2-3 hours)
-  - Create `docs/ROUTE-SCHEMA-V2.md` with full schema documentation
-  - Finalize junction structure with all fields
-  - Finalize segment structure with transport modes
-  - Define transport modes: walking, driving, flying, battery-car, ropeway, helicopter
-  - Document sub-milestone structure within segments
-  - Create schema validation rules
-  - Document migration guide from v1 to v2
+**Legend:**
+- ✅ Implementation complete
+- 🧪 Testing pending
+- 🔗 Integration pending
 
-- [ ] **Task 1.6.2**: Update Route Config Loader (4-5 hours)
-  - Create `public/js/route-loader-v2.js` module
-  - Parse v2 route config (junctions + segments)
-  - Build route graph in memory (adjacency list)
-  - Validate graph structure:
-    - Detect orphaned junctions
-    - Detect invalid segment references
-    - Validate outgoingSegments exist
-  - Load and cache segment GeoJSON files
-  - Validate recommended paths
-  - Add backward compatibility check (detect v1 vs v2)
+---
 
-- [ ] **Task 1.6.3**: Convert Vaishno Devi Route to v2 (6-8 hours)
-  - Identify all junctions from actual data:
-    - 1. Katra (start)
-    - 2. Darshani Deodhi (junction)
-    - 3. Banganga (junction)
-    - 4. Charan Paduka (junction)
-    - 5. Ardhkuwari (junction)
-    - 6. Himkoti (junction)
-    - 7. Sanjichhat (junction)
-    - 8. Bhawan (junction/end)
-    - 9. Bhairavnath Temple (end)
-  - Split existing routes into segments
-  - Create segment GeoJSON files for each path
-  - Add sub-milestones (5a Garbh Joon Cave, 5b Battery Car Terminal, etc.)
-  - Define transport modes per segment
-  - Define recommended paths (main, fastest, senior-friendly)
-  - Test route loading and validation
+- [✅] **Task 1.6.1**: Design & Document Route Graph Schema (2-3 hours) - COMPLETE
+  - ✅ Create `docs/ROUTE-SCHEMA-V2.md` with full schema documentation (337 lines)
+  - ✅ Finalize junction structure with all fields
+  - ✅ Finalize segment structure with transport modes
+  - ✅ Define transport modes: walking, driving, flying, battery-car, ropeway, helicopter
+  - ✅ Document sub-milestone structure within segments
+  - ✅ Create schema validation rules
+  - ✅ Document migration guide from v1 to v2
+  - 🧪 **Testing Pending:** Schema validation against actual route files
 
-- [ ] **Task 1.6.4**: Implement Junction Detection System (4-5 hours)
-  - Create `public/js/junction-detector.js` module
-  - GPS proximity detection for junctions (30m radius)
-  - Junction approach notification (100m warning)
-  - Junction arrival detection and state update
-  - Determine available segments at current junction
-  - Load segment metadata for comparison
-  - Update trip state (currentJunction, currentSegment)
-  - Handle edge cases (GPS loss, backtracking)
+- [✅] **Task 1.6.2**: Update Route Config Loader (4-5 hours) - COMPLETE
+  - ✅ Create `public/js/route-loader-v2.js` module (313 lines)
+  - ✅ Parse v2 route config (junctions + segments)
+  - ✅ Build route graph in memory (adjacency list)
+  - ✅ Validate graph structure (orphaned junctions, invalid segments, circular refs)
+  - ✅ Load and cache segment GeoJSON files
+  - ✅ Validate recommended paths
+  - ✅ Add query API (getJunction, getSegment, getOutgoingSegments, findNearestJunction)
+  - 🔗 **Integration Pending:** Not imported in main app yet
+  - 🧪 **Testing Pending:**
+    - [ ] Load Vaishno Devi v2 config
+    - [ ] Verify graph structure in console
+    - [ ] Test all 11 segment GeoJSON files load
+    - [ ] Test findNearestJunction with real coordinates
+    - [ ] Test graph validation catches errors
 
-- [ ] **Task 1.6.5**: Build Route Selection UI (6-8 hours)
-  - Create junction arrival modal component
-  - Auto-show modal when reaching junction
-  - Display available segments as cards with:
-    - Segment name and description
-    - Distance and estimated time
-    - Transport mode icon
-    - Difficulty indicator
-    - Elevation gain/loss
-    - Ticket requirement (if any)
-  - Segment comparison view (side-by-side)
-  - Segment selection handler
-  - Update trip with chosen segment
-  - Modal animations and transitions
-  - "Continue on current route" option (if applicable)
+- [✅] **Task 1.6.3**: Convert Vaishno Devi Route to v2 (6-8 hours) - COMPLETE
+  - ✅ Created config-v2.json with 9 junctions, 11 segments
+  - ✅ Identified all junctions: Katra, Darshani Deodhi, Banganga, Charan Paduka, Ardhkuwari, Himkoti, Sanjichhat, Bhawan, Bhairavnath
+  - ✅ Created 11 segment GeoJSON files
+  - ✅ Added 6 sub-milestones (5a Garbh Joon, 5b Battery Terminal, 7a Helicopter, 8a Accommodation, 8b Darshan Queue, 9a Ropeway)
+  - ✅ Defined transport modes per segment (walking, battery-car, ropeway)
+  - ✅ Defined 3 recommended paths (main-traditional, shortcut-route, senior-friendly)
+  - ✅ Added 4 emergency medical points
+  - ✅ Moved v1 files to legacy folder
+  - 🧪 **Testing Pending:**
+    - [ ] Verify all junction coordinates are accurate
+    - [ ] Test GeoJSON paths render correctly on map
+    - [ ] Validate segment distances match actual paths
+    - [ ] Test recommended paths are valid (all segments exist)
+
+- [✅] **Task 1.6.4**: Implement Junction Detection System (4-5 hours) - COMPLETE
+  - ✅ Create `public/js/junction-detector.js` module (322 lines)
+  - ✅ GPS proximity detection (30m arrival, 100m approach)
+  - ✅ Event system (junctionApproach, junctionArrival, junctionDeparture)
+  - ✅ Available segments determination
+  - ✅ Recommended segment calculation
+  - ✅ ETA calculation and formatting
+  - ✅ Configurable detection/approach radius
+  - 🔗 **Integration Pending:** Not initialized in main app yet
+  - 🧪 **Testing Pending:**
+    - [ ] Test detection at Katra: 32.98944, 74.93333
+    - [ ] Test detection at Banganga: 32.99500, 74.94000
+    - [ ] Test detection at Sanjichhat: 33.03500, 74.97500
+    - [ ] Test 30m radius is appropriate (might need adjustment)
+    - [ ] Test approach warning at 100m
+    - [ ] Test departure detection
+    - [ ] Test with GPS accuracy variations
+
+- [✅] **Task 1.6.5**: Build Route Selection UI (6-8 hours) - COMPLETE
+  - ✅ Added route selection modal HTML to index.html
+  - ✅ Created CSS styles for segment cards (205 lines)
+  - ✅ Create `public/js/route-selector.js` module (323 lines)
+  - ✅ Junction arrival modal with icon and junction info
+  - ✅ Segment comparison cards with distance, time, transport, difficulty
+  - ✅ Transport mode icons (6 modes)
+  - ✅ Difficulty badges (easy, moderate, hard) with color coding
+  - ✅ Recommended segment highlighting
+  - ✅ Ticket requirement display
+  - ✅ Auto-selection for single-option junctions
+  - ✅ Segment selection handler
+  - ✅ Modal animations and transitions
+  - 🔗 **Integration Pending:** Not connected to junction-detector events yet
+  - 🧪 **Testing Pending:**
+    - [ ] Test modal appears on junction arrival
+    - [ ] Test segment cards render correctly
+    - [ ] Test all transport icons display
+    - [ ] Test difficulty badges show correct colors
+    - [ ] Test recommended badge highlights correct segment
+    - [ ] Test ticket warning appears when required
+    - [ ] Test segment selection updates state
+    - [ ] Test "Skip for Now" button
+    - [ ] Test modal close button
+    - [ ] Test on mobile (touch interactions)
+    - [ ] Test with 2, 3, 4+ segment options
 
 - [ ] **Task 1.6.6**: Implement Multi-Segment Trip Tracking (5-6 hours)
   - Update trip data model in `trips.js`
@@ -718,6 +774,99 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
   - Test edge cases (GPS loss, backtracking, skipping junctions)
 
 **Total Estimated Effort:** 45-55 hours (~2-3x Phase 1.5)
+
+---
+
+#### 🔄 INTEGRATION CHECKPOINT (After Task 1.6.6)
+
+**When:** After completing Task 1.6.6 (Segment Tracking)
+**Duration:** 3-4 hours
+**Goal:** Integrate and validate Tasks 1.6.1-1.6.6 before continuing
+
+**Integration Tasks:**
+
+1. **Module Integration (1 hour)**
+   - [ ] Import route-loader-v2.js in main app.js
+   - [ ] Import junction-detector.js in main app.js
+   - [ ] Import route-selector.js in main app.js
+   - [ ] Initialize modules on app startup
+   - [ ] Connect to existing trip system
+   - [ ] Add v2 route detection (check config.version)
+   - [ ] Fallback to v1 loader for old routes
+
+2. **Core Flow Testing (1-2 hours)**
+   - [ ] Test route loading: Load Vaishno Devi v2 config
+   - [ ] Test graph building: Verify adjacency list structure
+   - [ ] Test graph validation: Check for errors in console
+   - [ ] Test GeoJSON loading: Verify all 11 segments load
+   - [ ] Test junction detection: Simulate GPS at each junction
+     - Katra (start): 32.98944, 74.93333
+     - Banganga: 32.99500, 74.94000
+     - Sanjichhat: 33.03500, 74.97500
+     - Bhawan: 33.03000, 74.98000
+   - [ ] Test route selection modal: Verify modal appears at junctions
+   - [ ] Test segment selection: Click segment card, verify selection
+   - [ ] Test segment tracking: Verify progress updates
+   - [ ] Test segment completion: Verify next junction detection
+
+3. **Error Handling (30 min)**
+   - [ ] Test GPS failure: Disable location, verify graceful degradation
+   - [ ] Test network failure: Offline mode, verify cached GeoJSON
+   - [ ] Test invalid route: Load non-existent route, verify error
+   - [ ] Test missing GeoJSON: Remove segment file, verify error
+   - [ ] Test invalid coordinates: Use wrong junction coords, verify detection
+
+4. **Build & Deploy Test (30 min)**
+   - [ ] Run `npm run build` - verify no errors
+   - [ ] Test production build locally
+   - [ ] Verify service worker caches v2 routes
+   - [ ] Test offline functionality
+   - [ ] Deploy to dev branch on Cloudflare Pages
+   - [ ] Test on deployed URL
+
+5. **Mobile Testing (30 min)**
+   - [ ] Test on iOS Safari (if available)
+   - [ ] Test on Android Chrome (if available)
+   - [ ] Test touch interactions on modal
+   - [ ] Test GPS accuracy on real device
+   - [ ] Test performance (map rendering, modal animations)
+
+**Critical Issues to Watch For:**
+
+- ❌ **Module import errors** - ES6 import/export issues
+- ❌ **Circular dependencies** - Modules importing each other
+- ❌ **GPS coordinate format** - GeoJSON [lng,lat] vs Leaflet [lat,lng]
+- ❌ **Detection radius too small/large** - 30m might not work in all scenarios
+- ❌ **Modal not appearing** - Event listener not connected
+- ❌ **Segment GeoJSON not loading** - Path issues, CORS issues
+- ❌ **IndexedDB schema mismatch** - New fields not compatible with old trips
+- ❌ **Service worker cache issues** - Old routes cached, new routes not loading
+
+**Success Criteria:**
+
+✅ All modules load without errors
+✅ Route graph builds correctly
+✅ Junction detection works at test coordinates
+✅ Route selection modal appears and functions
+✅ Segment selection updates trip state
+✅ Build completes without errors
+✅ App works offline
+✅ No console errors during normal flow
+
+**If Issues Found:**
+
+- Document all issues in GitHub Issues
+- Fix critical blockers before continuing
+- Defer minor issues to Task 1.6.10 (Testing)
+- Update time estimates for remaining tasks
+
+**After Checkpoint:**
+
+- ✅ Proceed to Task 1.6.7 (Map Visualization)
+- ✅ Continue with confidence that core architecture works
+- ✅ Focus on polish and features, not debugging fundamentals
+
+---
 
 #### 5. Implementation Tasks - Option B (Linear) 🔖 BACKUP
 
