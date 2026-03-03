@@ -1208,8 +1208,10 @@ input:checked + .toggle-slider:before {
 }
 
 .map-control-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   background: white;
   border: none;
   border-radius: 50%;
@@ -1221,6 +1223,8 @@ input:checked + .toggle-slider:before {
   transition: all 0.2s ease;
   font-size: 16px;
   color: var(--text-primary);
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .map-control-btn:hover {
@@ -1239,8 +1243,19 @@ input:checked + .toggle-slider:before {
 }
 
 .control-icon {
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
   line-height: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .map-controls {
+    top: 70px;
+    right: 10px;
+    bottom: auto;
+    max-height: calc(100vh - 480px); /* Leave space for drawer and zoom controls */
+  }
 }
 
 /* Legend Side Panel */
@@ -1290,6 +1305,14 @@ input:checked + .toggle-slider:before {
 
 .legend-panel.active .legend-panel-content {
   transform: translateX(0);
+}
+
+/* Mobile: Make legend narrower (half width) */
+@media (max-width: 768px) {
+  .legend-panel-content {
+    width: 200px;
+    max-width: 50vw;
+  }
 }
 
 .legend-panel-header {

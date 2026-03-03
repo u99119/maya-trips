@@ -230,22 +230,6 @@
 
   <!-- Map Container -->
   <div id="map" class="map-container" style="display: none;">
-    <!-- Map Controls (Phase 1.6) - Vertical button strip on right -->
-    <div class="map-controls" id="mapControls" style="display: none;">
-      <button class="map-control-btn" id="btnLegendToggle" title="Toggle Legend">
-        <span class="control-icon">L</span>
-      </button>
-      <button class="map-control-btn" id="btnAutoCenter" title="Auto Center" data-active="false">
-        <span class="control-icon">⊕</span>
-      </button>
-      <button class="map-control-btn" id="btnCenterLocation" title="Center on My Location">
-        <span class="control-icon">📍</span>
-      </button>
-      <button class="map-control-btn" id="btnViewFullRoute" title="View Full Route">
-        <span class="control-icon">🗺</span>
-      </button>
-    </div>
-
     <!-- Map Legend Side Panel (Phase 1.6) -->
     <div class="legend-panel" id="legendPanel" style="display: none;">
       <div class="legend-panel-overlay" id="legendPanelOverlay"></div>
@@ -305,6 +289,16 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Transport Mode Filters (Phase 1.6) -->
+    <div class="transport-filters" id="transportFilters" style="display: none;">
+      <div class="filter-header">
+        <h4>Filter by Transport</h4>
+      </div>
+      <div class="filter-buttons" id="filterButtons">
+        <!-- Dynamically populated -->
       </div>
     </div>
   </div>
@@ -372,26 +366,31 @@
 
   <!-- Map Control Buttons -->
   <div class="map-controls" id="mapControls" style="display: none;">
-    <!-- View Route Button -->
-    <button class="map-control-btn" id="viewRouteBtn" title="View Full Route">
+    <!-- Legend Toggle Button -->
+    <button class="map-control-btn" id="btnLegendToggle" title="Toggle Legend">
+      <span class="control-icon">L</span>
+    </button>
+
+    <!-- Auto-Center Toggle Button -->
+    <button class="map-control-btn" id="btnAutoCenter" title="Auto-Center: OFF" data-active="false">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+        <circle cx="12" cy="12" r="3"/>
       </svg>
     </button>
 
     <!-- Recenter on Location Button -->
-    <button class="map-control-btn" id="recenterBtn" title="Center on My Location">
+    <button class="map-control-btn" id="btnCenterLocation" title="Center on My Location">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <circle cx="12" cy="12" r="3"/>
       </svg>
     </button>
 
-    <!-- Auto-Center Toggle Button -->
-    <button class="map-control-btn" id="autoCenterBtn" title="Auto-Center: OFF" data-active="false">
+    <!-- View Route Button -->
+    <button class="map-control-btn" id="btnViewFullRoute" title="View Full Route">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
-        <circle cx="12" cy="12" r="3"/>
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     </button>
   </div>
