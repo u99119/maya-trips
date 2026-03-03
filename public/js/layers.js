@@ -374,7 +374,7 @@ class Layers {
 
     const layer = L.geoJSON(geojson, {
       style: layerOptions,
-      onEachFeature: (feature, layer) => {
+      onEachFeature: (feature, featureLayer) => {
         // Create popup with segment info
         const transportIcon = this.getTransportIcon(segment.transportMode);
         const difficultyBadge = this.getDifficultyBadge(segment.difficulty);
@@ -392,7 +392,25 @@ class Layers {
           </div>
         `;
 
-        layer.bindPopup(popupContent);
+        featureLayer.bindPopup(popupContent);
+
+        // Add hover effects
+        featureLayer.on('mouseover', () => {
+          featureLayer.setStyle({
+            weight: layerOptions.weight + 2,
+            opacity: 1
+          });
+        });
+
+        featureLayer.on('mouseout', () => {
+          // Don't reset if this is the active segment
+          if (!featureLayer.options.className || !featureLayer.options.className.includes('segment-active')) {
+            featureLayer.setStyle({
+              weight: layerOptions.weight,
+              opacity: layerOptions.opacity
+            });
+          }
+        });
       }
     });
 
@@ -505,15 +523,19 @@ class Layers {
    * Highlight segment (Phase 1.6)
    * Used when segment is active or selected
    */
-  highlightSegment(segmentId, color = '#FFD700', weight = 6) {
+  highlightSegment(segmentId, color = '#FFD700', weight = 6, animate = true) {
     const layerData = this.segmentLayers.get(segmentId);
     if (!layerData) return false;
 
     layerData.layer.setStyle({
       color: color,
       weight: weight,
-      opacity: 1
+      opacity: 1,
+      className: animate ? 'segment-active' : ''
     });
+
+    // Store active state
+    layerData.active = true;
 
     return true;
   }
@@ -525,7 +547,14 @@ class Layers {
     const layerData = this.segmentLayers.get(segmentId);
     if (!layerData) return false;
 
-    layerData.layer.setStyle(layerData.options);
+    layerData.layer.setStyle({
+      ...layerData.options,
+      className: ''
+    });
+
+    // Clear active state
+    layerData.active = false;
+
     return true;
   }
 

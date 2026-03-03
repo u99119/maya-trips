@@ -23,12 +23,23 @@ Route Config v2.0 introduces a **junction-based graph architecture** that suppor
 **Paths between junctions** with specific transport modes.
 
 **Transport Modes:**
-- `walking` - On foot
-- `driving` - Car/bus/vehicle
-- `flying` - Airplane
-- `battery-car` - Electric vehicle on fixed route
-- `ropeway` - Cable car
-- `helicopter` - Helicopter service
+
+| Mode | Icon | Description |
+|------|------|-------------|
+| `walking` | 🚶 | On foot |
+| `driving` | 🚗 | Car/bus/vehicle |
+| `flying` | ✈️ | Airplane |
+| `battery-car` | 🚡 | Electric vehicle on fixed route |
+| `ropeway` | 🚠 | Cable car |
+| `helicopter` | 🚁 | Helicopter service |
+
+**Difficulty Levels:**
+
+| Difficulty | Badge | Color | Description |
+|------------|-------|-------|-------------|
+| `easy` | Easy | Green (#4CAF50) | Suitable for all fitness levels |
+| `moderate` | Moderate | Orange (#FF9800) | Requires moderate fitness |
+| `hard` | Hard | Red (#F44336) | Requires good fitness and experience |
 
 ### 3. Sub-Milestones
 **Points of interest along a segment** (not decision points).

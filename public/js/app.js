@@ -546,6 +546,11 @@ class App {
 
     await Promise.all(segmentPromises);
     console.log('✅ v2 route visualization complete');
+
+    // 4. Initialize map controls, legend, and transport filters
+    this.initMapControls();
+    this.initMapLegend();
+    this.initTransportFilters();
   }
 
   /**
@@ -1069,6 +1074,211 @@ class App {
 
     // Show route selection modal
     routeSelector.show(junction, availableSegments, recommendedSegment);
+  }
+
+  /**
+   * Initialize map controls (Phase 1.6)
+   */
+  initMapControls() {
+    const controlsEl = document.getElementById('mapControls');
+    const btnLegendToggle = document.getElementById('btnLegendToggle');
+    const btnAutoCenter = document.getElementById('btnAutoCenter');
+    const btnCenterLocation = document.getElementById('btnCenterLocation');
+    const btnViewFullRoute = document.getElementById('btnViewFullRoute');
+    const legendPanel = document.getElementById('legendPanel');
+    const legendPanelOverlay = document.getElementById('legendPanelOverlay');
+    const legendPanelClose = document.getElementById('legendPanelClose');
+
+    if (!controlsEl) return;
+
+    // Show map controls
+    controlsEl.style.display = 'flex';
+
+    // Legend toggle button
+    if (btnLegendToggle && legendPanel) {
+      btnLegendToggle.addEventListener('click', () => {
+        legendPanel.classList.toggle('active');
+      });
+
+      // Close legend panel when clicking overlay or close button
+      if (legendPanelOverlay) {
+        legendPanelOverlay.addEventListener('click', () => {
+          legendPanel.classList.remove('active');
+        });
+      }
+      if (legendPanelClose) {
+        legendPanelClose.addEventListener('click', () => {
+          legendPanel.classList.remove('active');
+        });
+      }
+    }
+
+    // Auto center toggle button
+    if (btnAutoCenter) {
+      // Get saved state from trip
+      const autoCenter = this.currentTrip?.settings?.autoCenter || false;
+      btnAutoCenter.dataset.active = autoCenter;
+
+      btnAutoCenter.addEventListener('click', () => {
+        const isActive = btnAutoCenter.dataset.active === 'true';
+        const newState = !isActive;
+        btnAutoCenter.dataset.active = newState;
+
+        // Save to trip settings
+        if (this.currentTrip) {
+          if (!this.currentTrip.settings) this.currentTrip.settings = {};
+          this.currentTrip.settings.autoCenter = newState;
+          storage.updateTrip(this.currentTrip.id, this.currentTrip);
+        }
+
+        console.log(`Auto-center: ${newState ? 'ON' : 'OFF'}`);
+      });
+    }
+
+    // Center on location button
+    if (btnCenterLocation) {
+      btnCenterLocation.addEventListener('click', () => {
+        if (this.currentLocation) {
+          this.map.setView([this.currentLocation.lat, this.currentLocation.lng], 15);
+        } else {
+          console.log('No GPS location available');
+        }
+      });
+    }
+
+    // View full route button
+    if (btnViewFullRoute) {
+      btnViewFullRoute.addEventListener('click', () => {
+        if (this.useV2Architecture) {
+          layers.fitBoundsV2();
+        } else {
+          layers.fitBounds();
+        }
+      });
+    }
+  }
+
+  /**
+   * Initialize map legend (Phase 1.6)
+   */
+  initMapLegend() {
+    const legendPanel = document.getElementById('legendPanel');
+    const transportLegend = document.getElementById('transportLegend');
+
+    if (!legendPanel || !this.routeV2) return;
+
+    // Get unique transport modes from segments
+    const transportModes = new Set();
+    this.routeV2.segments.forEach(segment => {
+      transportModes.add(segment.transportMode);
+    });
+
+    // Populate transport mode legend
+    const transportIcons = {
+      'walking': '🚶',
+      'driving': '🚗',
+      'flying': '✈️',
+      'battery-car': '🚡',
+      'ropeway': '🚠',
+      'helicopter': '🚁'
+    };
+
+    const transportLabels = {
+      'walking': 'Walking',
+      'driving': 'Driving',
+      'flying': 'Flying',
+      'battery-car': 'Battery Car',
+      'ropeway': 'Ropeway',
+      'helicopter': 'Helicopter'
+    };
+
+    transportLegend.innerHTML = '';
+    transportModes.forEach(mode => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <span class="legend-icon">${transportIcons[mode] || '🚶'}</span>
+        <span class="legend-label">${transportLabels[mode] || mode}</span>
+      `;
+      transportLegend.appendChild(item);
+    });
+
+    // Show legend panel (hidden by default, shown when L button clicked)
+    legendPanel.style.display = 'block';
+  }
+
+  /**
+   * Initialize transport mode filters (Phase 1.6)
+   */
+  initTransportFilters() {
+    const filtersEl = document.getElementById('transportFilters');
+    const filterButtons = document.getElementById('filterButtons');
+
+    if (!filtersEl || !this.routeV2) return;
+
+    // Get transport modes with counts
+    const transportCounts = {};
+    this.routeV2.segments.forEach(segment => {
+      const mode = segment.transportMode;
+      transportCounts[mode] = (transportCounts[mode] || 0) + 1;
+    });
+
+    // Transport mode icons and labels
+    const transportIcons = {
+      'walking': '🚶',
+      'driving': '🚗',
+      'flying': '✈️',
+      'battery-car': '🚡',
+      'ropeway': '🚠',
+      'helicopter': '🚁'
+    };
+
+    const transportLabels = {
+      'walking': 'Walking',
+      'driving': 'Driving',
+      'flying': 'Flying',
+      'battery-car': 'Battery Car',
+      'ropeway': 'Ropeway',
+      'helicopter': 'Helicopter'
+    };
+
+    // Create filter buttons
+    filterButtons.innerHTML = '';
+    Object.entries(transportCounts).forEach(([mode, count]) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn active';
+      btn.dataset.mode = mode;
+      btn.innerHTML = `
+        <span class="filter-icon">${transportIcons[mode] || '🚶'}</span>
+        <span class="filter-label">${transportLabels[mode] || mode}</span>
+        <span class="filter-count">(${count})</span>
+      `;
+
+      // Toggle filter on click
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        this.toggleTransportMode(mode, btn.classList.contains('active'));
+      });
+
+      filterButtons.appendChild(btn);
+    });
+
+    // Show filters
+    filtersEl.style.display = 'block';
+  }
+
+  /**
+   * Toggle transport mode visibility (Phase 1.6)
+   */
+  toggleTransportMode(mode, visible) {
+    if (!this.routeV2) return;
+
+    // Find all segments with this transport mode
+    this.routeV2.segments.forEach(segment => {
+      if (segment.transportMode === mode) {
+        layers.toggleSegmentLayer(segment.id, visible);
+      }
+    });
   }
 
   /**

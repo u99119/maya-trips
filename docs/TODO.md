@@ -1343,6 +1343,24 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
   - Testing: Test on multiple devices/browsers without DevTools open
   - Priority: Low (200ms works reliably, optimization can wait)
 
+- [x] **Q: Which map controls should be always visible vs toggle-able?**
+  - Status: ✅ DECIDED
+  - Context: Task 1.6.7 - Map controls and legend UI/UX
+  - **Decision:**
+    - **Map controls (vertical strip on right):**
+      - Legend toggle (L button) - always visible
+      - Auto Center toggle - always visible
+      - Center on Location button - always visible
+      - View Full Route button - always visible
+    - **Legend:** Side panel that slides in from right when L button pressed
+    - **Transport filters:** Move to bottom drawer under "Route Layers" section
+  - **Enhanced hover effects:**
+    - Path color changes to difficulty color (Easy=Green, Moderate=Orange, Hard=Red)
+    - Path becomes bold/darker
+    - Transport icon blinks for 1-2 seconds
+  - Priority: High (better UX, cleaner map interface)
+  - Related: Task 1.6.7 - Layer toggles and map legend
+
 - [x] **Q: Where will photos, notes, etc. be stored?**
   - Status: ✅ ANSWERED
   - Answer: **IndexedDB** (browser storage, offline-first)

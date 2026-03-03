@@ -1192,3 +1192,320 @@ input:checked + .toggle-slider:before {
   stroke: currentColor;
 }
 
+/* ========================================
+   Phase 1.6: Map Controls & Legend
+   ======================================== */
+
+/* Map Controls - Vertical button strip on right */
+.map-controls {
+  position: absolute;
+  top: 80px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 600;
+}
+
+.map-control-btn {
+  width: 36px;
+  height: 36px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.map-control-btn:hover {
+  background: var(--bg-secondary);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05);
+}
+
+.map-control-btn:active {
+  transform: scale(0.95);
+}
+
+.map-control-btn[data-active="true"] {
+  background: var(--success-color);
+  color: white;
+}
+
+.control-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Legend Side Panel */
+.legend-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.legend-panel.active {
+  pointer-events: auto;
+}
+
+.legend-panel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.legend-panel.active .legend-panel-overlay {
+  opacity: 1;
+}
+
+.legend-panel-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 85vw;
+  background: white;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.legend-panel.active .legend-panel-content {
+  transform: translateX(0);
+}
+
+.legend-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.legend-panel-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.legend-panel-close {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.legend-panel-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.legend-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* Legend Section Styles (used in side panel) */
+.legend-section {
+  margin-bottom: 16px;
+}
+
+.legend-section:last-child {
+  margin-bottom: 0;
+}
+
+.legend-section h5 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.legend-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.legend-line {
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legend-label {
+  flex: 1;
+}
+
+.difficulty-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+.difficulty-badge.easy {
+  background: var(--success-color);
+}
+
+.difficulty-badge.moderate {
+  background: var(--warning-color);
+}
+
+.difficulty-badge.hard {
+  background: var(--danger-color);
+}
+
+/* Transport Mode Filters */
+.transport-filters {
+  position: absolute;
+  bottom: 420px; /* Above drawer */
+  left: 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 12px;
+  z-index: 500;
+}
+
+.filter-header {
+  margin-bottom: 8px;
+}
+
+.filter-header h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  background: var(--bg-primary);
+  border-color: var(--primary-color);
+}
+
+.filter-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.filter-btn .filter-icon {
+  font-size: 16px;
+}
+
+.filter-btn .filter-count {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Segment Hover Effect */
+.leaflet-interactive:hover {
+  stroke-width: 6 !important;
+  stroke-opacity: 1 !important;
+  cursor: pointer;
+}
+
+/* Active Segment Animation */
+@keyframes pulse-segment {
+  0%, 100% {
+    stroke-opacity: 0.8;
+    stroke-width: 4;
+  }
+  50% {
+    stroke-opacity: 1;
+    stroke-width: 6;
+  }
+}
+
+.segment-active {
+  animation: pulse-segment 2s ease-in-out infinite;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .map-legend {
+    top: 70px;
+    right: 8px;
+    max-width: 240px;
+  }
+
+  .transport-filters {
+    bottom: 420px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .filter-buttons {
+    justify-content: flex-start;
+  }
+}
+

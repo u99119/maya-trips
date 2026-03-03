@@ -229,7 +229,85 @@
   </header>
 
   <!-- Map Container -->
-  <div id="map" class="map-container" style="display: none;"></div>
+  <div id="map" class="map-container" style="display: none;">
+    <!-- Map Controls (Phase 1.6) - Vertical button strip on right -->
+    <div class="map-controls" id="mapControls" style="display: none;">
+      <button class="map-control-btn" id="btnLegendToggle" title="Toggle Legend">
+        <span class="control-icon">L</span>
+      </button>
+      <button class="map-control-btn" id="btnAutoCenter" title="Auto Center" data-active="false">
+        <span class="control-icon">⊕</span>
+      </button>
+      <button class="map-control-btn" id="btnCenterLocation" title="Center on My Location">
+        <span class="control-icon">📍</span>
+      </button>
+      <button class="map-control-btn" id="btnViewFullRoute" title="View Full Route">
+        <span class="control-icon">🗺</span>
+      </button>
+    </div>
+
+    <!-- Map Legend Side Panel (Phase 1.6) -->
+    <div class="legend-panel" id="legendPanel" style="display: none;">
+      <div class="legend-panel-overlay" id="legendPanelOverlay"></div>
+      <div class="legend-panel-content">
+        <div class="legend-panel-header">
+          <h3>Map Legend</h3>
+          <button class="legend-panel-close" id="legendPanelClose">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="legend-panel-body">
+          <!-- Transport Modes -->
+          <div class="legend-section">
+            <h5>Transport Modes</h5>
+            <div class="legend-items" id="transportLegend">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <!-- Difficulty Levels -->
+          <div class="legend-section">
+            <h5>Difficulty</h5>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="difficulty-badge easy">Easy</span>
+              </div>
+              <div class="legend-item">
+                <span class="difficulty-badge moderate">Moderate</span>
+              </div>
+              <div class="legend-item">
+                <span class="difficulty-badge hard">Hard</span>
+              </div>
+            </div>
+          </div>
+          <!-- Junction Types -->
+          <div class="legend-section">
+            <h5>Junctions</h5>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="legend-icon">🚩</span>
+                <span class="legend-label">Start</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">🔀</span>
+                <span class="legend-label">Junction</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">🏁</span>
+                <span class="legend-label">End</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-icon">📍</span>
+                <span class="legend-label">Sub-milestone</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Bottom Drawer -->
   <div class="bottom-drawer" id="bottomDrawer" style="display: none;">
