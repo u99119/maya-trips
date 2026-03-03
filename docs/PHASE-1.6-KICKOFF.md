@@ -128,16 +128,38 @@ dev-junction (work here - can break)
 - Mobile testing
 - Edge cases
 
-## 🚀 Next Steps
+## 🚀 Progress Tracker
 
-1. ✅ Branches created (`dev-junction`, `dev-linear`)
-2. ✅ Currently on `dev-junction` branch
-3. 🔨 **START HERE:** Task 1.6.1 - Design & Document Route Graph Schema
-4. Test incrementally after each task
-5. Commit frequently to `dev-junction`
-6. Merge to `dev` after all tasks complete
-7. Final testing on `dev`
-8. Merge to `main` for production deployment
+**Overall Progress: 3/10 tasks complete (30%)**
+
+### ✅ Completed Tasks
+
+1. **Task 1.6.1** - Route Schema v2.0 ✅
+   - Created `docs/ROUTE-SCHEMA-V2.md` (337 lines)
+   - Defined junction, segment, sub-milestone structures
+   - Documented transport modes and validation rules
+
+2. **Task 1.6.2** - Route Loader v2 Module ✅
+   - Created `public/js/route-loader-v2.js` (313 lines)
+   - Graph builder with adjacency list
+   - Graph validation (orphaned junctions, circular segments)
+   - Junction/segment query API
+
+3. **Task 1.6.3** - Vaishno Devi v2 Conversion ✅
+   - Created `config-v2.json` with 9 junctions, 11 segments
+   - Added 6 sub-milestones (5a, 5b, 7a, 8a, 8b, 9a)
+   - Created 11 segment GeoJSON files
+   - Defined 3 recommended paths
+   - Added 4 emergency medical points
+   - Moved v1 files to legacy folder
+
+### ⏳ Next Task
+
+4. **Task 1.6.4** - Junction Detection (4-5 hours)
+   - Create `public/js/junction-detector.js`
+   - GPS proximity detection
+   - Junction approach notifications
+   - Available segments determination
 
 ## 📖 Reference Documents
 
