@@ -5,6 +5,7 @@
 
 import { junctionDetector } from './junction-detector.js';
 import { routeLoaderV2 } from './route-loader-v2.js';
+import { segmentTracker } from './segment-tracker.js';
 
 class RouteSelector {
   constructor() {
@@ -13,7 +14,8 @@ class RouteSelector {
     this.availableSegments = [];
     this.onSegmentSelected = null;
     this.completedSegments = [];
-    
+    this.tripId = null; // Current trip ID for tracking
+
     this.initializeElements();
     this.attachEventListeners();
   }
@@ -265,11 +267,26 @@ class RouteSelector {
    * Handle segment selection
    * @param {Object} segmentData - Selected segment data
    */
-  selectSegment(segmentData) {
+  async selectSegment(segmentData) {
     console.log('✅ Segment selected:', segmentData.segment.name);
 
-    // Add to completed segments
+    // Add to completed segments list
     this.completedSegments.push(segmentData.segment.id);
+
+    // Record junction choice if we have junction info
+    if (this.currentJunction && this.tripId) {
+      await segmentTracker.recordJunctionChoice(this.tripId, {
+        junctionId: this.currentJunction.id,
+        junctionName: this.currentJunction.name,
+        chosenSegment: segmentData.segment.id,
+        availableSegments: this.availableSegments.map(s => s.segment.id)
+      });
+    }
+
+    // Start segment tracking
+    if (this.tripId) {
+      await segmentTracker.startSegment(segmentData, this.tripId);
+    }
 
     // Call callback if set
     if (this.onSegmentSelected) {
@@ -278,9 +295,6 @@ class RouteSelector {
 
     // Hide modal
     this.hide();
-
-    // TODO: Trigger segment tracking
-    // This will be implemented in Task 1.6.6
   }
 
   /**
@@ -308,12 +322,21 @@ class RouteSelector {
   }
 
   /**
+   * Set current trip ID
+   * @param {string} tripId - Trip ID
+   */
+  setTripId(tripId) {
+    this.tripId = tripId;
+  }
+
+  /**
    * Reset selector state
    */
   reset() {
     this.hide();
     this.completedSegments = [];
     this.onSegmentSelected = null;
+    this.tripId = null;
     console.log('🔄 Route selector reset');
   }
 }
