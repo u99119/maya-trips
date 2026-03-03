@@ -8,6 +8,12 @@ import layers from './layers.js';
 import storage from './storage.js';
 import tripManager from './trips.js';
 
+// Phase 1.6: Multi-Route Architecture (v2 modules)
+import { routeLoaderV2 } from './route-loader-v2.js';
+import { junctionDetector } from './junction-detector.js';
+import { routeSelector } from './route-selector.js';
+import { segmentTracker } from './segment-tracker.js';
+
 class App {
   constructor() {
     this.currentRoute = null;
@@ -15,6 +21,10 @@ class App {
     this.milestones = null;
     this.currentTrip = null;
     this.isMapView = false; // Track if we're in map view or trip selection
+
+    // Phase 1.6: v2 route architecture
+    this.routeV2 = null; // Loaded v2 route (if available)
+    this.useV2Architecture = false; // Flag to determine which architecture to use
   }
 
   /**
@@ -358,6 +368,36 @@ class App {
    */
   async loadRoute(routeId) {
     try {
+      // Phase 1.6: Try loading v2 route first
+      try {
+        console.log(`🔍 Checking for v2 route: ${routeId}`);
+        this.routeV2 = await routeLoaderV2.loadRoute(routeId);
+        this.useV2Architecture = true;
+        console.log(`✅ Loaded v2 route: ${this.routeV2.name}`);
+        console.log(`   Junctions: ${this.routeV2.junctions.length}`);
+        console.log(`   Segments: ${this.routeV2.segments.length}`);
+
+        // Initialize v2 modules
+        await this.initV2Modules();
+
+        // For v2 routes, we still need basic config for map center
+        this.routeConfig = {
+          id: this.routeV2.id,
+          name: this.routeV2.name,
+          center: {
+            lat: this.routeV2.junctions[0].location[1],
+            lng: this.routeV2.junctions[0].location[0],
+            zoom: 13
+          }
+        };
+
+        return this.routeV2;
+      } catch (v2Error) {
+        console.log(`ℹ️ v2 route not found, falling back to v1: ${v2Error.message}`);
+        this.useV2Architecture = false;
+      }
+
+      // Fallback to v1 route loading
       // Load route config
       const configResponse = await fetch(`/routes/${routeId}/config.json`);
       this.routeConfig = await configResponse.json();
@@ -663,11 +703,26 @@ class App {
     // Update GPS info
     document.getElementById('gpsInfo').textContent = `±${Math.round(accuracy)}m`;
 
-    // Update distances to milestones
-    this.updateMilestoneDistances(lat, lng);
+    // Phase 1.6: v2 architecture integration
+    if (this.useV2Architecture && this.routeV2) {
+      // Check for junction proximity
+      junctionDetector.checkPosition(position);
 
-    // Check if near any milestone
-    this.checkMilestoneProximity(lat, lng);
+      // Update segment tracking progress
+      if (segmentTracker.isTracking() && this.currentTrip) {
+        segmentTracker.updateProgress(
+          { lat, lng, accuracy },
+          this.currentTrip.tripId
+        );
+      }
+    } else {
+      // Legacy v1 architecture
+      // Update distances to milestones
+      this.updateMilestoneDistances(lat, lng);
+
+      // Check if near any milestone
+      this.checkMilestoneProximity(lat, lng);
+    }
   }
 
   /**
@@ -856,6 +911,88 @@ class App {
     });
     // Store in trip settings
     this.saveTripSettings({ layerVisibility: layerStates });
+  }
+
+  /**
+   * Initialize Phase 1.6 v2 modules
+   */
+  async initV2Modules() {
+    console.log('🚀 Initializing v2 modules...');
+
+    // Initialize junction detector with route graph
+    junctionDetector.setRouteGraph(routeLoaderV2.getGraph());
+
+    // Set up junction detector event listeners
+    junctionDetector.on('junctionApproach', (data) => {
+      console.log(`⚠️ Approaching junction: ${data.junction.name} (${Math.round(data.distance)}m away)`);
+      // TODO: Show approach notification
+    });
+
+    junctionDetector.on('junctionArrival', (data) => {
+      console.log(`📍 Arrived at junction: ${data.junction.name}`);
+      this.handleJunctionArrival(data);
+    });
+
+    junctionDetector.on('junctionDeparture', (data) => {
+      console.log(`👋 Departed junction: ${data.junction.name}`);
+    });
+
+    // Set up route selector
+    routeSelector.setTripId(this.currentTrip?.tripId);
+    routeSelector.onSegmentSelected = (segmentData) => {
+      console.log(`✅ User selected segment: ${segmentData.segment.name}`);
+      // Segment tracking is already started by route-selector
+    };
+
+    // Set up segment tracker event listeners
+    segmentTracker.on('segmentStarted', (data) => {
+      console.log(`🏁 Segment tracking started: ${data.segment.name}`);
+      // TODO: Update UI to show segment progress
+    });
+
+    segmentTracker.on('segmentProgress', (data) => {
+      console.log(`📊 Segment progress: ${Math.round(data.progress)}% (${Math.round(data.distanceToEnd)}m to go)`);
+      // TODO: Update progress UI
+    });
+
+    segmentTracker.on('segmentCompleted', (data) => {
+      console.log(`🎉 Segment completed: ${data.segmentName}`);
+      console.log(`   Distance: ${data.actualDistance}m (expected: ${data.expectedDistance}m)`);
+      console.log(`   Time: ${Math.round(data.actualTime / 60)}min (expected: ${Math.round(data.expectedTime / 60)}min)`);
+      // TODO: Show completion notification
+      // TODO: Update trip statistics UI
+    });
+
+    segmentTracker.on('segmentAbandoned', (data) => {
+      console.log(`⚠️ Segment abandoned: ${data.segment.name} (${data.reason})`);
+      // TODO: Show abandonment notification
+    });
+
+    console.log('✅ v2 modules initialized');
+  }
+
+  /**
+   * Handle junction arrival (Phase 1.6)
+   */
+  handleJunctionArrival(data) {
+    const { junction, availableSegments, recommendedSegment } = data;
+
+    // If currently tracking a segment, complete it
+    if (segmentTracker.isTracking()) {
+      const position = gps.getCurrentPosition();
+      if (position) {
+        segmentTracker.completeSegment(
+          this.currentTrip.tripId,
+          {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        );
+      }
+    }
+
+    // Show route selection modal
+    routeSelector.show(junction, availableSegments, recommendedSegment);
   }
 
   /**
