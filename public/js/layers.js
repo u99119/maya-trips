@@ -23,7 +23,7 @@ class Layers {
     this.junctionMarkers.clear();
     this.segmentLayers.clear();
     this.subMilestoneMarkers.clear();
-    this.map = null;
+    this.map = map;
   }
 
   /**
