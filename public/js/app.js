@@ -13,6 +13,7 @@ import { routeLoaderV2 } from './route-loader-v2.js';
 import { junctionDetector } from './junction-detector.js';
 import { routeSelector } from './route-selector.js';
 import { segmentTracker } from './segment-tracker.js';
+import { progressUI } from './progress-ui.js';
 
 class App {
   constructor() {
@@ -557,7 +558,10 @@ class App {
       layers.markSegmentActive(this.currentTrip.currentSegment);
     }
 
-    // 6. Initialize map controls, legend, and transport filters
+    // 6. Initialize progress UI
+    progressUI.init(this.currentTrip, this.routeV2);
+
+    // 7. Initialize map controls, legend, and transport filters
     this.initMapControls();
     this.initMapLegend();
     this.initTransportFilters();
@@ -1018,10 +1022,14 @@ class App {
     junctionDetector.on('junctionArrival', (data) => {
       console.log(`📍 Arrived at junction: ${data.junction.name}`);
       this.handleJunctionArrival(data);
+      // Update progress UI
+      progressUI.updateAll();
     });
 
     junctionDetector.on('junctionDeparture', (data) => {
       console.log(`👋 Departed junction: ${data.junction.name}`);
+      // Update progress UI
+      progressUI.updateAll();
     });
 
     // Set up route selector
@@ -1034,25 +1042,35 @@ class App {
     // Set up segment tracker event listeners
     segmentTracker.on('segmentStarted', (data) => {
       console.log(`🏁 Segment tracking started: ${data.segment.name}`);
-      // TODO: Update UI to show segment progress
+      // Update progress UI
+      progressUI.updateAll();
     });
 
     segmentTracker.on('segmentProgress', (data) => {
       console.log(`📊 Segment progress: ${Math.round(data.progress)}% (${Math.round(data.distanceToEnd)}m to go)`);
-      // TODO: Update progress UI
+      // Update segment progress in UI
+      progressUI.updateSegmentProgress();
     });
 
     segmentTracker.on('segmentCompleted', (data) => {
       console.log(`🎉 Segment completed: ${data.segmentName}`);
       console.log(`   Distance: ${data.actualDistance}m (expected: ${data.expectedDistance}m)`);
       console.log(`   Time: ${Math.round(data.actualTime / 60)}min (expected: ${Math.round(data.expectedTime / 60)}min)`);
-      // TODO: Show completion notification
-      // TODO: Update trip statistics UI
+
+      // Update trip data
+      if (!this.currentTrip.completedSegments) {
+        this.currentTrip.completedSegments = [];
+      }
+      this.currentTrip.completedSegments.push(data);
+
+      // Update progress UI
+      progressUI.updateAll();
     });
 
     segmentTracker.on('segmentAbandoned', (data) => {
       console.log(`⚠️ Segment abandoned: ${data.segment.name} (${data.reason})`);
-      // TODO: Show abandonment notification
+      // Update progress UI
+      progressUI.updateAll();
     });
 
     console.log('✅ v2 modules initialized');

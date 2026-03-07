@@ -325,14 +325,53 @@
       <!-- Progress Section -->
       <div class="progress-section">
         <h3>Progress</h3>
-        <div class="milestone-progress" id="milestoneProgress">
-          <span class="progress-text">Milestone 0 / 0</span>
+
+        <!-- Current Location (Junction or Segment) -->
+        <div class="current-location" id="currentLocation">
+          <div class="location-label">Current Location:</div>
+          <div class="location-value" id="currentLocationValue">--</div>
+        </div>
+
+        <!-- Current Segment Progress (if on a segment) -->
+        <div class="segment-progress" id="segmentProgressContainer" style="display: none;">
+          <div class="segment-progress-header">
+            <span class="segment-progress-label">Current Segment</span>
+            <span class="segment-progress-percent" id="segmentProgressPercent">0%</span>
+          </div>
           <div class="progress-bar">
-            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            <div class="progress-fill" id="segmentProgressFill" style="width: 0%"></div>
+          </div>
+          <div class="segment-progress-details" id="segmentProgressDetails">
+            <span class="detail-item" id="segmentDistance">--</span>
+            <span class="detail-item" id="segmentTime">--</span>
           </div>
         </div>
+
+        <!-- Overall Trip Progress -->
+        <div class="trip-progress" id="tripProgressContainer">
+          <div class="trip-progress-header">
+            <span class="trip-progress-label">Overall Trip</span>
+            <span class="trip-progress-percent" id="tripProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="tripProgressFill" style="width: 0%"></div>
+          </div>
+          <div class="trip-progress-stats" id="tripProgressStats">
+            <span class="stat-item" id="completedSegmentsCount">0 segments completed</span>
+          </div>
+        </div>
+
+        <!-- Next Destination -->
         <div class="next-milestone" id="nextMilestone">
-          <strong>Next:</strong> <span>--</span>
+          <strong>Next:</strong> <span id="nextMilestoneValue">--</span>
+        </div>
+
+        <!-- Completed Segments List -->
+        <div class="completed-segments" id="completedSegmentsContainer" style="display: none;">
+          <h4>Completed Segments</h4>
+          <div class="completed-segments-list" id="completedSegmentsList">
+            <!-- Dynamically populated -->
+          </div>
         </div>
       </div>
 

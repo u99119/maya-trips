@@ -282,6 +282,128 @@ body {
   transition: width 0.5s ease;
 }
 
+/* Current Location */
+.current-location {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.location-label {
+  font-size: 11px;
+  opacity: 0.9;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.location-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Segment Progress */
+.segment-progress {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.segment-progress-header,
+.trip-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.segment-progress-label,
+.trip-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.segment-progress-percent,
+.trip-progress-percent {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.segment-progress-details,
+.trip-progress-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.detail-item,
+.stat-item {
+  display: inline-block;
+}
+
+/* Trip Progress */
+.trip-progress {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 4px solid var(--success-color);
+}
+
+/* Completed Segments List */
+.completed-segments {
+  margin-top: 16px;
+}
+
+.completed-segments h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.completed-segments-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.completed-segment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 4px;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid var(--success-color);
+  font-size: 12px;
+}
+
+.completed-segment-item .checkmark {
+  color: var(--success-color);
+  font-size: 16px;
+}
+
+.completed-segment-item .segment-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.completed-segment-item .segment-stats {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
 .next-milestone {
   font-size: 14px;
   color: var(--text-primary);
