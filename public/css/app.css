@@ -114,19 +114,6 @@
   .leaflet-popup-content {
     margin: 4px !important;
   }
-
-  /* Override default paragraph spacing */
-  .segment-popup p {
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.0 !important;
-  }
-
-  .segment-popup h3 {
-    margin: 0 0 2px 0 !important;
-    padding: 0 !important;
-    line-height: 1.1 !important;
-  }
 }
 
 body {

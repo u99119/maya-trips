@@ -390,14 +390,14 @@ class Layers {
 
         const popupContent = `
           <div class="segment-popup">
-            <h3 class="segment-popup-title" style="color: ${layerOptions.color};">${segment.name}</h3>
-            <p class="segment-popup-item"><strong>Transport:</strong> ${transportIcon} ${segment.transportMode}</p>
-            <p class="segment-popup-item"><strong>Distance:</strong> ${(segment.distance / 1000).toFixed(2)} km</p>
-            <p class="segment-popup-item"><strong>Time:</strong> ${Math.round(segment.estimatedTime / 60)} min</p>
-            <p class="segment-popup-item"><strong>Difficulty:</strong> ${difficultyBadge}</p>
-            ${segment.elevation ? `<p class="segment-popup-item"><strong>Elevation:</strong> +${segment.elevation.gain}m / -${segment.elevation.loss}m</p>` : ''}
-            ${segment.requiresTicket ? `<p class="segment-popup-warning">⚠️ Ticket Required</p>` : ''}
-            ${segment.description ? `<p class="segment-popup-desc">${segment.description}</p>` : ''}
+            <div class="segment-popup-title" style="color: ${layerOptions.color}; font-weight: 600;">${segment.name}</div>
+            <div class="segment-popup-item"><strong>Transport:</strong> ${transportIcon} ${segment.transportMode}</div>
+            <div class="segment-popup-item"><strong>Distance:</strong> ${(segment.distance / 1000).toFixed(2)} km</div>
+            <div class="segment-popup-item"><strong>Time:</strong> ${Math.round(segment.estimatedTime / 60)} min</div>
+            <div class="segment-popup-item"><strong>Difficulty:</strong> ${difficultyBadge}</div>
+            ${segment.elevation ? `<div class="segment-popup-item"><strong>Elevation:</strong> +${segment.elevation.gain}m / -${segment.elevation.loss}m</div>` : ''}
+            ${segment.requiresTicket ? `<div class="segment-popup-warning">⚠️ Ticket Required</div>` : ''}
+            ${segment.description ? `<div class="segment-popup-desc">${segment.description}</div>` : ''}
           </div>
         `;
 
