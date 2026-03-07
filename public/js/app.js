@@ -547,7 +547,17 @@ class App {
     await Promise.all(segmentPromises);
     console.log('✅ v2 route visualization complete');
 
-    // 4. Initialize map controls, legend, and transport filters
+    // 4. Load completed segments from trip
+    if (this.currentTrip && this.currentTrip.completedSegments) {
+      layers.loadCompletedSegments(this.currentTrip.completedSegments);
+    }
+
+    // 5. Mark active segment if tracking
+    if (this.currentTrip && this.currentTrip.currentSegment) {
+      layers.markSegmentActive(this.currentTrip.currentSegment);
+    }
+
+    // 6. Initialize map controls, legend, and transport filters
     this.initMapControls();
     this.initMapLegend();
     this.initTransportFilters();

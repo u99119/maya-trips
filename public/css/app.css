@@ -71,6 +71,20 @@
   line-height: 1.2;
 }
 
+/* Active Segment Animation */
+@keyframes pulse-segment {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.active-segment {
+  animation: pulse-segment 2s ease-in-out infinite;
+}
+
 /* Mobile: Smaller popup */
 @media (max-width: 768px) {
   .segment-popup {

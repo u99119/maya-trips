@@ -664,19 +664,117 @@ class Layers {
 
   /**
    * Mark segment as completed (Phase 1.6)
+   * Shows green color with checkmark icon
    */
   markSegmentCompleted(segmentId) {
     const layerData = this.segmentLayers.get(segmentId);
     if (!layerData) return false;
 
+    // Style completed segment with green color
     layerData.layer.setStyle({
-      color: '#4CAF50',
-      weight: 5,
-      opacity: 0.9
+      color: '#4CAF50',  // Green for completed
+      weight: 6,
+      opacity: 0.7,
+      dashArray: '5, 5'  // Dashed line to distinguish from active
+    });
+
+    // Add checkmark to popup
+    layerData.layer.eachLayer((featureLayer) => {
+      const segment = layerData.segment;
+      const transportIcon = this.getTransportIcon(segment.transportMode);
+      const difficultyBadge = this.getDifficultyBadge(segment.difficulty);
+
+      const popupContent = `
+        <div class="segment-popup">
+          <div class="segment-popup-title" style="color: #4CAF50; font-weight: 600;">
+            ✅ ${segment.name}
+          </div>
+          <div class="segment-popup-item" style="color: #4CAF50; font-weight: 600;">Status: Completed</div>
+          <div class="segment-popup-item"><strong>Transport:</strong> ${transportIcon} ${segment.transportMode}</div>
+          <div class="segment-popup-item"><strong>Distance:</strong> ${(segment.distance / 1000).toFixed(2)} km</div>
+          <div class="segment-popup-item"><strong>Time:</strong> ${Math.round(segment.estimatedTime / 60)} min</div>
+          <div class="segment-popup-item"><strong>Difficulty:</strong> ${difficultyBadge}</div>
+          ${segment.elevation ? `<div class="segment-popup-item"><strong>Elevation:</strong> +${segment.elevation.gain}m / -${segment.elevation.loss}m</div>` : ''}
+          ${segment.description ? `<div class="segment-popup-desc">${segment.description}</div>` : ''}
+        </div>
+      `;
+
+      featureLayer.unbindPopup();
+      featureLayer.bindPopup(popupContent, {
+        maxWidth: 280,
+        className: 'segment-popup-container'
+      });
     });
 
     layerData.completed = true;
+    console.log(`✅ Marked segment as completed: ${segmentId}`);
     return true;
+  }
+
+  /**
+   * Mark segment as active (currently being traveled)
+   */
+  markSegmentActive(segmentId) {
+    const layerData = this.segmentLayers.get(segmentId);
+    if (!layerData) return false;
+
+    // Style active segment with bold, pulsing effect
+    layerData.layer.setStyle({
+      color: '#2196F3',  // Blue for active
+      weight: 10,
+      opacity: 1,
+      className: 'active-segment'  // For CSS animation
+    });
+
+    // Add "In Progress" to popup
+    layerData.layer.eachLayer((featureLayer) => {
+      const segment = layerData.segment;
+      const transportIcon = this.getTransportIcon(segment.transportMode);
+      const difficultyBadge = this.getDifficultyBadge(segment.difficulty);
+
+      const popupContent = `
+        <div class="segment-popup">
+          <div class="segment-popup-title" style="color: #2196F3; font-weight: 600;">
+            🚶 ${segment.name}
+          </div>
+          <div class="segment-popup-item" style="color: #2196F3; font-weight: 600;">Status: In Progress</div>
+          <div class="segment-popup-item"><strong>Transport:</strong> ${transportIcon} ${segment.transportMode}</div>
+          <div class="segment-popup-item"><strong>Distance:</strong> ${(segment.distance / 1000).toFixed(2)} km</div>
+          <div class="segment-popup-item"><strong>Time:</strong> ${Math.round(segment.estimatedTime / 60)} min</div>
+          <div class="segment-popup-item"><strong>Difficulty:</strong> ${difficultyBadge}</div>
+          ${segment.elevation ? `<div class="segment-popup-item"><strong>Elevation:</strong> +${segment.elevation.gain}m / -${segment.elevation.loss}m</div>` : ''}
+          ${segment.description ? `<div class="segment-popup-desc">${segment.description}</div>` : ''}
+        </div>
+      `;
+
+      featureLayer.unbindPopup();
+      featureLayer.bindPopup(popupContent, {
+        maxWidth: 280,
+        className: 'segment-popup-container'
+      });
+    });
+
+    layerData.active = true;
+    console.log(`🚶 Marked segment as active: ${segmentId}`);
+    return true;
+  }
+
+  /**
+   * Load completed segments from trip data
+   * @param {Array} completedSegments - Array of completed segment IDs
+   */
+  loadCompletedSegments(completedSegments) {
+    if (!completedSegments || completedSegments.length === 0) {
+      console.log('No completed segments to load');
+      return;
+    }
+
+    console.log(`📊 Loading ${completedSegments.length} completed segments`);
+
+    completedSegments.forEach(segmentData => {
+      const segmentId = segmentData.segmentId;
+      this.markSegmentCompleted(segmentId);
+    });
   }
 
   /**

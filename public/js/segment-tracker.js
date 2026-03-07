@@ -29,7 +29,7 @@ class SegmentTracker {
    */
   async startSegment(segmentData, tripId) {
     const { segment, destination } = segmentData;
-    
+
     this.currentSegment = segment;
     this.segmentStartTime = new Date();
     this.segmentStartLocation = null; // Will be set on first GPS update
@@ -53,6 +53,11 @@ class SegmentTracker {
     this.listeners.segmentStarted.forEach(callback => {
       callback({ segment, destination, startTime: this.segmentStartTime });
     });
+
+    // Mark segment as active on map (if layers module is available)
+    if (typeof window !== 'undefined' && window.layers) {
+      window.layers.markSegmentActive(segment.id);
+    }
   }
 
   /**
@@ -190,6 +195,11 @@ class SegmentTracker {
     this.listeners.segmentCompleted.forEach(callback => {
       callback(segmentData);
     });
+
+    // Mark segment as completed on map (if layers module is available)
+    if (typeof window !== 'undefined' && window.layers) {
+      window.layers.markSegmentCompleted(segmentData.segmentId);
+    }
 
     // Reset state
     const completedSegment = this.currentSegment;
