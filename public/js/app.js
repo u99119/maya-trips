@@ -684,12 +684,14 @@ class App {
     const container = document.getElementById('milestonesList');
     container.innerHTML = '';
 
-    // Phase 1.6: Skip for v2 routes (milestones handled differently)
+    // Phase 1.6: For v2 routes, show junctions as milestones
     if (this.useV2Architecture) {
-      console.log('📍 v2 route - milestones list not implemented yet');
+      console.log('📍 v2 route - populating junctions as milestones');
+      this.populateV2Milestones(container);
       return;
     }
 
+    // Legacy v1 route milestones
     this.milestones.features.forEach((feature, index) => {
       const props = feature.properties;
       const milestoneItem = document.createElement('div');
@@ -740,6 +742,103 @@ class App {
 
       container.appendChild(milestoneItem);
     });
+  }
+
+  /**
+   * Populate v2 route milestones (junctions) for manual testing
+   */
+  populateV2Milestones(container) {
+    if (!this.routeV2 || !this.routeV2.junctions) {
+      container.innerHTML = '<p style="color: #757575; padding: 12px;">No junctions available</p>';
+      return;
+    }
+
+    // Get completed segments from current trip
+    const completedSegments = this.currentTrip?.completedSegments || [];
+    const completedSegmentIds = completedSegments.map(s => s.segmentId);
+
+    this.routeV2.junctions.forEach((junction, index) => {
+      const milestoneItem = document.createElement('div');
+      milestoneItem.className = 'milestone-item';
+      milestoneItem.dataset.junctionId = junction.id;
+
+      // Check if junction has been reached (if any incoming segment is completed)
+      const incomingSegments = this.routeV2.segments.filter(s => s.to === junction.id);
+      const isReached = incomingSegments.some(s => completedSegmentIds.includes(s.id));
+
+      if (isReached || index === 0) { // First junction is always "reached"
+        milestoneItem.classList.add('visited');
+      }
+
+      milestoneItem.innerHTML = `
+        <div class="milestone-number">${index + 1}</div>
+        <div class="milestone-info">
+          <div class="milestone-name">${junction.name}</div>
+          <div class="milestone-details">
+            ${junction.elevation ? `${junction.elevation}m` : ''}
+            ${junction.description ? `• ${junction.description}` : ''}
+          </div>
+        </div>
+        <button class="milestone-checkmark" data-junction-id="${junction.id}" data-junction-index="${index}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      `;
+
+      // Click on milestone info to center map on junction
+      const milestoneInfo = milestoneItem.querySelector('.milestone-info');
+      milestoneInfo.addEventListener('click', () => {
+        const map = mapManager.getMap();
+        if (map) {
+          map.invalidateSize();
+        }
+        mapManager.setView(junction.lat, junction.lon, 16, { animate: true });
+      });
+
+      // Click on checkmark to simulate arriving at junction
+      const checkmark = milestoneItem.querySelector('.milestone-checkmark');
+      checkmark.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.simulateJunctionArrival(junction, index);
+      });
+
+      container.appendChild(milestoneItem);
+    });
+  }
+
+  /**
+   * Simulate arriving at a junction (for manual testing)
+   */
+  simulateJunctionArrival(junction, index) {
+    console.log(`🧪 TEST MODE: Simulating arrival at ${junction.name}`);
+
+    // Find available segments from this junction
+    const availableSegments = this.routeV2.segments.filter(s => s.from === junction.id);
+
+    // Find recommended segment (first one for now)
+    const recommendedSegment = availableSegments[0] || null;
+
+    // Trigger junction arrival event
+    const data = {
+      junction,
+      availableSegments,
+      recommendedSegment
+    };
+
+    this.handleJunctionArrival(data);
+
+    // Update UI
+    const milestoneItem = document.querySelector(`[data-junction-id="${junction.id}"]`);
+    if (milestoneItem) {
+      milestoneItem.classList.add('visited');
+    }
+
+    // Update progress UI
+    if (this.currentTrip) {
+      this.currentTrip.currentJunction = junction.id;
+      progressUI.updateAll();
+    }
   }
 
   /**
