@@ -372,7 +372,7 @@ class Layers {
     const style = segment.style || {};
     const defaultStyle = {
       color: style.color || '#2196F3',
-      weight: style.weight || 6,  // Increased from 4 to 6 for easier tapping
+      weight: style.weight || 9,  // Increased from 6 to 9 for easier tapping on mobile
       opacity: style.opacity || 0.8,
       dashArray: style.dashArray || null,
       lineJoin: 'round',
@@ -437,15 +437,17 @@ class Layers {
           }
         });
 
-        // Click/Tap: First click highlights, second click opens popup
-        featureLayer.on('click', (e) => {
-          L.DomEvent.stopPropagation(e);
+        // Mobile: Long press to highlight, single tap to open popup
+        let longPressTimer = null;
+        let isLongPress = false;
 
-          if (!featureLayer._isHighlighted) {
-            // First click: Unhighlight all other segments, then highlight this one
+        featureLayer.on('mousedown touchstart', (e) => {
+          isLongPress = false;
+          longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            // Long press: Highlight with difficulty color
             this.unhighlightAllSegments();
 
-            // Highlight this segment with difficulty color
             featureLayer.setStyle({
               color: featureLayer._difficultyColor,
               weight: featureLayer._originalStyle.weight + 3,
@@ -453,13 +455,30 @@ class Layers {
             });
 
             featureLayer._isHighlighted = true;
+            console.log(`✨ Highlighted (long press): ${segment.name} (${segment.difficulty})`);
+          }, 500); // 500ms for long press
+        });
 
-            console.log(`✨ Highlighted: ${segment.name} (${segment.difficulty})`);
-          } else {
-            // Second click: Open popup (default Leaflet behavior will handle this)
-            console.log(`📋 Opening popup: ${segment.name}`);
-            // Popup will open automatically
+        featureLayer.on('mouseup touchend', () => {
+          if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
           }
+        });
+
+        // Click/Tap: Single tap opens popup directly
+        featureLayer.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+
+          // If it was a long press, don't open popup
+          if (isLongPress) {
+            isLongPress = false;
+            return;
+          }
+
+          // Single tap: Open popup directly
+          console.log(`📋 Opening popup: ${segment.name}`);
+          // Popup will open automatically
         });
       }
     });
