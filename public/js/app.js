@@ -621,20 +621,8 @@ class App {
       });
     }
 
-    // Auto-Center Toggle Button
-    const autoCenterBtn = document.getElementById('btnAutoCenter');
-    if (autoCenterBtn) {
-      autoCenterBtn.addEventListener('click', () => {
-        const isActive = autoCenterBtn.dataset.active === 'true';
-        const newState = !isActive;
-
-        autoCenterBtn.dataset.active = newState;
-        autoCenterBtn.title = `Auto-Center: ${newState ? 'ON' : 'OFF'}`;
-
-        // Update GPS settings
-        gps.updateSettings({ autoCenter: newState });
-      });
-    }
+    // Auto-Center Toggle Button - handled in initMapControls()
+    // (removed duplicate event listener)
 
     // Populate layer toggles
     this.populateLayerToggles();
@@ -1129,11 +1117,13 @@ class App {
       // Get saved state from trip
       const autoCenter = this.currentTrip?.settings?.autoCenter || false;
       btnAutoCenter.dataset.active = autoCenter;
+      btnAutoCenter.title = `Auto-Center: ${autoCenter ? 'ON' : 'OFF'}`;
 
       btnAutoCenter.addEventListener('click', () => {
         const isActive = btnAutoCenter.dataset.active === 'true';
         const newState = !isActive;
         btnAutoCenter.dataset.active = newState;
+        btnAutoCenter.title = `Auto-Center: ${newState ? 'ON' : 'OFF'}`;
 
         // Save to trip settings
         if (this.currentTrip) {
@@ -1141,6 +1131,9 @@ class App {
           this.currentTrip.settings.autoCenter = newState;
           storage.updateTrip(this.currentTrip.id, this.currentTrip);
         }
+
+        // Update GPS settings
+        gps.updateSettings({ autoCenter: newState });
 
         console.log(`Auto-center: ${newState ? 'ON' : 'OFF'}`);
       });
