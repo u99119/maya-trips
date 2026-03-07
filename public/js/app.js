@@ -816,11 +816,14 @@ class App {
   simulateJunctionArrival(junction, index) {
     console.log(`🧪 TEST MODE: Simulating arrival at ${junction.name}`);
 
-    // Find available segments from this junction
-    const availableSegments = this.routeV2.segments.filter(s => s.from === junction.id);
+    // Get available segments with proper metadata using junction detector
+    const availableSegments = junctionDetector.getAvailableSegments(junction.id);
 
-    // Find recommended segment (first one for now)
-    const recommendedSegment = availableSegments[0] || null;
+    // Get completed segment IDs
+    const completedSegmentIds = this.currentTrip?.completedSegments?.map(s => s.segmentId) || [];
+
+    // Find recommended segment
+    const recommendedSegment = junctionDetector.getRecommendedSegment(junction.id, completedSegmentIds);
 
     // Trigger junction arrival event
     const data = {
