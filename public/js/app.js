@@ -1105,18 +1105,21 @@ class App {
     // Legend toggle button
     if (btnLegendToggle && legendPanel) {
       btnLegendToggle.addEventListener('click', () => {
-        legendPanel.classList.toggle('active');
+        const isActive = legendPanel.classList.toggle('active');
+        btnLegendToggle.dataset.active = isActive;
       });
 
       // Close legend panel when clicking overlay or close button
       if (legendPanelOverlay) {
         legendPanelOverlay.addEventListener('click', () => {
           legendPanel.classList.remove('active');
+          btnLegendToggle.dataset.active = 'false';
         });
       }
       if (legendPanelClose) {
         legendPanelClose.addEventListener('click', () => {
           legendPanel.classList.remove('active');
+          btnLegendToggle.dataset.active = 'false';
         });
       }
     }
@@ -1148,6 +1151,12 @@ class App {
       btnCenterLocation.addEventListener('click', () => {
         if (this.currentLocation) {
           this.map.setView([this.currentLocation.lat, this.currentLocation.lng], 15);
+
+          // Flash green for 1 second to show action completed
+          btnCenterLocation.dataset.active = 'true';
+          setTimeout(() => {
+            btnCenterLocation.dataset.active = 'false';
+          }, 1000);
         } else {
           console.log('No GPS location available');
         }
@@ -1162,6 +1171,12 @@ class App {
         } else {
           layers.fitBounds();
         }
+
+        // Flash green for 1 second to show action completed
+        btnViewFullRoute.dataset.active = 'true';
+        setTimeout(() => {
+          btnViewFullRoute.dataset.active = 'false';
+        }, 1000);
       });
     }
   }

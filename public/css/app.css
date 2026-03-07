@@ -1212,7 +1212,7 @@ input:checked + .toggle-slider:before {
   height: 44px;
   min-width: 44px;
   min-height: 44px;
-  background: white;
+  background: var(--primary-color); /* Blue when disabled/inactive */
   border: none;
   border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -1222,21 +1222,22 @@ input:checked + .toggle-slider:before {
   justify-content: center;
   transition: all 0.2s ease;
   font-size: 16px;
-  color: var(--text-primary);
+  color: white;
   padding: 0;
   flex-shrink: 0;
 }
 
 .map-control-btn:hover {
-  background: var(--bg-secondary);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
   transform: scale(1.05);
+  opacity: 0.9;
 }
 
 .map-control-btn:active {
   transform: scale(0.95);
 }
 
+/* Green when enabled/active */
 .map-control-btn[data-active="true"] {
   background: var(--success-color);
   color: white;
