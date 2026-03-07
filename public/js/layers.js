@@ -372,7 +372,7 @@ class Layers {
     const style = segment.style || {};
     const defaultStyle = {
       color: style.color || '#2196F3',
-      weight: style.weight || 4,
+      weight: style.weight || 6,  // Increased from 4 to 6 for easier tapping
       opacity: style.opacity || 0.8,
       dashArray: style.dashArray || null,
       lineJoin: 'round',
@@ -412,6 +412,8 @@ class Layers {
         featureLayer._difficultyColor = this.getDifficultyColor(segment.difficulty);
         featureLayer._isHighlighted = false;
         featureLayer._segmentId = segment.id;
+
+        console.log(`Segment ${segment.name}: difficulty=${segment.difficulty}, color=${featureLayer._difficultyColor}`);
 
         // Desktop: Hover effects (preview)
         featureLayer.on('mouseover', () => {
@@ -503,6 +505,11 @@ class Layers {
    * Used for tap-to-highlight interaction
    */
   highlightSegment(featureLayer, segment) {
+    console.log(`🎨 Highlighting segment: ${segment.name}`);
+    console.log(`  Difficulty: ${segment.difficulty}`);
+    console.log(`  Difficulty Color: ${featureLayer._difficultyColor}`);
+    console.log(`  Original Color: ${featureLayer._originalStyle.color}`);
+
     // Unhighlight any previously highlighted segment
     this.unhighlightAllSegments();
 
@@ -514,10 +521,10 @@ class Layers {
     });
     featureLayer._isHighlighted = true;
 
+    console.log(`  ✅ Applied style - color: ${featureLayer._difficultyColor}, weight: ${featureLayer._originalStyle.weight + 3}`);
+
     // Blink the transport icon (find junction markers with this segment's transport mode)
     this.blinkTransportIcon(segment);
-
-    console.log(`Highlighted segment: ${segment.name} with difficulty color`);
   }
 
   /**
