@@ -894,24 +894,29 @@ class App {
    * Update progress display (trip-scoped)
    */
   updateProgress() {
-    // Phase 1.6: Skip for v2 routes (progress handled differently)
+    // Phase 1.6: v2 routes use progressUI module
     if (this.useV2Architecture) {
-      console.log('📍 v2 route - progress display not implemented yet');
-      // TODO: Show segment-based progress in Task 1.6.8
-      document.querySelector('.progress-text').textContent = 'In Progress';
-      document.getElementById('progressFill').style.width = '0%';
-      const nextEl = document.querySelector('#nextMilestone span');
-      nextEl.textContent = 'Start your journey';
+      console.log('📍 v2 route - using progressUI module');
+      // Progress is handled by progressUI module (initialized in addV2RouteLayers)
       return;
     }
 
+    // Legacy v1 route progress
     const visitedMilestones = tripManager.getVisitedMilestones();
     const total = this.milestones.features.length;
     const visited = visitedMilestones.length;
     const percentage = (visited / total) * 100;
 
-    document.querySelector('.progress-text').textContent = `Milestone ${visited} / ${total}`;
-    document.getElementById('progressFill').style.width = `${percentage}%`;
+    // Note: These elements don't exist in v2 UI, only for v1 routes
+    const progressText = document.querySelector('.progress-text');
+    const progressFill = document.getElementById('progressFill');
+
+    if (progressText) {
+      progressText.textContent = `Milestone ${visited} / ${total}`;
+    }
+    if (progressFill) {
+      progressFill.style.width = `${percentage}%`;
+    }
 
     // Update next milestone
     const visitedIds = visitedMilestones.map(m => m.milestoneId);
@@ -921,10 +926,14 @@ class App {
 
     if (nextMilestone) {
       const nextEl = document.querySelector('#nextMilestone span');
-      nextEl.textContent = `${nextMilestone.properties.name} (${nextMilestone.properties.distance_from_start}km)`;
+      if (nextEl) {
+        nextEl.textContent = `${nextMilestone.properties.name} (${nextMilestone.properties.distance_from_start}km)`;
+      }
     } else {
       const nextEl = document.querySelector('#nextMilestone span');
-      nextEl.textContent = 'Journey Complete! 🎉';
+      if (nextEl) {
+        nextEl.textContent = 'Journey Complete! 🎉';
+      }
     }
   }
 
