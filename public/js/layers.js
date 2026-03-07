@@ -441,6 +441,7 @@ class Layers {
           try {
             console.log(`🖱️ CLICK detected on segment: ${segment.name}`);
             console.log(`   Is highlighted: ${featureLayer._isHighlighted}`);
+            console.log(`   Current color: ${featureLayer.options.color}`);
 
             L.DomEvent.stopPropagation(e);
 
@@ -449,6 +450,9 @@ class Layers {
               console.log(`   → Calling highlightSegment()`);
               this.highlightSegment(featureLayer, segment);
               console.log(`   ✅ highlightSegment() completed`);
+              console.log(`   New color: ${featureLayer.options.color}`);
+              console.log(`   New weight: ${featureLayer.options.weight}`);
+              console.log(`   Is now highlighted: ${featureLayer._isHighlighted}`);
             } else {
               // Second click: Open popup (default Leaflet behavior will handle this)
               console.log(`   → Opening popup (already highlighted)`);
@@ -522,30 +526,36 @@ class Layers {
    * Used for tap-to-highlight interaction
    */
   highlightSegment(featureLayer, segment) {
+    console.log(`🎨 START highlightSegment: ${segment.name}`);
+
     try {
-      console.log(`🎨 Highlighting segment: ${segment.name}`);
       console.log(`  Difficulty: ${segment.difficulty}`);
       console.log(`  Difficulty Color: ${featureLayer._difficultyColor}`);
       console.log(`  Original Color: ${featureLayer._originalStyle.color}`);
 
       // Unhighlight any previously highlighted segment
-      console.log(`  Calling unhighlightAllSegments()...`);
-      this.unhighlightAllSegments();
-      console.log(`  ✅ Unhighlight complete`);
+      // console.log(`  Calling unhighlightAllSegments()...`);
+      // this.unhighlightAllSegments();
+      // console.log(`  ✅ Unhighlight complete`);
 
       // Highlight this segment
-      console.log(`  Setting new style...`);
+      console.log(`  Setting new style with color: ${featureLayer._difficultyColor}`);
       featureLayer.setStyle({
         color: featureLayer._difficultyColor,
         weight: featureLayer._originalStyle.weight + 3,
         opacity: 1
       });
+      console.log(`  ✅ setStyle() called`);
+
       featureLayer._isHighlighted = true;
+      console.log(`  ✅ _isHighlighted set to true`);
 
       console.log(`  ✅ Applied style - color: ${featureLayer._difficultyColor}, weight: ${featureLayer._originalStyle.weight + 3}`);
 
       // Blink the transport icon (find junction markers with this segment's transport mode)
-      this.blinkTransportIcon(segment);
+      // this.blinkTransportIcon(segment);
+
+      console.log(`🎨 END highlightSegment`);
     } catch (error) {
       console.error(`❌ Error in highlightSegment:`, error);
       console.error(`   Stack:`, error.stack);
