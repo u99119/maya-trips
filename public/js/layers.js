@@ -438,19 +438,25 @@ class Layers {
 
         // Click/Tap: First click highlights, second click opens popup
         featureLayer.on('click', (e) => {
-          console.log(`🖱️ CLICK detected on segment: ${segment.name}`);
-          console.log(`   Is highlighted: ${featureLayer._isHighlighted}`);
+          try {
+            console.log(`🖱️ CLICK detected on segment: ${segment.name}`);
+            console.log(`   Is highlighted: ${featureLayer._isHighlighted}`);
 
-          L.DomEvent.stopPropagation(e);
+            L.DomEvent.stopPropagation(e);
 
-          if (!featureLayer._isHighlighted) {
-            // First click: Highlight with difficulty color
-            console.log(`   → Calling highlightSegment()`);
-            this.highlightSegment(featureLayer, segment);
-          } else {
-            // Second click: Open popup (default Leaflet behavior will handle this)
-            console.log(`   → Opening popup (already highlighted)`);
-            // Popup will open automatically, we just need to ensure it's not prevented
+            if (!featureLayer._isHighlighted) {
+              // First click: Highlight with difficulty color
+              console.log(`   → Calling highlightSegment()`);
+              this.highlightSegment(featureLayer, segment);
+              console.log(`   ✅ highlightSegment() completed`);
+            } else {
+              // Second click: Open popup (default Leaflet behavior will handle this)
+              console.log(`   → Opening popup (already highlighted)`);
+              // Popup will open automatically, we just need to ensure it's not prevented
+            }
+          } catch (error) {
+            console.error(`❌ Error in click handler:`, error);
+            console.error(`   Stack:`, error.stack);
           }
         });
       }
@@ -516,26 +522,34 @@ class Layers {
    * Used for tap-to-highlight interaction
    */
   highlightSegment(featureLayer, segment) {
-    console.log(`🎨 Highlighting segment: ${segment.name}`);
-    console.log(`  Difficulty: ${segment.difficulty}`);
-    console.log(`  Difficulty Color: ${featureLayer._difficultyColor}`);
-    console.log(`  Original Color: ${featureLayer._originalStyle.color}`);
+    try {
+      console.log(`🎨 Highlighting segment: ${segment.name}`);
+      console.log(`  Difficulty: ${segment.difficulty}`);
+      console.log(`  Difficulty Color: ${featureLayer._difficultyColor}`);
+      console.log(`  Original Color: ${featureLayer._originalStyle.color}`);
 
-    // Unhighlight any previously highlighted segment
-    this.unhighlightAllSegments();
+      // Unhighlight any previously highlighted segment
+      console.log(`  Calling unhighlightAllSegments()...`);
+      this.unhighlightAllSegments();
+      console.log(`  ✅ Unhighlight complete`);
 
-    // Highlight this segment
-    featureLayer.setStyle({
-      color: featureLayer._difficultyColor,
-      weight: featureLayer._originalStyle.weight + 3,
-      opacity: 1
-    });
-    featureLayer._isHighlighted = true;
+      // Highlight this segment
+      console.log(`  Setting new style...`);
+      featureLayer.setStyle({
+        color: featureLayer._difficultyColor,
+        weight: featureLayer._originalStyle.weight + 3,
+        opacity: 1
+      });
+      featureLayer._isHighlighted = true;
 
-    console.log(`  ✅ Applied style - color: ${featureLayer._difficultyColor}, weight: ${featureLayer._originalStyle.weight + 3}`);
+      console.log(`  ✅ Applied style - color: ${featureLayer._difficultyColor}, weight: ${featureLayer._originalStyle.weight + 3}`);
 
-    // Blink the transport icon (find junction markers with this segment's transport mode)
-    this.blinkTransportIcon(segment);
+      // Blink the transport icon (find junction markers with this segment's transport mode)
+      this.blinkTransportIcon(segment);
+    } catch (error) {
+      console.error(`❌ Error in highlightSegment:`, error);
+      console.error(`   Stack:`, error.stack);
+    }
   }
 
   /**
