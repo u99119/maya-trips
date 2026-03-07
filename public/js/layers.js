@@ -442,14 +442,31 @@ class Layers {
             console.log(`🖱️ CLICK detected on segment: ${segment.name}`);
             console.log(`   Is highlighted: ${featureLayer._isHighlighted}`);
             console.log(`   Current color: ${featureLayer.options.color}`);
+            console.log(`   this =`, this);
+            console.log(`   typeof this.highlightSegment =`, typeof this.highlightSegment);
 
             L.DomEvent.stopPropagation(e);
 
             if (!featureLayer._isHighlighted) {
-              // First click: Highlight with difficulty color
-              console.log(`   → Calling highlightSegment()`);
-              this.highlightSegment(featureLayer, segment);
-              console.log(`   ✅ highlightSegment() completed`);
+              // First click: Highlight with difficulty color - do it inline
+              console.log(`   → Highlighting inline...`);
+
+              // Set the style directly
+              const difficultyColor = featureLayer._difficultyColor;
+              const newWeight = featureLayer._originalStyle.weight + 3;
+
+              console.log(`   Setting color to: ${difficultyColor}`);
+              console.log(`   Setting weight to: ${newWeight}`);
+
+              featureLayer.setStyle({
+                color: difficultyColor,
+                weight: newWeight,
+                opacity: 1
+              });
+
+              featureLayer._isHighlighted = true;
+
+              console.log(`   ✅ Style applied!`);
               console.log(`   New color: ${featureLayer.options.color}`);
               console.log(`   New weight: ${featureLayer.options.weight}`);
               console.log(`   Is now highlighted: ${featureLayer._isHighlighted}`);
