@@ -594,41 +594,47 @@ class App {
     });
 
     // View Route Button
-    const viewRouteBtn = document.getElementById('viewRouteBtn');
-    viewRouteBtn.addEventListener('click', () => {
-      const map = mapManager.getMap();
-      if (map) {
-        map.invalidateSize(); // Ensure map size is correct before fitting bounds
-      }
-      layers.fitBounds();
-    });
+    const viewRouteBtn = document.getElementById('btnViewFullRoute');
+    if (viewRouteBtn) {
+      viewRouteBtn.addEventListener('click', () => {
+        const map = mapManager.getMap();
+        if (map) {
+          map.invalidateSize(); // Ensure map size is correct before fitting bounds
+        }
+        layers.fitBounds();
+      });
+    }
 
     // Recenter on Location Button
-    const recenterBtn = document.getElementById('recenterBtn');
-    recenterBtn.addEventListener('click', () => {
-      const position = gps.getCurrentPosition();
-      if (position) {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        // Use setView to ensure proper centering
-        mapManager.setView(lat, lng, 16, { animate: true });
-      } else {
-        alert('GPS is not enabled or no position available');
-      }
-    });
+    const recenterBtn = document.getElementById('btnCenterLocation');
+    if (recenterBtn) {
+      recenterBtn.addEventListener('click', () => {
+        const position = gps.getCurrentPosition();
+        if (position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          // Use setView to ensure proper centering
+          mapManager.setView(lat, lng, 16, { animate: true });
+        } else {
+          alert('GPS is not enabled or no position available');
+        }
+      });
+    }
 
     // Auto-Center Toggle Button
-    const autoCenterBtn = document.getElementById('autoCenterBtn');
-    autoCenterBtn.addEventListener('click', () => {
-      const isActive = autoCenterBtn.dataset.active === 'true';
-      const newState = !isActive;
+    const autoCenterBtn = document.getElementById('btnAutoCenter');
+    if (autoCenterBtn) {
+      autoCenterBtn.addEventListener('click', () => {
+        const isActive = autoCenterBtn.dataset.active === 'true';
+        const newState = !isActive;
 
-      autoCenterBtn.dataset.active = newState;
-      autoCenterBtn.title = `Auto-Center: ${newState ? 'ON' : 'OFF'}`;
+        autoCenterBtn.dataset.active = newState;
+        autoCenterBtn.title = `Auto-Center: ${newState ? 'ON' : 'OFF'}`;
 
-      // Update GPS settings
-      gps.updateSettings({ autoCenter: newState });
-    });
+        // Update GPS settings
+        gps.updateSettings({ autoCenter: newState });
+      });
+    }
 
     // Populate layer toggles
     this.populateLayerToggles();
@@ -939,9 +945,11 @@ class App {
 
     // Update auto-center button state
     const autoCenterState = tripSettings.autoCenter || false;
-    const autoCenterBtn = document.getElementById('autoCenterBtn');
-    autoCenterBtn.dataset.active = autoCenterState;
-    autoCenterBtn.title = `Auto-Center: ${autoCenterState ? 'ON' : 'OFF'}`;
+    const autoCenterBtn = document.getElementById('btnAutoCenter');
+    if (autoCenterBtn) {
+      autoCenterBtn.dataset.active = autoCenterState;
+      autoCenterBtn.title = `Auto-Center: ${autoCenterState ? 'ON' : 'OFF'}`;
+    }
 
     gps.updateSettings({
       batterySaver: tripSettings.batterySaver || false,
