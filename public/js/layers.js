@@ -389,19 +389,22 @@ class Layers {
         const difficultyBadge = this.getDifficultyBadge(segment.difficulty);
 
         const popupContent = `
-          <div style="min-width: 250px;">
-            <h3 style="margin: 0 0 8px 0; color: ${layerOptions.color};">${segment.name}</h3>
-            <p style="margin: 4px 0;"><strong>Transport:</strong> ${transportIcon} ${segment.transportMode}</p>
-            <p style="margin: 4px 0;"><strong>Distance:</strong> ${(segment.distance / 1000).toFixed(2)} km</p>
-            <p style="margin: 4px 0;"><strong>Est. Time:</strong> ${Math.round(segment.estimatedTime / 60)} min</p>
-            <p style="margin: 4px 0;"><strong>Difficulty:</strong> ${difficultyBadge}</p>
-            ${segment.elevation ? `<p style="margin: 4px 0;"><strong>Elevation:</strong> +${segment.elevation.gain}m / -${segment.elevation.loss}m</p>` : ''}
-            ${segment.requiresTicket ? `<p style="margin: 8px 0 4px 0; color: #FF9800;"><strong>⚠️ Ticket Required</strong></p>` : ''}
-            ${segment.description ? `<p style="margin: 8px 0 4px 0;">${segment.description}</p>` : ''}
+          <div class="segment-popup">
+            <h3 class="segment-popup-title" style="color: ${layerOptions.color};">${segment.name}</h3>
+            <p class="segment-popup-item"><strong>Transport:</strong> ${transportIcon} ${segment.transportMode}</p>
+            <p class="segment-popup-item"><strong>Distance:</strong> ${(segment.distance / 1000).toFixed(2)} km</p>
+            <p class="segment-popup-item"><strong>Time:</strong> ${Math.round(segment.estimatedTime / 60)} min</p>
+            <p class="segment-popup-item"><strong>Difficulty:</strong> ${difficultyBadge}</p>
+            ${segment.elevation ? `<p class="segment-popup-item"><strong>Elevation:</strong> +${segment.elevation.gain}m / -${segment.elevation.loss}m</p>` : ''}
+            ${segment.requiresTicket ? `<p class="segment-popup-warning">⚠️ Ticket Required</p>` : ''}
+            ${segment.description ? `<p class="segment-popup-desc">${segment.description}</p>` : ''}
           </div>
         `;
 
-        featureLayer.bindPopup(popupContent);
+        featureLayer.bindPopup(popupContent, {
+          maxWidth: 280,
+          className: 'segment-popup-container'
+        });
 
         // Store original style and difficulty color
         featureLayer._originalStyle = {
