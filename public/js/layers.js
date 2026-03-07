@@ -368,6 +368,8 @@ class Layers {
    * @param {Object} options - Additional layer options
    */
   addSegmentLayer(segment, geojson, options = {}) {
+    console.log(`📍 Adding segment layer: ${segment.name} (${segment.id})`);
+
     // Use segment style from config, or defaults
     const style = segment.style || {};
     const defaultStyle = {
@@ -436,13 +438,18 @@ class Layers {
 
         // Click/Tap: First click highlights, second click opens popup
         featureLayer.on('click', (e) => {
+          console.log(`🖱️ CLICK detected on segment: ${segment.name}`);
+          console.log(`   Is highlighted: ${featureLayer._isHighlighted}`);
+
           L.DomEvent.stopPropagation(e);
 
           if (!featureLayer._isHighlighted) {
             // First click: Highlight with difficulty color
+            console.log(`   → Calling highlightSegment()`);
             this.highlightSegment(featureLayer, segment);
           } else {
             // Second click: Open popup (default Leaflet behavior will handle this)
+            console.log(`   → Opening popup (already highlighted)`);
             // Popup will open automatically, we just need to ensure it's not prevented
           }
         });
@@ -458,6 +465,10 @@ class Layers {
     });
 
     layer.addTo(this.map);
+
+    console.log(`✅ Segment layer added to map: ${segment.name}`);
+    console.log(`   Layer has ${layer.getLayers().length} features`);
+
     return layer;
   }
 
