@@ -24,6 +24,15 @@ class Layers {
     this.segmentLayers.clear();
     this.subMilestoneMarkers.clear();
     this.map = map;
+
+    // Add map click listener to unhighlight segments when clicking on empty area
+    this.map.on('click', (e) => {
+      // Only unhighlight if clicking on the map itself (not on a segment)
+      if (e.originalEvent.target.tagName === 'svg' ||
+          e.originalEvent.target.classList.contains('leaflet-container')) {
+        this.unhighlightAllSegments();
+      }
+    });
   }
 
   /**
@@ -394,21 +403,45 @@ class Layers {
 
         featureLayer.bindPopup(popupContent);
 
-        // Add hover effects
+        // Store original style and difficulty color
+        featureLayer._originalStyle = {
+          color: layerOptions.color,
+          weight: layerOptions.weight,
+          opacity: layerOptions.opacity
+        };
+        featureLayer._difficultyColor = this.getDifficultyColor(segment.difficulty);
+        featureLayer._isHighlighted = false;
+        featureLayer._segmentId = segment.id;
+
+        // Desktop: Hover effects (preview)
         featureLayer.on('mouseover', () => {
-          featureLayer.setStyle({
-            weight: layerOptions.weight + 2,
-            opacity: 1
-          });
+          if (!featureLayer._isHighlighted) {
+            featureLayer.setStyle({
+              weight: layerOptions.weight + 2,
+              opacity: 1
+            });
+          }
         });
 
         featureLayer.on('mouseout', () => {
-          // Don't reset if this is the active segment
-          if (!featureLayer.options.className || !featureLayer.options.className.includes('segment-active')) {
+          if (!featureLayer._isHighlighted) {
             featureLayer.setStyle({
               weight: layerOptions.weight,
               opacity: layerOptions.opacity
             });
+          }
+        });
+
+        // Click/Tap: First click highlights, second click opens popup
+        featureLayer.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+
+          if (!featureLayer._isHighlighted) {
+            // First click: Highlight with difficulty color
+            this.highlightSegment(featureLayer, segment);
+          } else {
+            // Second click: Open popup (default Leaflet behavior will handle this)
+            // Popup will open automatically, we just need to ensure it's not prevented
           }
         });
       }
@@ -451,6 +484,73 @@ class Layers {
       'hard': '<span style="background: #F44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">Hard</span>'
     };
     return badges[difficulty] || difficulty;
+  }
+
+  /**
+   * Get difficulty color (Phase 1.6)
+   */
+  getDifficultyColor(difficulty) {
+    const colors = {
+      'easy': '#4CAF50',      // Green
+      'moderate': '#FF9800',  // Orange
+      'hard': '#F44336'       // Red
+    };
+    return colors[difficulty] || '#2196F3'; // Default to blue
+  }
+
+  /**
+   * Highlight segment with difficulty color (Phase 1.6)
+   * Used for tap-to-highlight interaction
+   */
+  highlightSegment(featureLayer, segment) {
+    // Unhighlight any previously highlighted segment
+    this.unhighlightAllSegments();
+
+    // Highlight this segment
+    featureLayer.setStyle({
+      color: featureLayer._difficultyColor,
+      weight: featureLayer._originalStyle.weight + 3,
+      opacity: 1
+    });
+    featureLayer._isHighlighted = true;
+
+    // Blink the transport icon (find junction markers with this segment's transport mode)
+    this.blinkTransportIcon(segment);
+
+    console.log(`Highlighted segment: ${segment.name} with difficulty color`);
+  }
+
+  /**
+   * Unhighlight all segments (Phase 1.6)
+   */
+  unhighlightAllSegments() {
+    this.segmentLayers.forEach((layerData) => {
+      const layer = layerData.layer;
+      layer.eachLayer((featureLayer) => {
+        if (featureLayer._isHighlighted) {
+          featureLayer.setStyle({
+            color: featureLayer._originalStyle.color,
+            weight: featureLayer._originalStyle.weight,
+            opacity: featureLayer._originalStyle.opacity
+          });
+          featureLayer._isHighlighted = false;
+        }
+      });
+    });
+  }
+
+  /**
+   * Blink transport icon for 1-2 seconds (Phase 1.6)
+   */
+  blinkTransportIcon(segment) {
+    // Find the junction markers at the start/end of this segment
+    // For now, we'll add a visual indicator to the segment itself
+    // TODO: If we have separate transport icons on the map, blink those
+
+    console.log(`Blinking transport icon for: ${segment.transportMode}`);
+
+    // We could add a pulsing marker at the segment's midpoint
+    // For now, just log it - we can enhance this later if needed
   }
 
   /**

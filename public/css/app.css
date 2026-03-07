@@ -23,6 +23,16 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Keyframe Animations */
+@keyframes blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.2); }
+}
+
+.blink-icon {
+  animation: blink 0.5s ease-in-out 3;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--text-primary);
@@ -255,6 +265,26 @@ input:checked + .toggle-slider {
 
 input:checked + .toggle-slider:before {
   transform: translateX(20px);
+}
+
+/* Drawer Transport Filters */
+.drawer-transport-filters {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.drawer-transport-filters h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.drawer-filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Layer Toggles */
@@ -1354,6 +1384,158 @@ input:checked + .toggle-slider:before {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+}
+
+/* Transport Filter Panel - Same structure as Legend Panel */
+.transport-filter-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.transport-filter-panel.active {
+  pointer-events: auto;
+}
+
+.transport-filter-panel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.transport-filter-panel.active .transport-filter-panel-overlay {
+  opacity: 1;
+}
+
+.transport-filter-panel-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 85vw;
+  background: white;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.transport-filter-panel.active .transport-filter-panel-content {
+  transform: translateX(0);
+}
+
+/* Mobile: Make transport filter panel narrower */
+@media (max-width: 768px) {
+  .transport-filter-panel-content {
+    width: 200px;
+    max-width: 50vw;
+  }
+}
+
+.transport-filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.transport-filter-panel-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.transport-filter-panel-close {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.transport-filter-panel-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.transport-filter-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.filter-checkbox-item:hover {
+  background: var(--bg-secondary);
+}
+
+.filter-checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.filter-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.filter-checkbox-icon {
+  font-size: 20px;
+}
+
+.filter-checkbox-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: auto;
 }
 
 /* Legend Section Styles (used in side panel) */

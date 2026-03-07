@@ -1112,6 +1112,33 @@ class App {
       }
     }
 
+    // Transport filter toggle button
+    const btnTransportFilter = document.getElementById('btnTransportFilter');
+    const transportFilterPanel = document.getElementById('transportFilterPanel');
+    const transportFilterPanelOverlay = document.getElementById('transportFilterPanelOverlay');
+    const transportFilterPanelClose = document.getElementById('transportFilterPanelClose');
+
+    if (btnTransportFilter && transportFilterPanel) {
+      btnTransportFilter.addEventListener('click', () => {
+        const isActive = transportFilterPanel.classList.toggle('active');
+        btnTransportFilter.dataset.active = isActive;
+      });
+
+      // Close transport filter panel when clicking overlay or close button
+      if (transportFilterPanelOverlay) {
+        transportFilterPanelOverlay.addEventListener('click', () => {
+          transportFilterPanel.classList.remove('active');
+          btnTransportFilter.dataset.active = 'false';
+        });
+      }
+      if (transportFilterPanelClose) {
+        transportFilterPanelClose.addEventListener('click', () => {
+          transportFilterPanel.classList.remove('active');
+          btnTransportFilter.dataset.active = 'false';
+        });
+      }
+    }
+
     // Auto center toggle button
     if (btnAutoCenter) {
       // Get saved state from trip
@@ -1227,10 +1254,11 @@ class App {
    * Initialize transport mode filters (Phase 1.6)
    */
   initTransportFilters() {
-    const filtersEl = document.getElementById('transportFilters');
-    const filterButtons = document.getElementById('filterButtons');
+    const transportFilterPanel = document.getElementById('transportFilterPanel');
+    const transportFilterCheckboxes = document.getElementById('transportFilterCheckboxes');
+    const drawerFilterCheckboxes = document.getElementById('drawerFilterCheckboxes');
 
-    if (!filtersEl || !this.routeV2) return;
+    if (!this.routeV2) return;
 
     // Get transport modes with counts
     const transportCounts = {};
@@ -1258,29 +1286,61 @@ class App {
       'helicopter': 'Helicopter'
     };
 
-    // Create filter buttons
-    filterButtons.innerHTML = '';
-    Object.entries(transportCounts).forEach(([mode, count]) => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn active';
-      btn.dataset.mode = mode;
-      btn.innerHTML = `
-        <span class="filter-icon">${transportIcons[mode] || '🚶'}</span>
-        <span class="filter-label">${transportLabels[mode] || mode}</span>
-        <span class="filter-count">(${count})</span>
+    // Helper function to create checkbox item
+    const createCheckboxItem = (mode, count, idPrefix) => {
+      const item = document.createElement('div');
+      item.className = 'filter-checkbox-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = `${idPrefix}-${mode}`;
+      checkbox.checked = true;
+      checkbox.dataset.mode = mode;
+      checkbox.className = 'transport-filter-checkbox';
+
+      const label = document.createElement('label');
+      label.className = 'filter-checkbox-label';
+      label.htmlFor = `${idPrefix}-${mode}`;
+      label.innerHTML = `
+        <span class="filter-checkbox-icon">${transportIcons[mode] || '🚶'}</span>
+        <span>${transportLabels[mode] || mode}</span>
+        <span class="filter-checkbox-count">${count} segment${count !== 1 ? 's' : ''}</span>
       `;
 
-      // Toggle filter on click
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
-        this.toggleTransportMode(mode, btn.classList.contains('active'));
+      // Toggle filter on checkbox change and sync with other checkboxes
+      checkbox.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        this.toggleTransportMode(mode, isChecked);
+
+        // Sync all checkboxes for this mode
+        document.querySelectorAll(`.transport-filter-checkbox[data-mode="${mode}"]`).forEach(cb => {
+          cb.checked = isChecked;
+        });
       });
 
-      filterButtons.appendChild(btn);
-    });
+      item.appendChild(checkbox);
+      item.appendChild(label);
+      return item;
+    };
 
-    // Show filters
-    filtersEl.style.display = 'block';
+    // Populate transport filter checkboxes in side panel
+    if (transportFilterCheckboxes) {
+      transportFilterCheckboxes.innerHTML = '';
+      Object.entries(transportCounts).forEach(([mode, count]) => {
+        transportFilterCheckboxes.appendChild(createCheckboxItem(mode, count, 'filter'));
+      });
+
+      // Show transport filter panel
+      transportFilterPanel.style.display = 'block';
+    }
+
+    // Populate transport filter checkboxes in drawer
+    if (drawerFilterCheckboxes) {
+      drawerFilterCheckboxes.innerHTML = '';
+      Object.entries(transportCounts).forEach(([mode, count]) => {
+        drawerFilterCheckboxes.appendChild(createCheckboxItem(mode, count, 'drawer-filter'));
+      });
+    }
   }
 
   /**

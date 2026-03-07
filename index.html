@@ -292,13 +292,27 @@
       </div>
     </div>
 
-    <!-- Transport Mode Filters (Phase 1.6) -->
-    <div class="transport-filters" id="transportFilters" style="display: none;">
-      <div class="filter-header">
-        <h4>Filter by Transport</h4>
-      </div>
-      <div class="filter-buttons" id="filterButtons">
-        <!-- Dynamically populated -->
+    <!-- Transport Filter Side Panel (Phase 1.6) -->
+    <div class="transport-filter-panel" id="transportFilterPanel" style="display: none;">
+      <div class="transport-filter-panel-overlay" id="transportFilterPanelOverlay"></div>
+      <div class="transport-filter-panel-content">
+        <div class="transport-filter-panel-header">
+          <h3>Transport Filters</h3>
+          <button class="transport-filter-panel-close" id="transportFilterPanelClose">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="transport-filter-panel-body">
+          <div class="filter-section">
+            <p class="filter-description">Show/hide route segments by transport mode:</p>
+            <div class="filter-checkboxes" id="transportFilterCheckboxes">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -349,6 +363,15 @@
       <!-- Route Layers Section -->
       <div class="layers-section">
         <h3>Route Layers</h3>
+
+        <!-- Transport Filters in Drawer -->
+        <div class="drawer-transport-filters" id="drawerTransportFilters">
+          <h4>Filter by Transport</h4>
+          <div class="drawer-filter-checkboxes" id="drawerFilterCheckboxes">
+            <!-- Dynamically populated (synced with side panel) -->
+          </div>
+        </div>
+
         <div class="layer-toggles" id="layerToggles">
           <!-- Dynamically populated -->
         </div>
@@ -369,6 +392,11 @@
     <!-- Legend Toggle Button -->
     <button class="map-control-btn" id="btnLegendToggle" title="Legend" data-active="false">
       <span class="control-icon">☰</span>
+    </button>
+
+    <!-- Transport Filter Toggle Button -->
+    <button class="map-control-btn" id="btnTransportFilter" title="Transport Filters" data-active="false">
+      <span class="control-icon">🚂</span>
     </button>
 
     <!-- Auto-Center Toggle Button -->
