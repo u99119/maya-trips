@@ -766,7 +766,8 @@ class App {
       const incomingSegments = this.routeV2.segments.filter(s => s.to === junction.id);
       const isReached = incomingSegments.some(s => completedSegmentIds.includes(s.id));
 
-      if (isReached || index === 0) { // First junction is always "reached"
+      // Don't auto-mark any junction as visited
+      if (isReached) {
         milestoneItem.classList.add('visited');
       }
 
@@ -793,7 +794,9 @@ class App {
         if (map) {
           map.invalidateSize();
         }
-        mapManager.setView(junction.lat, junction.lon, 16, { animate: true });
+        // Junction location is [longitude, latitude] array
+        const [lon, lat] = junction.location;
+        mapManager.setView(lat, lon, 16, { animate: true });
       });
 
       // Click on checkmark to simulate arriving at junction
@@ -1289,10 +1292,10 @@ class App {
         btnAutoCenter.title = `Auto-Center: ${newState ? 'ON' : 'OFF'}`;
 
         // Save to trip settings
-        if (this.currentTrip) {
+        if (this.currentTrip && this.currentTrip.tripId) {
           if (!this.currentTrip.settings) this.currentTrip.settings = {};
           this.currentTrip.settings.autoCenter = newState;
-          storage.updateTrip(this.currentTrip.id, this.currentTrip);
+          storage.updateTrip(this.currentTrip.tripId, this.currentTrip);
         }
 
         // Update GPS settings
