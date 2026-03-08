@@ -205,6 +205,16 @@ body {
   z-index: 1;
 }
 
+/* Leaflet Zoom Controls - Ensure they're above drawer */
+.leaflet-bottom.leaflet-right {
+  bottom: calc(var(--drawer-height) + 10px) !important;
+  z-index: 1000 !important;
+}
+
+.leaflet-control-zoom {
+  z-index: 1000 !important;
+}
+
 /* Bottom Drawer */
 .bottom-drawer {
   position: fixed;

@@ -7,6 +7,7 @@ import gps from './gps.js';
 import layers from './layers.js';
 import storage from './storage.js';
 import tripManager from './trips.js';
+import drawerManager from './drawer.js';
 
 // Phase 1.6: Multi-Route Architecture (v2 modules)
 import { routeLoaderV2 } from './route-loader-v2.js';
@@ -41,6 +42,10 @@ class App {
 
       // Initialize trip manager
       await tripManager.init();
+
+      // Initialize drawer manager
+      drawerManager.init();
+      drawerManager.restoreSavedHeight();
 
       // Initialize trip selection UI
       this.initTripSelectionUI();
