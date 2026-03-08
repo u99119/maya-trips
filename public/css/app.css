@@ -1731,21 +1731,21 @@ input:checked + .toggle-slider:before {
   }
 
   .legend-difficulty-items {
-    gap: 6px;
-  }
-
-  .legend-difficulty-item {
     gap: 3px;
   }
 
-  .difficulty-label {
-    font-size: 10px;
+  .legend-difficulty-item {
+    gap: 6px;
   }
 
   .difficulty-badge {
     height: 6px;
     border-radius: 3px;
-    width: 50px;
+    width: 40px;
+  }
+
+  .difficulty-label {
+    font-size: 10px;
   }
 }
 
@@ -2042,27 +2042,29 @@ input:checked + .toggle-slider:before {
   flex: 1;
 }
 
-/* Difficulty items with label on top of colored bar */
+/* Difficulty items with colored bar on left, text on right */
 .legend-difficulty-items {
-  gap: 8px;
+  gap: 4px;
 }
 
 .legend-difficulty-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.difficulty-badge {
+  height: 8px;
+  border-radius: 4px;
+  width: 50px;
+  flex-shrink: 0;
 }
 
 .difficulty-label {
   font-size: 11px;
   font-weight: 400;
   color: var(--text-primary);
-}
-
-.difficulty-badge {
-  height: 8px;
-  border-radius: 4px;
-  width: 60px;
 }
 
 .difficulty-badge.easy {
