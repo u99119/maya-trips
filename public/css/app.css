@@ -229,23 +229,6 @@ body {
   .leaflet-bottom.leaflet-right {
     right: 5px !important;
   }
-
-  /* Smaller map control buttons (legend, transport filters) */
-  .map-control-btn {
-    width: 36px !important;
-    height: 36px !important;
-  }
-
-  .map-control-btn svg {
-    width: 18px !important;
-    height: 18px !important;
-  }
-
-  /* Move map controls closer to right edge */
-  .map-controls {
-    right: 32px !important; /* Closer to edge, accounting for smaller zoom buttons */
-    gap: 8px !important; /* Tighter spacing */
-  }
 }
 
 /* Leaflet Attribution & Scale - Stay at bottom of map container */
@@ -1577,9 +1560,21 @@ input:checked + .toggle-slider:before {
 @media (max-width: 768px) {
   .map-controls {
     top: 70px;
-    right: 10px;
+    right: 32px !important; /* Position between zoom buttons and map edge */
     bottom: auto;
     max-height: calc(100vh - 480px); /* Leave space for drawer and zoom controls */
+    gap: 8px !important; /* Tighter spacing */
+  }
+
+  /* Smaller map control buttons */
+  .map-control-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .map-control-btn svg {
+    width: 18px !important;
+    height: 18px !important;
   }
 }
 
