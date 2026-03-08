@@ -205,9 +205,9 @@ body {
   z-index: 1;
 }
 
-/* Leaflet Controls - Position above drawer and other controls */
-/* Note: Bottom position is set dynamically by drawer.js */
+/* Leaflet Controls - Stay at bottom of map container */
 .leaflet-bottom.leaflet-right {
+  bottom: 10px !important; /* Fixed position relative to map container */
   z-index: 1100 !important; /* Higher than drawer (999) and map controls (1000) */
 }
 
@@ -225,13 +225,14 @@ body {
   }
 }
 
-/* Leaflet Attribution - Also position above drawer */
-/* Note: Bottom position is set dynamically by drawer.js */
+/* Leaflet Attribution & Scale - Stay at bottom of map container */
 .leaflet-bottom.leaflet-left {
+  bottom: 10px !important; /* Fixed position relative to map container */
   z-index: 1100 !important;
 }
 
-.leaflet-control-attribution {
+.leaflet-control-attribution,
+.leaflet-control-scale {
   z-index: 1100 !important;
   font-size: 10px !important;
 }

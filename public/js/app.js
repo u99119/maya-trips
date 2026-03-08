@@ -849,12 +849,13 @@ class App {
     this.handleJunctionArrival(data);
 
     // Update UI - mark milestone as visited in drawer
-    const milestoneItem = document.querySelector(`[data-junction-id="${junction.id}"]`);
+    // Use .milestone-item selector to avoid selecting map markers
+    const milestoneItem = document.querySelector(`.milestone-item[data-junction-id="${junction.id}"]`);
     if (milestoneItem) {
       milestoneItem.classList.add('visited');
-      console.log(`✅ Milestone item marked as visited: ${junction.id}`, milestoneItem.className);
+      console.log(`✅ Milestone item marked as visited in drawer: ${junction.id}`, milestoneItem.className);
     } else {
-      console.warn(`⚠️ Milestone item not found for junction: ${junction.id}`);
+      console.warn(`⚠️ Milestone item not found in drawer for junction: ${junction.id}`);
     }
 
     // Mark junction as completed on map
@@ -1112,9 +1113,10 @@ class App {
 
       // Mark junctions as visited in milestone list
       visitedJunctionIds.forEach(junctionId => {
-        const milestoneItem = document.querySelector(`[data-junction-id="${junctionId}"]`);
+        const milestoneItem = document.querySelector(`.milestone-item[data-junction-id="${junctionId}"]`);
         if (milestoneItem) {
           milestoneItem.classList.add('visited');
+          console.log(`✅ Restored visited state for junction in drawer: ${junctionId}`);
         }
       });
     } else {
