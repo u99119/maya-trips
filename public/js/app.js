@@ -839,10 +839,13 @@ class App {
 
     this.handleJunctionArrival(data);
 
-    // Update UI
+    // Update UI - mark milestone as visited in drawer
     const milestoneItem = document.querySelector(`[data-junction-id="${junction.id}"]`);
     if (milestoneItem) {
       milestoneItem.classList.add('visited');
+      console.log(`✅ Milestone item marked as visited: ${junction.id}`, milestoneItem.className);
+    } else {
+      console.warn(`⚠️ Milestone item not found for junction: ${junction.id}`);
     }
 
     // Mark junction as completed on map

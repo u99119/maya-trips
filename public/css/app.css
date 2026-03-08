@@ -205,14 +205,25 @@ body {
   z-index: 1;
 }
 
-/* Leaflet Zoom Controls - Ensure they're above drawer */
+/* Leaflet Controls - Position above drawer and other controls */
 .leaflet-bottom.leaflet-right {
   bottom: calc(var(--drawer-height) + 10px) !important;
-  z-index: 1000 !important;
+  z-index: 1100 !important; /* Higher than drawer (999) and map controls (1000) */
 }
 
 .leaflet-control-zoom {
-  z-index: 1000 !important;
+  z-index: 1100 !important;
+  margin-bottom: 10px !important;
+}
+
+/* Leaflet Attribution - Also position above drawer */
+.leaflet-bottom.leaflet-left {
+  bottom: calc(var(--drawer-height) + 10px) !important;
+  z-index: 1100 !important;
+}
+
+.leaflet-control-attribution {
+  z-index: 1100 !important;
 }
 
 /* Bottom Drawer */
@@ -591,8 +602,9 @@ input:checked + .toggle-slider:before {
 }
 
 .milestone-item.visited {
-  background: rgba(76, 175, 80, 0.1);
-  border-left: 4px solid var(--success-color);
+  background: rgba(76, 175, 80, 0.15) !important;
+  border-left: 4px solid var(--success-color) !important;
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2) !important;
 }
 
 .milestone-item.active {
@@ -617,9 +629,9 @@ input:checked + .toggle-slider:before {
 }
 
 .milestone-item.visited .milestone-number {
-  background: var(--success-color);
-  border-color: var(--success-color);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  background: var(--success-color) !important;
+  border-color: var(--success-color) !important;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3) !important;
 }
 
 .milestone-info {

@@ -164,9 +164,16 @@ class DrawerManager {
    * Update Leaflet controls position when drawer height changes
    */
   updateLeafletControlsPosition(drawerHeight) {
+    // Update zoom controls (bottom-right)
     const leafletBottomRight = document.querySelector('.leaflet-bottom.leaflet-right');
     if (leafletBottomRight) {
       leafletBottomRight.style.bottom = `${drawerHeight + 10}px`;
+    }
+
+    // Update attribution control (bottom-left)
+    const leafletBottomLeft = document.querySelector('.leaflet-bottom.leaflet-left');
+    if (leafletBottomLeft) {
+      leafletBottomLeft.style.bottom = `${drawerHeight + 10}px`;
     }
   }
 }
