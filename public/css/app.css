@@ -206,24 +206,34 @@ body {
 }
 
 /* Leaflet Controls - Position above drawer and other controls */
+/* Note: Bottom position is set dynamically by drawer.js */
 .leaflet-bottom.leaflet-right {
-  bottom: calc(var(--drawer-height) + 10px) !important;
   z-index: 1100 !important; /* Higher than drawer (999) and map controls (1000) */
 }
 
 .leaflet-control-zoom {
   z-index: 1100 !important;
-  margin-bottom: 10px !important;
+}
+
+/* Smaller zoom buttons on mobile */
+@media (max-width: 768px) {
+  .leaflet-control-zoom a {
+    width: 26px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    font-size: 16px !important;
+  }
 }
 
 /* Leaflet Attribution - Also position above drawer */
+/* Note: Bottom position is set dynamically by drawer.js */
 .leaflet-bottom.leaflet-left {
-  bottom: calc(var(--drawer-height) + 10px) !important;
   z-index: 1100 !important;
 }
 
 .leaflet-control-attribution {
   z-index: 1100 !important;
+  font-size: 10px !important;
 }
 
 /* Bottom Drawer */
@@ -688,13 +698,13 @@ input:checked + .toggle-slider:before {
 }
 
 .milestone-item.visited .milestone-checkmark {
-  border-color: var(--success-color);
-  background: var(--success-color);
-  color: white;
+  border-color: var(--success-color) !important;
+  background: var(--success-color) !important;
+  color: white !important;
 }
 
 .milestone-item.visited .milestone-checkmark svg {
-  opacity: 1;
+  opacity: 1 !important;
 }
 
 /* Map Control Buttons */

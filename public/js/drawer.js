@@ -32,6 +32,15 @@ class DrawerManager {
     this.startHeight = parseInt(drawerHeight) || 400;
 
     this.setupDragListeners();
+
+    // Set initial Leaflet controls position
+    this.updateLeafletControlsPosition(this.startHeight);
+
+    // Also update after a delay to ensure Leaflet has rendered
+    setTimeout(() => {
+      this.updateLeafletControlsPosition(this.drawer.offsetHeight);
+    }, 500);
+
     console.log('✅ Drawer initialized with drag support');
   }
 
@@ -119,6 +128,12 @@ class DrawerManager {
         this.drawer.style.height = `${height}px`;
         document.documentElement.style.setProperty('--drawer-height', `${height}px`);
         this.updateLeafletControlsPosition(height);
+
+        // Update again after delay to ensure Leaflet controls are rendered
+        setTimeout(() => {
+          this.updateLeafletControlsPosition(height);
+        }, 500);
+
         console.log(`Restored drawer height: ${height}px`);
       }
     }
@@ -164,16 +179,24 @@ class DrawerManager {
    * Update Leaflet controls position when drawer height changes
    */
   updateLeafletControlsPosition(drawerHeight) {
+    const bottomPosition = `${drawerHeight + 10}px`;
+
     // Update zoom controls (bottom-right)
     const leafletBottomRight = document.querySelector('.leaflet-bottom.leaflet-right');
     if (leafletBottomRight) {
-      leafletBottomRight.style.bottom = `${drawerHeight + 10}px`;
+      leafletBottomRight.style.bottom = bottomPosition;
+      console.log(`📍 Updated zoom controls position: ${bottomPosition}`);
+    } else {
+      console.warn('⚠️ Zoom controls (.leaflet-bottom.leaflet-right) not found');
     }
 
     // Update attribution control (bottom-left)
     const leafletBottomLeft = document.querySelector('.leaflet-bottom.leaflet-left');
     if (leafletBottomLeft) {
-      leafletBottomLeft.style.bottom = `${drawerHeight + 10}px`;
+      leafletBottomLeft.style.bottom = bottomPosition;
+      console.log(`📍 Updated attribution position: ${bottomPosition}`);
+    } else {
+      console.warn('⚠️ Attribution control (.leaflet-bottom.leaflet-left) not found');
     }
   }
 }
