@@ -588,6 +588,38 @@ input:checked + .toggle-slider:before {
   transform: scale(0.95);
 }
 
+/* Milestones Header with Collapse Button */
+.milestones-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.milestones-section h3 {
+  margin: 0;
+}
+
+/* Collapsible sections */
+.drawer-filter-checkboxes.collapsed,
+.milestones-list.collapsed {
+  display: none;
+}
+
+.drawer-filter-action-btn.collapsed svg {
+  transform: rotate(0deg);
+}
+
+.drawer-filter-action-btn:not(.collapsed) svg {
+  transform: rotate(0deg);
+}
+
+/* Plus/Minus icon rotation */
+.drawer-filter-action-btn[data-collapsed="true"] svg line:last-child {
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
 .drawer-filter-checkboxes {
   display: flex;
   flex-direction: column;
@@ -1649,6 +1681,43 @@ input:checked + .toggle-slider:before {
   padding: 16px;
 }
 
+/* Mobile: Compact legend panel */
+@media (max-width: 768px) {
+  .legend-panel-body {
+    padding: 10px;
+  }
+
+  .legend-section {
+    margin-bottom: 12px;
+  }
+
+  .legend-section h4 {
+    font-size: 11px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .legend-item {
+    padding: 4px 0;
+    gap: 8px;
+  }
+
+  .legend-icon {
+    font-size: 16px;
+  }
+
+  .legend-label {
+    font-size: 12px;
+  }
+
+  .difficulty-badge {
+    height: 16px;
+    border-radius: 8px;
+    width: 50px;
+  }
+}
+
 /* Transport Filter Panel - Same structure as Legend Panel */
 .transport-filter-panel {
   position: absolute;
@@ -1746,6 +1815,35 @@ input:checked + .toggle-slider:before {
   padding: 16px;
 }
 
+/* Mobile: Compact transport filter panel */
+@media (max-width: 768px) {
+  .transport-filter-panel-body {
+    padding: 12px;
+  }
+
+  .filter-description {
+    font-size: 11px;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+  }
+
+  .filter-checkboxes {
+    gap: 6px;
+  }
+
+  .filter-checkbox-item {
+    padding: 6px 8px;
+  }
+
+  .filter-checkbox-label {
+    font-size: 12px;
+  }
+
+  .filter-checkbox-count {
+    font-size: 10px;
+  }
+}
+
 /* Filter Actions (Show All / Hide All) */
 .filter-actions {
   display: flex;
@@ -1755,25 +1853,23 @@ input:checked + .toggle-slider:before {
 
 .filter-action-btn {
   flex: 1;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: #2c2c2c;
+  border: none;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 10px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: white;
   transition: var(--transition);
 }
 
 .filter-action-btn:hover {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  background: #3c3c3c;
 }
 
 .filter-action-btn:active {
@@ -1784,20 +1880,38 @@ input:checked + .toggle-slider:before {
   flex-shrink: 0;
 }
 
+/* Mobile: Icon-only buttons */
+@media (max-width: 768px) {
+  .filter-action-btn {
+    padding: 10px;
+    min-width: 44px;
+  }
+
+  .filter-action-text {
+    display: none;
+  }
+
+  .filter-action-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .filter-section {
   margin-bottom: 20px;
 }
 
 .filter-description {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 12px;
+  line-height: 1.4;
 }
 
 .filter-checkboxes {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .filter-checkbox-item {

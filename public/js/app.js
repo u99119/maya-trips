@@ -1600,6 +1600,51 @@ class App {
         });
       });
     }
+
+    // Add collapse/expand button handler for transport filters (drawer)
+    const btnDrawerToggleFilters = document.getElementById('btnDrawerToggleFilters');
+    if (btnDrawerToggleFilters && drawerFilterCheckboxes) {
+      btnDrawerToggleFilters.addEventListener('click', () => {
+        const isCollapsed = drawerFilterCheckboxes.classList.toggle('collapsed');
+        btnDrawerToggleFilters.dataset.collapsed = isCollapsed;
+
+        // Update icon (minus to plus)
+        const svg = btnDrawerToggleFilters.querySelector('svg');
+        if (isCollapsed) {
+          // Show plus icon
+          svg.innerHTML = `
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19"/>
+          `;
+        } else {
+          // Show minus icon
+          svg.innerHTML = `<line x1="5" y1="12" x2="19" y2="12"/>`;
+        }
+      });
+    }
+
+    // Add collapse/expand button handler for milestones
+    const btnDrawerToggleMilestones = document.getElementById('btnDrawerToggleMilestones');
+    const milestonesList = document.getElementById('milestonesList');
+    if (btnDrawerToggleMilestones && milestonesList) {
+      btnDrawerToggleMilestones.addEventListener('click', () => {
+        const isCollapsed = milestonesList.classList.toggle('collapsed');
+        btnDrawerToggleMilestones.dataset.collapsed = isCollapsed;
+
+        // Update icon (minus to plus)
+        const svg = btnDrawerToggleMilestones.querySelector('svg');
+        if (isCollapsed) {
+          // Show plus icon
+          svg.innerHTML = `
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19"/>
+          `;
+        } else {
+          // Show minus icon
+          svg.innerHTML = `<line x1="5" y1="12" x2="19" y2="12"/>`;
+        }
+      });
+    }
   }
 
   /**
