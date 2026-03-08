@@ -758,22 +758,31 @@ class App {
       return;
     }
 
-    // Get completed segments from current trip
+    // Get completed segments to determine which junctions have been visited
     const completedSegments = this.currentTrip?.completedSegments || [];
-    const completedSegmentIds = completedSegments.map(s => s.segmentId);
+    const visitedJunctionIds = new Set();
+
+    // Add all "from" and "to" junctions from completed segments
+    completedSegments.forEach(seg => {
+      const segment = this.routeV2.segments.find(s => s.id === seg.segmentId);
+      if (segment) {
+        visitedJunctionIds.add(segment.from);
+        visitedJunctionIds.add(segment.to);
+      }
+    });
+
+    console.log(`📍 Populating ${this.routeV2.junctions.length} junctions, ${visitedJunctionIds.size} visited`);
 
     this.routeV2.junctions.forEach((junction, index) => {
       const milestoneItem = document.createElement('div');
       milestoneItem.className = 'milestone-item';
       milestoneItem.dataset.junctionId = junction.id;
 
-      // Check if junction has been reached (if any incoming segment is completed)
-      const incomingSegments = this.routeV2.segments.filter(s => s.to === junction.id);
-      const isReached = incomingSegments.some(s => completedSegmentIds.includes(s.id));
-
-      // Don't auto-mark any junction as visited
-      if (isReached) {
+      // Mark as visited if this junction has been reached
+      const isVisited = visitedJunctionIds.has(junction.id);
+      if (isVisited) {
         milestoneItem.classList.add('visited');
+        console.log(`✅ Junction ${junction.id} marked as visited in drawer`);
       }
 
       milestoneItem.innerHTML = `
