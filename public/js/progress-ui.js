@@ -30,6 +30,7 @@ class ProgressUI {
     this.updateTripProgress();
     this.updateNextDestination();
     this.updateCompletedSegments();
+    this.updateAvailableRoutes(); // Phase 1.6.8 enhancement
   }
 
   /**
@@ -218,6 +219,81 @@ class ProgressUI {
 
       list.appendChild(item);
     });
+  }
+
+  /**
+   * Update available routes at current junction (Phase 1.6.8 enhancement)
+   */
+  updateAvailableRoutes() {
+    const container = document.getElementById('availableRoutesContainer');
+    const list = document.getElementById('availableRoutesList');
+
+    if (!container || !list || !this.currentTrip || !this.routeV2) {
+      if (container) container.style.display = 'none';
+      return;
+    }
+
+    // Only show if at a junction
+    if (!this.currentTrip.currentJunction) {
+      container.style.display = 'none';
+      return;
+    }
+
+    // Get available outgoing segments from current junction
+    const outgoingSegments = this.routeV2.segments.filter(
+      s => s.from === this.currentTrip.currentJunction
+    );
+
+    if (outgoingSegments.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    // Show container and populate list
+    container.style.display = 'block';
+    list.innerHTML = '';
+
+    // Get recommended segment (if any)
+    const recommendedPath = this.routeV2.recommendedPaths?.[0];
+    const recommendedSegmentId = recommendedPath?.segments?.[0]; // Simplified - would need better logic
+
+    outgoingSegments.forEach(segment => {
+      const item = document.createElement('div');
+      item.className = 'available-route-item';
+
+      const isRecommended = segment.id === recommendedSegmentId;
+      if (isRecommended) {
+        item.classList.add('recommended');
+      }
+
+      const distanceKm = (segment.distance / 1000).toFixed(1);
+      const timeMin = Math.round(segment.estimatedTime / 60);
+      const icon = this.getTransportIcon(segment.transportMode);
+
+      item.innerHTML = `
+        <span class="route-icon">${icon}</span>
+        <span class="route-name">${segment.name}</span>
+        <span class="route-details">${distanceKm}km • ${timeMin}min</span>
+        ${isRecommended ? '<span class="recommended-badge">Recommended</span>' : ''}
+      `;
+
+      list.appendChild(item);
+    });
+  }
+
+  /**
+   * Get transport mode icon
+   */
+  getTransportIcon(mode) {
+    const icons = {
+      'walking': '🚶',
+      'driving': '🚗',
+      'flying': '✈️',
+      'battery-car': '🚡',
+      'ropeway': '🚠',
+      'helicopter': '🚁'
+    };
+    return icons[mode] || '🚶';
   }
 }
 

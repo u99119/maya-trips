@@ -15,6 +15,7 @@ import { junctionDetector } from './junction-detector.js';
 import { routeSelector } from './route-selector.js';
 import { segmentTracker } from './segment-tracker.js';
 import { progressUI } from './progress-ui.js';
+import notifications from './notifications.js';
 
 class App {
   constructor() {
@@ -1176,12 +1177,21 @@ class App {
     // Set up junction detector event listeners
     junctionDetector.on('junctionApproach', (data) => {
       console.log(`⚠️ Approaching junction: ${data.junction.name} (${Math.round(data.distance)}m away)`);
-      // TODO: Show approach notification
+      // Show approach notification (Phase 1.6.8)
+      notifications.approachingJunction(
+        data.junction.name,
+        `${Math.round(data.distance)}m`
+      );
     });
 
     junctionDetector.on('junctionArrival', (data) => {
       console.log(`📍 Arrived at junction: ${data.junction.name}`);
       this.handleJunctionArrival(data);
+      // Show junction reached notification (Phase 1.6.8)
+      notifications.junctionReached(
+        data.junction.name,
+        data.availableSegments?.length || 0
+      );
       // Update progress UI
       progressUI.updateAll();
     });
@@ -1202,6 +1212,14 @@ class App {
     // Set up segment tracker event listeners
     segmentTracker.on('segmentStarted', (data) => {
       console.log(`🏁 Segment tracking started: ${data.segment.name}`);
+      // Show segment started notification (Phase 1.6.8)
+      const distanceKm = (data.segment.distance / 1000).toFixed(1);
+      const timeMin = Math.round(data.segment.estimatedTime / 60);
+      notifications.segmentStarted(
+        data.segment.name,
+        `${distanceKm}km`,
+        `~${timeMin}min`
+      );
       // Update progress UI
       progressUI.updateAll();
     });
@@ -1216,6 +1234,15 @@ class App {
       console.log(`🎉 Segment completed: ${data.segmentName}`);
       console.log(`   Distance: ${data.actualDistance}m (expected: ${data.expectedDistance}m)`);
       console.log(`   Time: ${Math.round(data.actualTime / 60)}min (expected: ${Math.round(data.expectedTime / 60)}min)`);
+
+      // Show segment completed notification (Phase 1.6.8)
+      const distanceKm = (data.actualDistance / 1000).toFixed(1);
+      const timeMin = Math.round(data.actualTime / 60);
+      notifications.segmentCompleted(
+        data.segmentName,
+        `${distanceKm}km`,
+        `${timeMin}min`
+      );
 
       // Update trip data
       if (!this.currentTrip.completedSegments) {
@@ -1527,6 +1554,50 @@ class App {
       drawerFilterCheckboxes.innerHTML = '';
       Object.entries(transportCounts).forEach(([mode, count]) => {
         drawerFilterCheckboxes.appendChild(createCheckboxItem(mode, count, 'drawer-filter'));
+      });
+    }
+
+    // Add Show All / Hide All button handlers (side panel)
+    const btnShowAll = document.getElementById('btnShowAllTransport');
+    const btnHideAll = document.getElementById('btnHideAllTransport');
+
+    if (btnShowAll) {
+      btnShowAll.addEventListener('click', () => {
+        document.querySelectorAll('.transport-filter-checkbox').forEach(cb => {
+          cb.checked = true;
+          this.toggleTransportMode(cb.dataset.mode, true);
+        });
+      });
+    }
+
+    if (btnHideAll) {
+      btnHideAll.addEventListener('click', () => {
+        document.querySelectorAll('.transport-filter-checkbox').forEach(cb => {
+          cb.checked = false;
+          this.toggleTransportMode(cb.dataset.mode, false);
+        });
+      });
+    }
+
+    // Add Show All / Hide All button handlers (drawer)
+    const btnDrawerShowAll = document.getElementById('btnDrawerShowAll');
+    const btnDrawerHideAll = document.getElementById('btnDrawerHideAll');
+
+    if (btnDrawerShowAll) {
+      btnDrawerShowAll.addEventListener('click', () => {
+        document.querySelectorAll('.transport-filter-checkbox').forEach(cb => {
+          cb.checked = true;
+          this.toggleTransportMode(cb.dataset.mode, true);
+        });
+      });
+    }
+
+    if (btnDrawerHideAll) {
+      btnDrawerHideAll.addEventListener('click', () => {
+        document.querySelectorAll('.transport-filter-checkbox').forEach(cb => {
+          cb.checked = false;
+          this.toggleTransportMode(cb.dataset.mode, false);
+        });
       });
     }
   }

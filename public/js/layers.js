@@ -407,6 +407,25 @@ class Layers {
           className: 'segment-popup-container'
         });
 
+        // Add tooltip (hover label) - Phase 1.6.7 enhancement
+        const distanceKm = (segment.distance / 1000).toFixed(1);
+        const timeMin = Math.round(segment.estimatedTime / 60);
+        const tooltipContent = `
+          <div style="text-align: center;">
+            <strong>${segment.name}</strong><br>
+            <span style="font-size: 11px; color: #666;">
+              ${distanceKm}km • ${timeMin}min • ${this.getTransportIcon(segment.transportMode)}
+            </span>
+          </div>
+        `;
+
+        featureLayer.bindTooltip(tooltipContent, {
+          permanent: false,
+          direction: 'top',
+          className: 'segment-tooltip',
+          opacity: 0.9
+        });
+
         // Store original style and difficulty color
         featureLayer._originalStyle = {
           color: layerOptions.color,

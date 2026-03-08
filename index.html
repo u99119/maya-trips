@@ -308,6 +308,24 @@
         <div class="transport-filter-panel-body">
           <div class="filter-section">
             <p class="filter-description">Show/hide route segments by transport mode:</p>
+
+            <!-- Show All / Hide All Buttons -->
+            <div class="filter-actions">
+              <button class="filter-action-btn" id="btnShowAllTransport">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Show All
+              </button>
+              <button class="filter-action-btn" id="btnHideAllTransport">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Hide All
+              </button>
+            </div>
+
             <div class="filter-checkboxes" id="transportFilterCheckboxes">
               <!-- Dynamically populated -->
             </div>
@@ -366,6 +384,14 @@
           <strong>Next:</strong> <span id="nextMilestoneValue">--</span>
         </div>
 
+        <!-- Available Routes at Current Junction (Phase 1.6.8 enhancement) -->
+        <div class="available-routes" id="availableRoutesContainer" style="display: none;">
+          <h4>Available Routes</h4>
+          <div class="available-routes-list" id="availableRoutesList">
+            <!-- Dynamically populated when at junction -->
+          </div>
+        </div>
+
         <!-- Completed Segments List -->
         <div class="completed-segments" id="completedSegmentsContainer" style="display: none;">
           <h4>Completed Segments</h4>
@@ -405,7 +431,22 @@
 
         <!-- Transport Filters in Drawer -->
         <div class="drawer-transport-filters" id="drawerTransportFilters">
-          <h4>Filter by Transport</h4>
+          <div class="drawer-filter-header">
+            <h4>Filter by Transport</h4>
+            <div class="drawer-filter-actions">
+              <button class="drawer-filter-action-btn" id="btnDrawerShowAll" title="Show All">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+              <button class="drawer-filter-action-btn" id="btnDrawerHideAll" title="Hide All">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
           <div class="drawer-filter-checkboxes" id="drawerFilterCheckboxes">
             <!-- Dynamically populated (synced with side panel) -->
           </div>
@@ -466,6 +507,11 @@
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <p>Loading route data...</p>
+  </div>
+
+  <!-- Notification Toast Container (Phase 1.6.8) -->
+  <div class="notification-container" id="notificationContainer">
+    <!-- Notifications will be dynamically added here -->
   </div>
 
   <!-- Leaflet JS -->
