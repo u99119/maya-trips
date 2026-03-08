@@ -336,6 +336,116 @@
     </div>
   </div>
 
+  <!-- Statistics Side Panel (Phase 1.6.9) -->
+  <div class="stats-panel" id="statsPanel">
+    <div class="stats-panel-overlay" id="statsPanelOverlay"></div>
+    <div class="stats-panel-content">
+      <div class="stats-panel-header">
+        <h3>Stats</h3>
+        <button class="stats-panel-close" id="statsPanelClose" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="stats-panel-body">
+        <!-- Overview Section -->
+        <div class="stats-section">
+          <h5>Overview</h5>
+          <div class="stats-items">
+            <div class="stat-row">
+              <span class="stat-label">Progress</span>
+              <span class="stat-value" id="statsProgress">0%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Segments</span>
+              <span class="stat-value" id="statsSegments">0/0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distance Section -->
+        <div class="stats-section">
+          <h5>Distance</h5>
+          <div class="stats-items">
+            <div class="stat-row">
+              <span class="stat-label">Actual</span>
+              <span class="stat-value" id="statsActualDist">0 km</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Recommended</span>
+              <span class="stat-value" id="statsRecDist">0 km</span>
+            </div>
+            <div class="stat-row stat-diff">
+              <span class="stat-label">Difference</span>
+              <span class="stat-value" id="statsDistDiff">0 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Section -->
+        <div class="stats-section">
+          <h5>Time</h5>
+          <div class="stats-items">
+            <div class="stat-row">
+              <span class="stat-label">Actual</span>
+              <span class="stat-value" id="statsActualTime">0m</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Recommended</span>
+              <span class="stat-value" id="statsRecTime">0m</span>
+            </div>
+            <div class="stat-row stat-diff">
+              <span class="stat-label">Difference</span>
+              <span class="stat-value" id="statsTimeDiff">0m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transport Breakdown Section -->
+        <div class="stats-section">
+          <h5>Transport</h5>
+          <div class="stats-items" id="statsTransportBreakdown">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Efficiency Score Section -->
+        <div class="stats-section">
+          <h5>Score</h5>
+          <div class="stats-score" id="statsScore">
+            <div class="score-value">--</div>
+            <div class="score-breakdown">
+              <div class="score-item">
+                <span>Route</span>
+                <span id="scoreRoute">--%</span>
+              </div>
+              <div class="score-item">
+                <span>Distance</span>
+                <span id="scoreDist">--%</span>
+              </div>
+              <div class="score-item">
+                <span>Time</span>
+                <span id="scoreTime">--%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="stats-section">
+          <h5>Export</h5>
+          <div class="stats-export-buttons">
+            <button class="stats-export-btn" id="btnExportJSON">JSON</button>
+            <button class="stats-export-btn" id="btnExportCSV">CSV</button>
+            <button class="stats-export-btn" id="btnExportText">Text</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Drawer -->
   <div class="bottom-drawer" id="bottomDrawer" style="display: none;">
     <div class="drawer-handle"></div>
@@ -398,6 +508,39 @@
           <h4>Completed Segments</h4>
           <div class="completed-segments-list" id="completedSegmentsList">
             <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Trip Statistics Section (Phase 1.6.9) -->
+        <div class="drawer-stats-section" id="drawerStatsSection" style="display: none;">
+          <div class="drawer-section-header">
+            <h4>Trip Stats</h4>
+            <button class="drawer-toggle-btn" id="btnDrawerToggleStats" data-collapsed="false" aria-label="Toggle stats">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="drawer-stats-content" id="drawerStatsContent">
+            <!-- Distance -->
+            <div class="drawer-stat-row">
+              <span class="drawer-stat-label">Distance</span>
+              <span class="drawer-stat-value" id="drawerStatDist">--</span>
+            </div>
+            <!-- Time -->
+            <div class="drawer-stat-row">
+              <span class="drawer-stat-label">Time</span>
+              <span class="drawer-stat-value" id="drawerStatTime">--</span>
+            </div>
+            <!-- Efficiency -->
+            <div class="drawer-stat-row">
+              <span class="drawer-stat-label">Efficiency</span>
+              <span class="drawer-stat-value" id="drawerStatEfficiency">--</span>
+            </div>
+            <!-- Transport Breakdown -->
+            <div class="drawer-stat-transport" id="drawerStatTransport">
+              <!-- Dynamically populated -->
+            </div>
           </div>
         </div>
       </div>
@@ -514,6 +657,15 @@
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     </button>
+
+    <!-- Statistics Button (Phase 1.6.9) -->
+    <button class="map-control-btn" id="btnStatsToggle" title="Statistics" data-active="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    </button>
   </div>
 
   <!-- Loading Overlay -->
@@ -528,10 +680,13 @@
   </div>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin=""></script>
-  
+
+  <!-- Trip Statistics JS (Phase 1.6.9) -->
+  <script src="/js/trip-statistics.js"></script>
+
   <!-- App JS -->
   <script type="module" src="/js/app.js"></script>
 </body>

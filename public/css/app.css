@@ -442,6 +442,118 @@ body {
   font-size: 12px;
 }
 
+/* Drawer Statistics Section (Phase 1.6.9) */
+.drawer-stats-section {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(33, 150, 243, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(33, 150, 243, 0.1);
+}
+
+.drawer-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.drawer-section-header h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.drawer-stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.drawer-stats-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.drawer-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+  line-height: 1;
+  margin: 0;
+}
+
+.drawer-stat-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.drawer-stat-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.drawer-stat-transport {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.drawer-transport-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.drawer-transport-item span:first-child {
+  color: var(--text-secondary);
+}
+
+.drawer-transport-item span:last-child {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Mobile: Even more compact */
+@media (max-width: 768px) {
+  .drawer-stats-section {
+    padding: 8px;
+    margin-top: 12px;
+  }
+
+  .drawer-section-header h4 {
+    font-size: 10px;
+  }
+
+  .drawer-stat-row {
+    padding: 2px 0;
+  }
+
+  .drawer-stat-label,
+  .drawer-stat-value {
+    font-size: 10px;
+  }
+
+  .drawer-transport-item {
+    font-size: 9px;
+  }
+}
+
 .completed-segment-item .checkmark {
   color: var(--success-color);
   font-size: 16px;
@@ -2093,6 +2205,271 @@ input:checked + .toggle-slider:before {
 
 .difficulty-badge.hard {
   background: var(--danger-color);
+}
+
+/* Statistics Panel (Phase 1.6.9) - Same structure as Legend/Transport Filter */
+.stats-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1100;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.stats-panel.active {
+  visibility: visible;
+  pointer-events: all;
+}
+
+.stats-panel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stats-panel.active .stats-panel-overlay {
+  opacity: 1;
+}
+
+.stats-panel-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 85vw;
+  background: var(--bg-primary);
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.stats-panel.active .stats-panel-content {
+  transform: translateX(0);
+}
+
+.stats-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.stats-panel-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stats-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.stats-panel-close:hover {
+  color: var(--text-primary);
+}
+
+.stats-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+/* Stats Sections */
+.stats-section {
+  margin-bottom: 12px;
+}
+
+.stats-section:last-child {
+  margin-bottom: 0;
+}
+
+.stats-section h5 {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.stats-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 12px;
+  line-height: 1;
+  margin: 0;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.stat-value {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.stat-diff .stat-value {
+  font-weight: 600;
+}
+
+/* Efficiency Score */
+.stats-score {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.score-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-color);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.score-breakdown {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.score-item span:first-child {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.score-item span:last-child {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Export Buttons */
+.stats-export-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.stats-export-btn {
+  flex: 1;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-export-btn:hover {
+  background: var(--primary-dark);
+}
+
+.stats-export-btn:active {
+  transform: scale(0.98);
+}
+
+/* Mobile: Ultra-compact stats panel */
+@media (max-width: 768px) {
+  .stats-panel-content {
+    width: 280px;
+    max-width: 75vw;
+  }
+
+  .stats-panel-header {
+    padding: 12px;
+  }
+
+  .stats-panel-header h3 {
+    font-size: 14px;
+  }
+
+  .stats-panel-body {
+    padding: 8px;
+  }
+
+  .stats-section {
+    margin-bottom: 10px;
+  }
+
+  .stats-section h5 {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .stat-row {
+    padding: 2px 0;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  .stat-value {
+    font-size: 11px;
+  }
+
+  .score-value {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .score-item {
+    font-size: 9px;
+  }
+
+  .score-item span:last-child {
+    font-size: 10px;
+  }
+
+  .stats-export-btn {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
 }
 
 /* Transport Mode Filters */

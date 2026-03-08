@@ -28,6 +28,9 @@ class App {
     // Phase 1.6: v2 route architecture
     this.routeV2 = null; // Loaded v2 route (if available)
     this.useV2Architecture = false; // Flag to determine which architecture to use
+
+    // Phase 1.6.9: Trip statistics
+    this.tripStatistics = new TripStatistics();
   }
 
   /**
@@ -828,8 +831,11 @@ class App {
   /**
    * Simulate arriving at a junction (for manual testing)
    */
-  simulateJunctionArrival(junction, index) {
+  async simulateJunctionArrival(junction, index) {
     console.log(`🧪 TEST MODE: Simulating arrival at ${junction.name}`);
+
+    // PHASE 1.6.9: Complete incoming segment before showing route selector
+    await this.completeIncomingSegment(junction);
 
     // Get available segments with proper metadata using junction detector
     const availableSegments = junctionDetector.getAvailableSegments(junction.id);
@@ -867,6 +873,99 @@ class App {
       this.currentTrip.currentJunction = junction.id;
       progressUI.updateAll();
     }
+  }
+
+  /**
+   * Complete the incoming segment to a junction (Phase 1.6.9)
+   * Finds and completes the segment that ends at this junction
+   */
+  async completeIncomingSegment(junction) {
+    if (!this.routeV2 || !this.currentTrip) {
+      return;
+    }
+
+    // Find all segments that end at this junction
+    const incomingSegments = this.routeV2.segments.filter(seg => seg.to === junction.id);
+
+    if (incomingSegments.length === 0) {
+      console.log(`ℹ️ No incoming segments to ${junction.name} (likely start junction)`);
+      return;
+    }
+
+    // Get already completed segment IDs
+    const completedSegmentIds = this.currentTrip.completedSegments?.map(s => s.segmentId) || [];
+
+    // Find the incoming segment that hasn't been completed yet
+    // Prefer segments from the last visited junction
+    let segmentToComplete = null;
+
+    // Strategy 1: If there's a currently tracking segment, complete it
+    if (segmentTracker.isTracking()) {
+      const currentSegment = segmentTracker.getCurrentSegment();
+      if (currentSegment && currentSegment.to === junction.id) {
+        segmentToComplete = currentSegment;
+        console.log(`✅ Completing currently tracked segment: ${segmentToComplete.name}`);
+      }
+    }
+
+    // Strategy 2: Find the most recent uncompleted incoming segment
+    if (!segmentToComplete) {
+      for (const segment of incomingSegments) {
+        if (!completedSegmentIds.includes(segment.id)) {
+          segmentToComplete = segment;
+          break;
+        }
+      }
+    }
+
+    if (!segmentToComplete) {
+      console.log(`ℹ️ All incoming segments to ${junction.name} already completed`);
+      return;
+    }
+
+    // Create segment data for completion
+    const fromJunction = this.routeV2.junctions.find(j => j.id === segmentToComplete.from);
+    const segmentData = {
+      segment: segmentToComplete,
+      destination: junction,
+      distance: segmentToComplete.distance,
+      estimatedTime: segmentToComplete.estimatedTime,
+      transportMode: segmentToComplete.transportMode
+    };
+
+    // Complete the segment manually (simulate completion)
+    const completedSegment = {
+      segmentId: segmentToComplete.id,
+      segmentName: segmentToComplete.name,
+      from: segmentToComplete.from,
+      to: segmentToComplete.to,
+      transportMode: segmentToComplete.transportMode,
+      startedAt: new Date(Date.now() - (segmentToComplete.estimatedTime || 600) * 1000).toISOString(),
+      completedAt: new Date().toISOString(),
+      actualDistance: segmentToComplete.distance, // Use expected distance for manual completion
+      expectedDistance: segmentToComplete.distance,
+      actualTime: segmentToComplete.estimatedTime || 600, // Use expected time
+      expectedTime: segmentToComplete.estimatedTime || 600,
+      pathPoints: [] // No GPS points for manual completion
+    };
+
+    // Add to trip's completed segments
+    if (!this.currentTrip.completedSegments) {
+      this.currentTrip.completedSegments = [];
+    }
+    this.currentTrip.completedSegments.push(completedSegment);
+
+    // Save to storage
+    await storage.updateTrip(this.currentTrip.tripId, {
+      completedSegments: this.currentTrip.completedSegments
+    });
+
+    console.log(`✅ Manually completed segment: ${segmentToComplete.name}`);
+    console.log(`   From: ${fromJunction?.name || segmentToComplete.from} → To: ${junction.name}`);
+    console.log(`   Distance: ${segmentToComplete.distance}m, Time: ${segmentToComplete.estimatedTime}s`);
+
+    // Update statistics
+    this.updateDrawerStatistics();
   }
 
   /**
@@ -1135,6 +1234,11 @@ class App {
     // Update progress
     this.updateProgress();
 
+    // Update drawer statistics (Phase 1.6.9)
+    if (this.useV2Architecture) {
+      this.updateDrawerStatistics();
+    }
+
     // Auto-start GPS if it was enabled
     if (tripSettings.gpsEnabled) {
       this.toggleGPS(true);
@@ -1252,6 +1356,13 @@ class App {
 
       // Update progress UI
       progressUI.updateAll();
+
+      // Update statistics (Phase 1.6.9)
+      this.updateDrawerStatistics();
+      const statsPanel = document.getElementById('statsPanel');
+      if (statsPanel && statsPanel.classList.contains('active')) {
+        this.updateStatisticsPanel();
+      }
     });
 
     segmentTracker.on('segmentAbandoned', (data) => {
@@ -1352,6 +1463,69 @@ class App {
           btnTransportFilter.dataset.active = 'false';
         });
       }
+    }
+
+    // Statistics panel toggle button (Phase 1.6.9)
+    const btnStatsToggle = document.getElementById('btnStatsToggle');
+    const statsPanel = document.getElementById('statsPanel');
+    const statsPanelOverlay = document.getElementById('statsPanelOverlay');
+    const statsPanelClose = document.getElementById('statsPanelClose');
+
+    if (btnStatsToggle && statsPanel) {
+      btnStatsToggle.addEventListener('click', () => {
+        const isActive = statsPanel.classList.toggle('active');
+        btnStatsToggle.dataset.active = isActive;
+
+        // Update statistics when opening
+        if (isActive) {
+          this.updateStatisticsPanel();
+        }
+      });
+
+      // Close stats panel when clicking overlay or close button
+      if (statsPanelOverlay) {
+        statsPanelOverlay.addEventListener('click', () => {
+          statsPanel.classList.remove('active');
+          btnStatsToggle.dataset.active = 'false';
+        });
+      }
+      if (statsPanelClose) {
+        statsPanelClose.addEventListener('click', () => {
+          statsPanel.classList.remove('active');
+          btnStatsToggle.dataset.active = 'false';
+        });
+      }
+    }
+
+    // Export buttons (Phase 1.6.9)
+    const btnExportJSON = document.getElementById('btnExportJSON');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnExportText = document.getElementById('btnExportText');
+
+    if (btnExportJSON) {
+      btnExportJSON.addEventListener('click', () => {
+        this.tripStatistics.exportAsJSON();
+      });
+    }
+
+    if (btnExportCSV) {
+      btnExportCSV.addEventListener('click', () => {
+        this.tripStatistics.exportAsCSV();
+      });
+    }
+
+    if (btnExportText) {
+      btnExportText.addEventListener('click', () => {
+        const summary = this.tripStatistics.generateTextSummary();
+        // Create a text file download
+        const blob = new Blob([summary], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `trip-summary-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
     }
 
     // Auto center toggle button
@@ -1679,6 +1853,176 @@ class App {
   showError(message) {
     // Simple alert for now, can be replaced with toast notification
     alert(message);
+  }
+
+  /**
+   * Update statistics panel (Phase 1.6.9)
+   */
+  updateStatisticsPanel() {
+    if (!this.currentTrip || !this.routeV2) {
+      return;
+    }
+
+    // Update trip statistics module
+    this.tripStatistics.update(this.currentTrip, this.routeV2);
+
+    // Get calculations
+    const distComp = this.tripStatistics.calculateDistanceComparison();
+    const timeComp = this.tripStatistics.calculateTimeComparison();
+    const transport = this.tripStatistics.getTransportBreakdown();
+    const score = this.tripStatistics.calculateEfficiencyScore();
+
+    // Update overview
+    const totalSegments = this.routeV2.segments.length;
+    const completedCount = this.currentTrip.completedSegments?.length || 0;
+    const progressPercent = totalSegments > 0 ? Math.round((completedCount / totalSegments) * 100) : 0;
+
+    const statsProgress = document.getElementById('statsProgress');
+    const statsSegments = document.getElementById('statsSegments');
+    if (statsProgress) statsProgress.textContent = `${progressPercent}%`;
+    if (statsSegments) statsSegments.textContent = `${completedCount}/${totalSegments}`;
+
+    // Update distance
+    const statsActualDist = document.getElementById('statsActualDist');
+    const statsRecDist = document.getElementById('statsRecDist');
+    const statsDistDiff = document.getElementById('statsDistDiff');
+
+    if (statsActualDist) statsActualDist.textContent = `${this.tripStatistics.formatDistance(distComp.actual)} km`;
+    if (statsRecDist) statsRecDist.textContent = `${this.tripStatistics.formatDistance(distComp.recommended)} km`;
+
+    const distDiff = distComp.actual - distComp.recommended;
+    const distDiffText = `${distDiff >= 0 ? '+' : ''}${this.tripStatistics.formatDistance(distDiff)} km (${this.tripStatistics.formatPercentage(distComp.percentage)})`;
+    if (statsDistDiff) statsDistDiff.textContent = distDiffText;
+
+    // Update time
+    const statsActualTime = document.getElementById('statsActualTime');
+    const statsRecTime = document.getElementById('statsRecTime');
+    const statsTimeDiff = document.getElementById('statsTimeDiff');
+
+    if (statsActualTime) statsActualTime.textContent = this.tripStatistics.formatTime(timeComp.actual);
+    if (statsRecTime) statsRecTime.textContent = this.tripStatistics.formatTime(timeComp.recommended);
+
+    const timeDiff = timeComp.actual - timeComp.recommended;
+    const timeDiffText = `${timeDiff >= 0 ? '+' : ''}${this.tripStatistics.formatTime(Math.abs(timeDiff))} (${this.tripStatistics.formatPercentage(timeComp.percentage)})`;
+    if (statsTimeDiff) statsTimeDiff.textContent = timeDiffText;
+
+    // Update transport breakdown
+    const transportBreakdownEl = document.getElementById('statsTransportBreakdown');
+    if (transportBreakdownEl) {
+      transportBreakdownEl.innerHTML = '';
+      transport.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        row.innerHTML = `
+          <span class="stat-label">${this.tripStatistics.getTransportIcon(t.mode)} ${t.mode}</span>
+          <span class="stat-value">${this.tripStatistics.formatDistance(t.distance)} km (${Math.round(t.percentage)}%)</span>
+        `;
+        transportBreakdownEl.appendChild(row);
+      });
+    }
+
+    // Update efficiency score
+    const scoreValue = document.querySelector('.score-value');
+    const scoreRoute = document.getElementById('scoreRoute');
+    const scoreDist = document.getElementById('scoreDist');
+    const scoreTime = document.getElementById('scoreTime');
+
+    if (scoreValue) scoreValue.textContent = score.total;
+    if (scoreRoute) scoreRoute.textContent = `${score.routeAdherence}%`;
+    if (scoreDist) scoreDist.textContent = `${score.distanceEfficiency}%`;
+    if (scoreTime) scoreTime.textContent = `${score.timeEfficiency}%`;
+  }
+
+  /**
+   * Update drawer statistics section (Phase 1.6.9)
+   */
+  updateDrawerStatistics() {
+    const drawerStatsSection = document.getElementById('drawerStatsSection');
+
+    if (!this.currentTrip || !this.routeV2) {
+      console.log('📊 Drawer stats: No trip or route data');
+      return;
+    }
+
+    if (!drawerStatsSection) {
+      console.log('📊 Drawer stats: Element not found');
+      return;
+    }
+
+    // Show the section if there are completed segments
+    const completedCount = this.currentTrip.completedSegments?.length || 0;
+    console.log(`📊 Drawer stats: ${completedCount} completed segments`);
+
+    if (completedCount > 0) {
+      drawerStatsSection.style.display = 'block';
+      console.log('📊 Drawer stats: Section shown');
+    } else {
+      drawerStatsSection.style.display = 'none';
+      console.log('📊 Drawer stats: Section hidden (no completed segments)');
+      return;
+    }
+
+    // Update trip statistics module
+    this.tripStatistics.update(this.currentTrip, this.routeV2);
+
+    // Get calculations
+    const distComp = this.tripStatistics.calculateDistanceComparison();
+    const timeComp = this.tripStatistics.calculateTimeComparison();
+    const transport = this.tripStatistics.getTransportBreakdown();
+    const score = this.tripStatistics.calculateEfficiencyScore();
+
+    // Update distance (compact format)
+    const distDiff = distComp.actual - distComp.recommended;
+    const distText = `${this.tripStatistics.formatDistance(distComp.actual)}km (${distDiff >= 0 ? '+' : ''}${this.tripStatistics.formatDistance(distDiff)}km)`;
+    document.getElementById('drawerStatDist').textContent = distText;
+
+    // Update time (compact format)
+    const timeDiff = timeComp.actual - timeComp.recommended;
+    const timeText = `${this.tripStatistics.formatTime(timeComp.actual)} (${timeDiff >= 0 ? '+' : ''}${this.tripStatistics.formatTime(Math.abs(timeDiff))})`;
+    document.getElementById('drawerStatTime').textContent = timeText;
+
+    // Update efficiency
+    document.getElementById('drawerStatEfficiency').textContent = `${score.total}/100`;
+
+    // Update transport breakdown
+    const transportEl = document.getElementById('drawerStatTransport');
+    if (transportEl && transport.length > 0) {
+      transportEl.innerHTML = '';
+      transport.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'drawer-transport-item';
+        item.innerHTML = `
+          <span>${this.tripStatistics.getTransportIcon(t.mode)} ${t.mode}</span>
+          <span>${this.tripStatistics.formatDistance(t.distance)}km (${Math.round(t.percentage)}%)</span>
+        `;
+        transportEl.appendChild(item);
+      });
+    }
+
+    // Setup collapse button if not already done
+    const btnToggle = document.getElementById('btnDrawerToggleStats');
+    const content = document.getElementById('drawerStatsContent');
+    if (btnToggle && content && !btnToggle.dataset.initialized) {
+      btnToggle.dataset.initialized = 'true';
+      btnToggle.addEventListener('click', () => {
+        const isCollapsed = content.classList.toggle('collapsed');
+        btnToggle.dataset.collapsed = isCollapsed;
+
+        const svg = btnToggle.querySelector('svg');
+        if (svg) {
+          if (isCollapsed) {
+            svg.innerHTML = `
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19"/>
+            `;
+          } else {
+            svg.innerHTML = `<line x1="5" y1="12" x2="19" y2="12"/>`;
+          }
+        }
+      });
+    }
+
+    console.log('📊 Drawer stats: Update complete');
   }
 }
 
