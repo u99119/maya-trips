@@ -1,0 +1,18 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "banganga-ardhkuwari-shortcut",
+    "name": "Banganga to Ardhkuwari (Shortcut)"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.94500, 32.99800],
+      [74.94800, 33.00200],
+      [74.95300, 33.00800],
+      [74.95700, 33.01400],
+      [74.96000, 33.01800]
+    ]
+  }
+}
+

@@ -1,0 +1,16 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "darshani-banganga",
+    "name": "Darshani Deodhi to Banganga"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.93800, 32.99300],
+      [74.94100, 32.99500],
+      [74.94500, 32.99800]
+    ]
+  }
+}
+

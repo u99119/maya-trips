@@ -1,0 +1,17 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "bhawan-bhairon-walk",
+    "name": "Bhawan to Bhairavnath (Walk)"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.98000, 33.03000],
+      [74.98200, 33.03300],
+      [74.98400, 33.03600],
+      [74.98500, 33.03800]
+    ]
+  }
+}
+

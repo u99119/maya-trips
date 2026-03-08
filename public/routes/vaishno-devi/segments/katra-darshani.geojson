@@ -1,0 +1,16 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "katra-darshani",
+    "name": "Katra to Darshani Deodhi"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.93333, 32.98944],
+      [74.93500, 32.99100],
+      [74.93800, 32.99300]
+    ]
+  }
+}
+

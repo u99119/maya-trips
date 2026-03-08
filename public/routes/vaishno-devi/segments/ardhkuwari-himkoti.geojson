@@ -1,0 +1,18 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "ardhkuwari-himkoti",
+    "name": "Ardhkuwari to Himkoti"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.96000, 33.01800],
+      [74.96200, 33.02000],
+      [74.96400, 33.02300],
+      [74.96600, 33.02600],
+      [74.96800, 33.02800]
+    ]
+  }
+}
+

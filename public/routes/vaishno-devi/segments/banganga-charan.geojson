@@ -1,0 +1,17 @@
+{
+  "type": "Feature",
+  "properties": {
+    "id": "banganga-charan",
+    "name": "Banganga to Charan Paduka"
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [74.94500, 32.99800],
+      [74.94700, 32.99950],
+      [74.94900, 33.00100],
+      [74.95200, 33.00500]
+    ]
+  }
+}
+
