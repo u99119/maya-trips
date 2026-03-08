@@ -1699,10 +1699,10 @@ input:checked + .toggle-slider:before {
   }
 
   .legend-section {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
-  .legend-section h4 {
+  .legend-section h5 {
     font-size: 10px;
     margin-bottom: 4px;
     text-transform: uppercase;
@@ -1710,10 +1710,14 @@ input:checked + .toggle-slider:before {
     font-weight: 600;
   }
 
+  .legend-items {
+    gap: 2px;
+  }
+
   .legend-item {
-    padding: 2px 0;
+    padding: 1px 0;
     gap: 6px;
-    min-height: 24px;
+    min-height: 20px;
   }
 
   .legend-icon {
@@ -1726,10 +1730,22 @@ input:checked + .toggle-slider:before {
     font-size: 11px;
   }
 
+  .legend-difficulty-items {
+    gap: 6px;
+  }
+
+  .legend-difficulty-item {
+    gap: 3px;
+  }
+
+  .difficulty-label {
+    font-size: 10px;
+  }
+
   .difficulty-badge {
-    height: 14px;
-    border-radius: 7px;
-    width: 45px;
+    height: 6px;
+    border-radius: 3px;
+    width: 50px;
   }
 }
 
@@ -1998,7 +2014,7 @@ input:checked + .toggle-slider:before {
 .legend-items {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .legend-item {
@@ -2007,6 +2023,7 @@ input:checked + .toggle-slider:before {
   gap: 8px;
   font-size: 13px;
   color: var(--text-primary);
+  padding: 2px 0;
 }
 
 .legend-icon {
@@ -2025,12 +2042,27 @@ input:checked + .toggle-slider:before {
   flex: 1;
 }
 
-.difficulty-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
+/* Difficulty items with label on top of colored bar */
+.legend-difficulty-items {
+  gap: 8px;
+}
+
+.legend-difficulty-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.difficulty-label {
   font-size: 11px;
-  font-weight: 600;
-  color: white;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.difficulty-badge {
+  height: 8px;
+  border-radius: 4px;
+  width: 60px;
 }
 
 .difficulty-badge.easy {

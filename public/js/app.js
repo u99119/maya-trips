@@ -1519,7 +1519,7 @@ class App {
       label.innerHTML = `
         <span class="filter-checkbox-icon">${transportIcons[mode] || '🚶'}</span>
         <span>${transportLabels[mode] || mode}</span>
-        <span class="filter-checkbox-count">${count} segment${count !== 1 ? 's' : ''}</span>
+        <span class="filter-checkbox-count">(${count})</span>
       `;
 
       // Toggle filter on checkbox change and sync with other checkboxes
