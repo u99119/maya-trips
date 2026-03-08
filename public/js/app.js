@@ -845,6 +845,9 @@ class App {
       milestoneItem.classList.add('visited');
     }
 
+    // Mark junction as completed on map
+    layers.markJunctionCompleted(junction.id);
+
     // Update progress UI
     if (this.currentTrip) {
       this.currentTrip.currentJunction = junction.id;
@@ -1077,9 +1080,33 @@ class App {
       autoCenter: autoCenterState
     });
 
-    // Phase 1.6: Skip milestone loading for v2 routes
-    if (!this.useV2Architecture) {
-      // Load visited milestones for this trip
+    // Phase 1.6: For v2 routes, restore completed junctions
+    if (this.useV2Architecture) {
+      // Get completed segments to determine visited junctions
+      const completedSegments = this.currentTrip.completedSegments || [];
+      const visitedJunctionIds = new Set();
+
+      // Add all "from" junctions from completed segments
+      completedSegments.forEach(seg => {
+        const segment = this.routeV2.segments.find(s => s.id === seg.segmentId);
+        if (segment) {
+          visitedJunctionIds.add(segment.from);
+          visitedJunctionIds.add(segment.to);
+        }
+      });
+
+      // Mark junctions as completed on map
+      layers.markJunctionsCompleted(Array.from(visitedJunctionIds));
+
+      // Mark junctions as visited in milestone list
+      visitedJunctionIds.forEach(junctionId => {
+        const milestoneItem = document.querySelector(`[data-junction-id="${junctionId}"]`);
+        if (milestoneItem) {
+          milestoneItem.classList.add('visited');
+        }
+      });
+    } else {
+      // Load visited milestones for v1 routes
       const visitedMilestones = tripManager.getVisitedMilestones();
       visitedMilestones.forEach((visited) => {
         const milestoneItem = document.querySelector(`[data-milestone-id="${visited.milestoneId}"]`);

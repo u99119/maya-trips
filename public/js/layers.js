@@ -308,7 +308,7 @@ class Layers {
     const icon = L.divIcon({
       className: 'junction-marker',
       html: `
-        <div style="
+        <div class="junction-marker-inner" data-junction-id="${junction.id}" style="
           width: 40px;
           height: 40px;
           background: ${bgColor};
@@ -321,6 +321,7 @@ class Layers {
           font-size: 20px;
           box-shadow: 0 3px 10px rgba(0,0,0,0.4);
           cursor: pointer;
+          transition: all 0.3s ease;
         ">${iconHtml}</div>
       `,
       iconSize: [40, 40],
@@ -823,6 +824,52 @@ class Layers {
         }, 200);
       });
     }
+  }
+
+  /**
+   * Mark a junction as completed (Phase 1.6)
+   * @param {string} junctionId - Junction ID to mark as completed
+   */
+  markJunctionCompleted(junctionId) {
+    const markerElement = document.querySelector(`.junction-marker-inner[data-junction-id="${junctionId}"]`);
+    if (markerElement) {
+      // Add green border and glow effect
+      markerElement.style.border = '4px solid #4CAF50';
+      markerElement.style.boxShadow = '0 0 0 4px rgba(76, 175, 80, 0.3), 0 2px 8px rgba(0,0,0,0.3)';
+
+      // Add checkmark overlay
+      const checkmark = document.createElement('div');
+      checkmark.innerHTML = '✓';
+      checkmark.style.cssText = `
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 20px;
+        height: 20px;
+        background: #4CAF50;
+        color: white;
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      `;
+      markerElement.style.position = 'relative';
+      markerElement.appendChild(checkmark);
+
+      console.log(`✅ Junction ${junctionId} marked as completed on map`);
+    }
+  }
+
+  /**
+   * Mark multiple junctions as completed
+   * @param {Array<string>} junctionIds - Array of junction IDs
+   */
+  markJunctionsCompleted(junctionIds) {
+    junctionIds.forEach(id => this.markJunctionCompleted(id));
   }
 }
 

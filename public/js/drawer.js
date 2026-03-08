@@ -72,7 +72,7 @@ class DrawerManager {
 
     const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
     const deltaY = this.startY - currentY; // Positive = dragging up, negative = dragging down
-    
+
     let newHeight = this.startHeight + deltaY;
 
     // Clamp height between min and max
@@ -81,6 +81,9 @@ class DrawerManager {
     // Update drawer height
     this.drawer.style.height = `${newHeight}px`;
     document.documentElement.style.setProperty('--drawer-height', `${newHeight}px`);
+
+    // Update Leaflet controls position
+    this.updateLeafletControlsPosition(newHeight);
 
     e.preventDefault();
   }
@@ -98,7 +101,10 @@ class DrawerManager {
     // Save the new height
     const finalHeight = this.drawer.offsetHeight;
     localStorage.setItem('drawerHeight', finalHeight);
-    
+
+    // Ensure controls are positioned correctly
+    this.updateLeafletControlsPosition(finalHeight);
+
     console.log(`Drawer resized to ${finalHeight}px`);
   }
 
@@ -112,6 +118,7 @@ class DrawerManager {
       if (height >= this.minHeight && height <= this.maxHeight) {
         this.drawer.style.height = `${height}px`;
         document.documentElement.style.setProperty('--drawer-height', `${height}px`);
+        this.updateLeafletControlsPosition(height);
         console.log(`Restored drawer height: ${height}px`);
       }
     }
@@ -124,6 +131,7 @@ class DrawerManager {
     const clampedHeight = Math.max(this.minHeight, Math.min(this.maxHeight, height));
     this.drawer.style.height = `${clampedHeight}px`;
     document.documentElement.style.setProperty('--drawer-height', `${clampedHeight}px`);
+    this.updateLeafletControlsPosition(clampedHeight);
   }
 
   /**
@@ -149,6 +157,16 @@ class DrawerManager {
       this.expand();
     } else {
       this.collapse();
+    }
+  }
+
+  /**
+   * Update Leaflet controls position when drawer height changes
+   */
+  updateLeafletControlsPosition(drawerHeight) {
+    const leafletBottomRight = document.querySelector('.leaflet-bottom.leaflet-right');
+    if (leafletBottomRight) {
+      leafletBottomRight.style.bottom = `${drawerHeight + 10}px`;
     }
   }
 }
