@@ -215,13 +215,36 @@ body {
   z-index: 1100 !important;
 }
 
-/* Smaller zoom buttons on mobile */
+/* Mobile optimizations */
 @media (max-width: 768px) {
+  /* Smaller zoom buttons */
   .leaflet-control-zoom a {
-    width: 26px !important;
-    height: 26px !important;
-    line-height: 26px !important;
-    font-size: 16px !important;
+    width: 22px !important;
+    height: 22px !important;
+    line-height: 22px !important;
+    font-size: 14px !important;
+  }
+
+  /* Move zoom controls closer to right edge */
+  .leaflet-bottom.leaflet-right {
+    right: 5px !important;
+  }
+
+  /* Smaller map control buttons (legend, transport filters) */
+  .map-control-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .map-control-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Move map controls closer to right edge */
+  .map-controls {
+    right: 32px !important; /* Closer to edge, accounting for smaller zoom buttons */
+    gap: 8px !important; /* Tighter spacing */
   }
 }
 
