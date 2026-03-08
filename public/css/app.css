@@ -718,16 +718,16 @@ input:checked + .toggle-slider:before {
 .map-controls {
   position: fixed;
   bottom: calc(var(--drawer-height) + 16px);
-  right: 76px; /* Shifted left to avoid zoom controls */
+  right: 8px; /* Much closer to edge - compact mobile layout */
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px; /* Tighter spacing */
   z-index: 998;
 }
 
 .map-control-btn {
-  width: 48px;
-  height: 48px;
+  width: 32px; /* Smaller for mobile */
+  height: 32px; /* Smaller for mobile */
   border-radius: 50%;
   background: var(--primary-color);
   color: white;
@@ -738,6 +738,11 @@ input:checked + .toggle-slider:before {
   align-items: center;
   justify-content: center;
   transition: var(--transition);
+}
+
+.map-control-btn svg {
+  width: 16px; /* Smaller icons for compact buttons */
+  height: 16px;
 }
 
 .map-control-btn:hover {
