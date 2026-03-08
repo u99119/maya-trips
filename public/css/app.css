@@ -717,11 +717,11 @@ input:checked + .toggle-slider:before {
 /* Map Control Buttons */
 .map-controls {
   position: fixed;
-  bottom: calc(var(--drawer-height) + 16px);
+  top: 80px; /* TOP-aligned, fixed position */
   right: 8px; /* Much closer to edge - compact mobile layout */
   display: flex;
   flex-direction: column;
-  gap: 6px; /* Tighter spacing */
+  gap: 3px; /* 50% tighter spacing (was 6px) */
   z-index: 998;
 }
 
