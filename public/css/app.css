@@ -1560,21 +1560,21 @@ input:checked + .toggle-slider:before {
 @media (max-width: 768px) {
   .map-controls {
     top: 70px;
-    right: 32px !important; /* Position between zoom buttons and map edge */
+    right: 8px !important; /* Close to right edge, just inside zoom buttons */
     bottom: auto;
     max-height: calc(100vh - 480px); /* Leave space for drawer and zoom controls */
-    gap: 8px !important; /* Tighter spacing */
+    gap: 6px !important; /* Very tight spacing */
   }
 
-  /* Smaller map control buttons */
+  /* Much smaller map control buttons */
   .map-control-btn {
-    width: 36px !important;
-    height: 36px !important;
+    width: 32px !important;
+    height: 32px !important;
   }
 
   .map-control-btn svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 16px !important;
+    height: 16px !important;
   }
 }
 
