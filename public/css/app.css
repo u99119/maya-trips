@@ -293,7 +293,8 @@ body {
 
 .location-label {
   font-size: 11px;
-  opacity: 0.9;
+  color: white;
+  opacity: 0.95;
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -302,6 +303,20 @@ body {
 .location-value {
   font-size: 16px;
   font-weight: 600;
+  color: white;
+}
+
+/* Location value color overrides based on state */
+.location-value.not-started {
+  color: white !important;
+}
+
+.location-value.at-junction {
+  color: #FFD700 !important; /* Neon yellow for junctions */
+}
+
+.location-value.on-segment {
+  color: #00FF00 !important; /* Neon green for active segments */
 }
 
 /* Segment Progress */
@@ -587,10 +602,14 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
 }
 
 .milestone-item.visited .milestone-number {
   background: var(--success-color);
+  border-color: var(--success-color);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .milestone-info {

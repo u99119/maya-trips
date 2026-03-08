@@ -39,8 +39,12 @@ class ProgressUI {
     const locationValue = document.getElementById('currentLocationValue');
     if (!locationValue) return;
 
+    // Remove all state classes
+    locationValue.classList.remove('not-started', 'at-junction', 'on-segment');
+
     if (!this.currentTrip) {
-      locationValue.textContent = '--';
+      locationValue.textContent = 'Not started';
+      locationValue.classList.add('not-started');
       return;
     }
 
@@ -49,7 +53,7 @@ class ProgressUI {
       const segment = this.routeV2?.segments.find(s => s.id === this.currentTrip.currentSegment);
       if (segment) {
         locationValue.textContent = `📍 ${segment.name}`;
-        locationValue.style.color = '#2196F3';
+        locationValue.classList.add('on-segment');
         return;
       }
     }
@@ -59,13 +63,13 @@ class ProgressUI {
       const junction = this.routeV2?.junctions.find(j => j.id === this.currentTrip.currentJunction);
       if (junction) {
         locationValue.textContent = `🔀 ${junction.name}`;
-        locationValue.style.color = '#FF9800';
+        locationValue.classList.add('at-junction');
         return;
       }
     }
 
     locationValue.textContent = 'Not started';
-    locationValue.style.color = '#757575';
+    locationValue.classList.add('not-started');
   }
 
   /**
@@ -154,6 +158,26 @@ class ProgressUI {
           nextValue.textContent = destJunction.name;
           return;
         }
+      }
+    }
+
+    // If at a junction, show available next junctions
+    if (this.currentTrip.currentJunction) {
+      const outgoingSegments = this.routeV2.segments.filter(s => s.from === this.currentTrip.currentJunction);
+      if (outgoingSegments.length > 0) {
+        const nextJunctions = outgoingSegments.map(s => {
+          const junction = this.routeV2.junctions.find(j => j.id === s.to);
+          return junction?.name;
+        }).filter(Boolean);
+
+        if (nextJunctions.length === 1) {
+          nextValue.textContent = nextJunctions[0];
+        } else if (nextJunctions.length > 1) {
+          nextValue.textContent = nextJunctions.join(' / ');
+        } else {
+          nextValue.textContent = 'Journey Complete! 🎉';
+        }
+        return;
       }
     }
 
