@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pune Route - Trip Validator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        .status.success {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .status.error {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .info-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #1976D2;
+        }
+        .info-card h3 {
+            margin: 0 0 10px 0;
+            color: #1976D2;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .info-card p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .validation-results {
+            margin-top: 30px;
+        }
+        .validation-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .validation-item.pass {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .validation-item.fail {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+        .validation-item::before {
+            content: '✓';
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .validation-item.fail::before {
+            content: '✗';
+        }
+        pre {
+            background: #263238;
+            color: #AED581;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section h2 {
+            color: #424242;
+            border-bottom: 2px solid #1976D2;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Pune Route Validation Test</h1>
+        <p>Testing: <strong>Eisha Zenith to Cisco Hinjewadi Phase 1</strong></p>
+        
+        <div id="status" class="status loading">⏳ Loading route...</div>
+        
+        <div id="route-info" class="info-grid" style="display: none;"></div>
+        
+        <div id="validation-results" class="section" style="display: none;">
+            <h2>Validation Results</h2>
+            <div id="validation-list"></div>
+        </div>
+        
+        <div id="graph-info" class="section" style="display: none;">
+            <h2>Route Graph Structure</h2>
+            <div id="graph-details"></div>
+        </div>
+        
+        <div id="error-details" class="section" style="display: none;">
+            <h2>Error Details</h2>
+            <pre id="error-message"></pre>
+        </div>
+    </div>
+
+    <script type="module">
+        async function testRoute() {
+            const statusEl = document.getElementById('status');
+            const routeInfoEl = document.getElementById('route-info');
+            const validationResultsEl = document.getElementById('validation-results');
+            const validationListEl = document.getElementById('validation-list');
+            const graphInfoEl = document.getElementById('graph-info');
+            const graphDetailsEl = document.getElementById('graph-details');
+            const errorDetailsEl = document.getElementById('error-details');
+            const errorMessageEl = document.getElementById('error-message');
+
+            try {
+                // Load the route JSON
+                const response = await fetch('/public/routes/pune-eisha-cisco/config-v2.json');
+                if (!response.ok) {
+                    throw new Error(`Failed to load route: ${response.statusText}`);
+                }
+                
+                const route = await response.json();
+                
+                // Display route info
+                routeInfoEl.innerHTML = `
+                    <div class="info-card">
+                        <h3>Route ID</h3>
+                        <p>${route.id}</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Name</h3>
+                        <p>${route.name}</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Distance</h3>
+                        <p>${(route.totalDistance / 1000).toFixed(1)} km</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Duration</h3>
+                        <p>${route.estimatedDuration}</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Junctions</h3>
+                        <p>${route.junctions.length} junctions</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Segments</h3>
+                        <p>${route.segments.length} segments</p>
+                    </div>
+                `;
+                routeInfoEl.style.display = 'grid';
+                
+                // Validate the route
+                const validationResults = validateRoute(route);
+                
+                // Display validation results
+                validationListEl.innerHTML = validationResults.map(result => 
+                    `<div class="validation-item ${result.pass ? 'pass' : 'fail'}">${result.message}</div>`
+                ).join('');
+                validationResultsEl.style.display = 'block';
+                
+                // Display graph info
+                const graphInfo = analyzeGraph(route);
+                graphDetailsEl.innerHTML = `<pre>${JSON.stringify(graphInfo, null, 2)}</pre>`;
+                graphInfoEl.style.display = 'block';
+                
+                // Update status
+                const allPassed = validationResults.every(r => r.pass);
+                statusEl.className = `status ${allPassed ? 'success' : 'error'}`;
+                statusEl.textContent = allPassed ? '✅ Route validation passed!' : '⚠️ Route validation failed - see issues below';
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Error loading route';
+                errorMessageEl.textContent = error.message + '\n\n' + error.stack;
+                errorDetailsEl.style.display = 'block';
+            }
+        }
+
+        function validateRoute(route) {
+            const results = [];
+            
+            // Check required fields
+            results.push({
+                pass: !!route.id,
+                message: 'Route has ID'
+            });
+            results.push({
+                pass: !!route.name,
+                message: 'Route has name'
+            });
+            results.push({
+                pass: route.version === '2.0',
+                message: 'Route version is 2.0'
+            });
+            
+            // Check junctions
+            const junctionIds = new Set();
+            let hasStart = false;
+            let hasEnd = false;
+            
+            route.junctions.forEach(junction => {
+                if (junctionIds.has(junction.id)) {
+                    results.push({
+                        pass: false,
+                        message: `Duplicate junction ID: ${junction.id}`
+                    });
+                }
+                junctionIds.add(junction.id);
+                
+                if (junction.isStart) hasStart = true;
+                if (junction.isEnd) hasEnd = true;
+            });
+            
+            results.push({
+                pass: hasStart,
+                message: 'Route has start junction'
+            });
+            results.push({
+                pass: hasEnd,
+                message: 'Route has end junction'
+            });
+            
+            // Check segments
+            const segmentIds = new Set();
+            route.segments.forEach(segment => {
+                if (segmentIds.has(segment.id)) {
+                    results.push({
+                        pass: false,
+                        message: `Duplicate segment ID: ${segment.id}`
+                    });
+                }
+                segmentIds.add(segment.id);
+                
+                // Check segment references
+                if (!junctionIds.has(segment.from)) {
+                    results.push({
+                        pass: false,
+                        message: `Segment ${segment.id}: invalid 'from' junction ${segment.from}`
+                    });
+                }
+                if (!junctionIds.has(segment.to)) {
+                    results.push({
+                        pass: false,
+                        message: `Segment ${segment.id}: invalid 'to' junction ${segment.to}`
+                    });
+                }
+            });
+            
+            results.push({
+                pass: junctionIds.size === route.junctions.length,
+                message: `All junction IDs are unique (${junctionIds.size} junctions)`
+            });
+            results.push({
+                pass: segmentIds.size === route.segments.length,
+                message: `All segment IDs are unique (${segmentIds.size} segments)`
+            });
+            
+            return results;
+        }
+
+        function analyzeGraph(route) {
+            const graph = {};
+            route.junctions.forEach(j => {
+                graph[j.id] = {
+                    name: j.name,
+                    isStart: j.isStart,
+                    isEnd: j.isEnd,
+                    outgoing: j.outgoingSegments || []
+                };
+            });
+            
+            return {
+                totalJunctions: route.junctions.length,
+                totalSegments: route.segments.length,
+                startJunctions: route.junctions.filter(j => j.isStart).map(j => j.id),
+                endJunctions: route.junctions.filter(j => j.isEnd).map(j => j.id),
+                graph: graph
+            };
+        }
+
+        // Run test on page load
+        testRoute();
+    </script>
+</body>
+</html>
+

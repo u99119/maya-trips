@@ -18,19 +18,34 @@ class RouteLoaderV2 {
    */
   async loadRoute(routeId) {
     try {
-      const configPath = `/routes/${routeId}/config-v2.json`;
-      const response = await fetch(configPath);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load route config: ${response.statusText}`);
-      }
+      let config;
 
-      const config = await response.json();
+      // First, try to load from localStorage (for imported trips)
+      const localStorageKey = `route_config_${routeId}`;
+      const localConfig = localStorage.getItem(localStorageKey);
+
+      if (localConfig) {
+        console.log(`Loading route from localStorage: ${routeId}`);
+        config = JSON.parse(localConfig);
+      } else {
+        // Fall back to loading from file system
+        const configPath = `/routes/${routeId}/config-v2.json`;
+        const response = await fetch(configPath);
+
+        if (!response.ok) {
+          throw new Error(`Failed to load route config: ${response.statusText}`);
+        }
+
+        config = await response.json();
+      }
       
       // Validate schema version
       if (config.version !== '2.0') {
         throw new Error(`Unsupported route version: ${config.version}. Expected 2.0`);
       }
+
+      // Convert Trip Template format to Route Schema v2.0 if needed
+      config = this.convertTripTemplateToV2(config);
 
       this.route = config;
       this.buildGraph();
@@ -313,6 +328,64 @@ class RouteLoaderV2 {
       junctionCount: this.junctionMap.size,
       segmentCount: this.segmentMap.size
     };
+  }
+
+  /**
+   * Convert Trip Template format to Route Schema v2.0 format
+   * Trip Template uses isStart/isEnd and [lat, lon] coordinates
+   * Route Schema v2.0 uses type and [lon, lat] location
+   */
+  convertTripTemplateToV2(config) {
+    // Check if this is already in v2.0 format (has 'type' field in junctions)
+    if (config.junctions && config.junctions.length > 0 && config.junctions[0].type) {
+      return config; // Already in v2.0 format
+    }
+
+    // Check if this is Trip Template format (has isStart/isEnd)
+    if (config.junctions && config.junctions.length > 0 &&
+        (config.junctions[0].hasOwnProperty('isStart') || config.junctions[0].hasOwnProperty('isEnd'))) {
+
+      console.log('Converting Trip Template format to Route Schema v2.0...');
+
+      // Convert junctions
+      config.junctions = config.junctions.map(junction => {
+        // Determine type
+        let type = 'junction';
+        if (junction.isStart) type = 'start';
+        else if (junction.isEnd) type = 'end';
+
+        // Trip Template uses coordinates: [lat, lon]
+        // Route Schema v2.0 uses location: [lon, lat]
+        // We'll keep both for compatibility
+        const [lat, lon] = junction.coordinates;
+
+        return {
+          ...junction,
+          type: type,
+          coordinates: junction.coordinates, // Keep [lat, lon] format for compatibility
+          location: [lon, lat], // Add [lon, lat] format for v2.0 compatibility
+          // Remove isStart/isEnd
+          isStart: undefined,
+          isEnd: undefined
+        };
+      });
+
+      // Convert segments (if needed)
+      if (config.segments) {
+        config.segments = config.segments.map(segment => {
+          return {
+            ...segment,
+            // Ensure transportMode is set (Trip Template uses 'mode')
+            transportMode: segment.transportMode || segment.mode,
+            // Keep path as-is (already [lat, lon] format)
+          };
+        });
+      }
+
+      console.log('✅ Converted Trip Template to Route Schema v2.0');
+    }
+
+    return config;
   }
 }
 

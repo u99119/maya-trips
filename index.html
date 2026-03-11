@@ -49,14 +49,24 @@
         <!-- Dynamically populated -->
       </div>
 
-      <!-- Create Trip Button -->
-      <button class="btn-create-trip" id="btnCreateTrip">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Create New Trip
-      </button>
+      <!-- Create Trip Buttons -->
+      <div class="trip-action-buttons">
+        <button class="btn-create-trip" id="btnCreateTrip">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Create New Trip
+        </button>
+        <button class="btn-import-trip" id="btnImportTrip">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Import Route
+        </button>
+      </div>
     </div>
   </div>
 
@@ -106,6 +116,123 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="btnCancelCreate">Cancel</button>
         <button class="btn btn-primary" id="btnConfirmCreate">Create Trip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Route Modal -->
+  <div class="modal" id="importTripModal" style="display: none;">
+    <div class="modal-overlay" id="importModalOverlay"></div>
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>Import Route</h2>
+        <button class="modal-close" id="importModalClose">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p style="margin-bottom: 20px; color: var(--text-secondary);">
+          Import a trip JSON file in Trip Template v2.0 format. You can paste JSON directly or upload a file.
+        </p>
+
+        <!-- Tab Selection -->
+        <div class="import-tabs">
+          <button class="import-tab active" id="tabPasteJSON" data-tab="paste">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+            </svg>
+            Paste JSON
+          </button>
+          <button class="import-tab" id="tabUploadFile" data-tab="upload">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload File
+          </button>
+        </div>
+
+        <!-- Paste JSON Tab -->
+        <div class="import-tab-content" id="pasteJSONContent">
+          <div class="form-group">
+            <label for="jsonTextarea">Trip JSON</label>
+            <textarea
+              id="jsonTextarea"
+              class="form-control json-textarea"
+              placeholder='Paste your Trip Template JSON here...'
+              rows="12"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Upload File Tab -->
+        <div class="import-tab-content" id="uploadFileContent" style="display: none;">
+          <div class="form-group">
+            <label for="jsonFileInput">Select JSON File</label>
+            <div class="file-upload-area" id="fileUploadArea">
+              <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+              <div class="file-upload-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p>Click to select a JSON file or drag and drop</p>
+                <small>Supports .json files only</small>
+              </div>
+              <div class="file-upload-selected" id="fileUploadSelected" style="display: none;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                  <polyline points="13 2 13 9 20 9"/>
+                </svg>
+                <span id="selectedFileName">file.json</span>
+                <button class="btn-remove-file" id="btnRemoveFile" type="button">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Validation Results -->
+        <div class="validation-results" id="validationResults" style="display: none;">
+          <div class="validation-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="validationIcon">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <h4 id="validationTitle">Validation Results</h4>
+          </div>
+          <div class="validation-content" id="validationContent">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Trip Name Override -->
+        <div class="form-group" id="tripNameGroup" style="display: none;">
+          <label for="importTripNameInput">Create First Trip (optional)</label>
+          <input
+            type="text"
+            id="importTripNameInput"
+            class="form-control"
+            placeholder="e.g., My Morning Commute - March 2026"
+          >
+          <small class="form-hint">Enter a trip name to create a trip instance, or leave empty to just import the route</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelImport">Cancel</button>
+        <button class="btn btn-primary" id="btnValidateTrip">Validate</button>
+        <button class="btn btn-primary" id="btnConfirmImport" style="display: none;">Import Route & Create Trip</button>
       </div>
     </div>
   </div>

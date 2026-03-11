@@ -79,7 +79,22 @@ class TripManager {
     }
 
     try {
-      // Phase 1.6: Try v2 config first
+      // Phase 1.7: Check localStorage for imported routes first
+      const localStorageKey = `route_config_${routeId}`;
+      const localConfig = localStorage.getItem(localStorageKey);
+
+      if (localConfig) {
+        try {
+          const config = JSON.parse(localConfig);
+          this.routeConfigs.set(routeId, config);
+          console.log(`✅ Loaded imported route config from localStorage: ${routeId}`);
+          return config;
+        } catch (parseError) {
+          console.warn(`Failed to parse imported route config: ${routeId}`, parseError);
+        }
+      }
+
+      // Phase 1.6: Try v2 config from file system
       try {
         const v2Response = await fetch(`/routes/${routeId}/config-v2.json`);
         if (v2Response.ok) {
