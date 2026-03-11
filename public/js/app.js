@@ -20,6 +20,9 @@ import notifications from './notifications.js';
 // Phase 1.7: Trip Import (v2.0 Trip Template)
 import { tripImportUI } from './trip-import.js';
 
+// Phase 2: Cloud Backend & Authentication
+import { initAuthUI } from './auth-ui.js';
+
 class App {
   constructor() {
     this.currentRoute = null;
@@ -56,6 +59,9 @@ class App {
 
       // Initialize trip selection UI
       this.initTripSelectionUI();
+
+      // Initialize authentication UI (Phase 2)
+      initAuthUI();
 
       // Initialize trip import UI (Phase 1.7)
       tripImportUI.init();

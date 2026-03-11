@@ -1068,8 +1068,15 @@ input:checked + .toggle-slider:before {
 }
 
 .trip-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40px 20px 20px;
+}
+
+.trip-selection-header > div:first-child {
   text-align: center;
-  padding: 40px 0 20px;
+  flex: 1;
 }
 
 .trip-selection-header h1 {
@@ -1082,6 +1089,12 @@ input:checked + .toggle-slider:before {
 .trip-selection-header .subtitle {
   font-size: 16px;
   color: var(--text-secondary);
+}
+
+#authButtonContainer {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
 /* Empty State */
@@ -3056,5 +3069,72 @@ input:checked + .toggle-slider:before {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+/* ============================================
+   AUTHENTICATION STYLES
+   ============================================ */
+
+.auth-tab {
+  transition: all 0.2s ease;
+}
+
+.auth-tab:hover {
+  color: var(--primary-color) !important;
+}
+
+.auth-tab.active {
+  border-bottom-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.form-control::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+#authError,
+#authSuccess {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
