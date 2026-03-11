@@ -27,12 +27,12 @@ import { getStorage, connectStorageEmulator } from 'https://www.gstatic.com/fire
  * Get from: Firebase Console > Project Settings > General > Your apps > Web app
  */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAtOHSBgPtnMSz9IY3X5mbekAgYeHCDHJM",
+  authDomain: "maya-family-trips.firebaseapp.com",
+  projectId: "maya-family-trips",
+  storageBucket: "maya-family-trips.firebasestorage.app",
+  messagingSenderId: "536438489502",
+  appId: "1:536438489502:web:61a2d3b793f48558d0d68f"
 };
 
 /**
