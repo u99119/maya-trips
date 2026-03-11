@@ -1,0 +1,283 @@
+{
+  "id": "pune-eisha-cisco",
+  "name": "Pune: Eisha Zenith to Cisco Hinjewadi",
+  "version": "2.0",
+  "description": "Daily commute route from Eisha Zenith, Tathawade to Cisco Systems, Hinjewadi Phase 1 with two alternate driving paths via Lakshmi Chowk.",
+  "region": "Pune",
+  "country": "IN",
+  "difficulty": "easy",
+  "estimatedDuration": "15-20 minutes depending on traffic",
+  "totalDistance": 3030,
+  "startJunction": "eisha_zenith",
+  "endJunction": "cisco_hinjewadi",
+  "junctions": [
+    {
+      "id": "eisha_zenith",
+      "name": "Eisha Zenith",
+      "description": "Residential society in Tathawade",
+      "coordinates": [18.612078, 73.745192],
+      "elevation": 590,
+      "facilities": ["parking", "security", "residential"],
+      "isStart": true,
+      "isEnd": false,
+      "outgoingSegments": ["seg_eisha_akshara", "seg_eisha_vinode"]
+    },
+    {
+      "id": "akshara_school",
+      "name": "Akshara International School",
+      "description": "Major school landmark in Tathawade",
+      "coordinates": [18.609209, 73.745507],
+      "elevation": 588,
+      "facilities": ["school", "parking"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_akshara_silverspoon"]
+    },
+    {
+      "id": "silver_spoon",
+      "name": "Silver Spoon Restaurant",
+      "description": "Restaurant landmark on Tathawade road",
+      "coordinates": [18.602836, 73.745955],
+      "elevation": 585,
+      "facilities": ["restaurant", "parking"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_silverspoon_lakshmi"]
+    },
+    {
+      "id": "vinode_phata",
+      "name": "Vinode Phata",
+      "description": "Important junction connecting Tathawade to Wakad and Hinjewadi",
+      "coordinates": [18.602416, 73.744402],
+      "elevation": 590,
+      "facilities": ["junction", "traffic_signal"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_vinode_lakshmi"]
+    },
+    {
+      "id": "lakshmi_chowk",
+      "name": "Lakshmi Chowk",
+      "description": "Busy junction between Wakad and Hinjewadi Phase 1",
+      "coordinates": [18.599757, 73.734701],
+      "elevation": 592,
+      "facilities": ["traffic_signal", "shops", "fuel"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_lakshmi_mezza", "seg_lakshmi_iamsterdam"]
+    },
+    {
+      "id": "iamsterdam",
+      "name": "IAMsterdam Cafe",
+      "description": "Cafe landmark on route towards Shivaji Chowk",
+      "coordinates": [18.594765, 73.729269],
+      "elevation": 594,
+      "facilities": ["cafe", "parking"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_iamsterdam_shivaji"]
+    },
+    {
+      "id": "mezza9",
+      "name": "Mezza 9 Restaurant",
+      "description": "Popular restaurant landmark before Shivaji Chowk",
+      "coordinates": [18.594455, 73.735535],
+      "elevation": 593,
+      "facilities": ["restaurant", "parking"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_mezza_shivaji"]
+    },
+    {
+      "id": "shivaji_chowk",
+      "name": "Shivaji Chowk Hinjewadi",
+      "description": "Major roundabout at entry of Hinjewadi Phase 1",
+      "coordinates": [18.591343, 73.738925],
+      "elevation": 596,
+      "facilities": ["traffic_signal", "bus_stop", "shops"],
+      "isStart": false,
+      "isEnd": false,
+      "outgoingSegments": ["seg_shivaji_cisco"]
+    },
+    {
+      "id": "cisco_hinjewadi",
+      "name": "Cisco Systems Hinjewadi Phase 1",
+      "description": "Cisco campus inside Rajiv Gandhi Infotech Park",
+      "coordinates": [18.587036, 73.738254],
+      "elevation": 600,
+      "facilities": ["office", "parking", "security"],
+      "isStart": false,
+      "isEnd": true,
+      "outgoingSegments": []
+    }
+  ],
+  "segments": [
+    {
+      "id": "seg_eisha_akshara",
+      "name": "Eisha Zenith to Akshara School",
+      "from": "eisha_zenith",
+      "to": "akshara_school",
+      "mode": "driving",
+      "distance": 320,
+      "estimatedTime": 2,
+      "difficulty": "easy",
+      "description": "Local road from Eisha Zenith towards Akshara International School",
+      "path": [
+        [18.612078, 73.745192],
+        [18.609209, 73.745507]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_akshara_silverspoon",
+      "name": "Akshara School to Silver Spoon",
+      "from": "akshara_school",
+      "to": "silver_spoon",
+      "mode": "driving",
+      "distance": 710,
+      "estimatedTime": 3,
+      "difficulty": "easy",
+      "description": "Drive towards Silver Spoon restaurant",
+      "path": [
+        [18.609209, 73.745507],
+        [18.602836, 73.745955]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_silverspoon_lakshmi",
+      "name": "Silver Spoon to Lakshmi Chowk",
+      "from": "silver_spoon",
+      "to": "lakshmi_chowk",
+      "mode": "driving",
+      "distance": 1300,
+      "estimatedTime": 4,
+      "difficulty": "easy",
+      "description": "Main road leading to Lakshmi Chowk junction",
+      "path": [
+        [18.602836, 73.745955],
+        [18.599757, 73.734701]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_eisha_vinode",
+      "name": "Eisha Zenith to Vinode Phata",
+      "from": "eisha_zenith",
+      "to": "vinode_phata",
+      "mode": "driving",
+      "distance": 1100,
+      "estimatedTime": 4,
+      "difficulty": "easy",
+      "description": "Alternate route from Eisha Zenith to Vinode Phata",
+      "path": [
+        [18.612078, 73.745192],
+        [18.602416, 73.744402]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_vinode_lakshmi",
+      "name": "Vinode Phata to Lakshmi Chowk",
+      "from": "vinode_phata",
+      "to": "lakshmi_chowk",
+      "mode": "driving",
+      "distance": 1100,
+      "estimatedTime": 4,
+      "difficulty": "easy",
+      "description": "Road connecting Vinode Phata to Lakshmi Chowk",
+      "path": [
+        [18.602416, 73.744402],
+        [18.599757, 73.734701]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_lakshmi_mezza",
+      "name": "Lakshmi Chowk to Mezza 9",
+      "from": "lakshmi_chowk",
+      "to": "mezza9",
+      "mode": "driving",
+      "distance": 600,
+      "estimatedTime": 2,
+      "difficulty": "easy",
+      "description": "Route towards Mezza 9 restaurant",
+      "path": [
+        [18.599757, 73.734701],
+        [18.594455, 73.735535]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_mezza_shivaji",
+      "name": "Mezza 9 to Shivaji Chowk",
+      "from": "mezza9",
+      "to": "shivaji_chowk",
+      "mode": "driving",
+      "distance": 500,
+      "estimatedTime": 2,
+      "difficulty": "easy",
+      "description": "Short stretch to Shivaji Chowk",
+      "path": [
+        [18.594455, 73.735535],
+        [18.591343, 73.738925]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_lakshmi_iamsterdam",
+      "name": "Lakshmi Chowk to IAMsterdam",
+      "from": "lakshmi_chowk",
+      "to": "iamsterdam",
+      "mode": "driving",
+      "distance": 900,
+      "estimatedTime": 3,
+      "difficulty": "easy",
+      "description": "Alternate route via IAMsterdam cafe",
+      "path": [
+        [18.599757, 73.734701],
+        [18.594765, 73.729269]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_iamsterdam_shivaji",
+      "name": "IAMsterdam to Shivaji Chowk",
+      "from": "iamsterdam",
+      "to": "shivaji_chowk",
+      "mode": "driving",
+      "distance": 1100,
+      "estimatedTime": 4,
+      "difficulty": "easy",
+      "description": "Road connecting IAMsterdam to Shivaji Chowk",
+      "path": [
+        [18.594765, 73.729269],
+        [18.591343, 73.738925]
+      ],
+      "subMilestones": []
+    },
+    {
+      "id": "seg_shivaji_cisco",
+      "name": "Shivaji Chowk to Cisco Systems",
+      "from": "shivaji_chowk",
+      "to": "cisco_hinjewadi",
+      "mode": "driving",
+      "distance": 500,
+      "estimatedTime": 2,
+      "difficulty": "easy",
+      "description": "Final stretch entering Rajiv Gandhi Infotech Park towards Cisco campus",
+      "path": [
+        [18.591343, 73.738925],
+        [18.587036, 73.738254]
+      ],
+      "subMilestones": []
+    }
+  ],
+  "metadata": {
+    "createdBy": "chatgpt",
+    "createdDate": "2026-03-11",
+    "version": "2.0",
+    "source": "chatgpt-assisted"
+  }
+}
+

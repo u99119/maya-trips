@@ -17,6 +17,9 @@ import { segmentTracker } from './segment-tracker.js';
 import { progressUI } from './progress-ui.js';
 import notifications from './notifications.js';
 
+// Phase 1.7: Trip Import (v2.0 Trip Template)
+import { tripImportUI } from './trip-import.js';
+
 class App {
   constructor() {
     this.currentRoute = null;
@@ -53,6 +56,9 @@ class App {
 
       // Initialize trip selection UI
       this.initTripSelectionUI();
+
+      // Initialize trip import UI (Phase 1.7)
+      tripImportUI.init();
 
       // Check if there's a current trip
       const currentTrip = tripManager.getCurrentTrip();
@@ -228,6 +234,9 @@ class App {
    * Show create trip modal
    */
   showCreateTripModal() {
+    // Populate route dropdown with available routes
+    this.populateRouteDropdown('routeSelect');
+
     document.getElementById('createTripModal').style.display = 'flex';
     document.getElementById('routeSelect').value = '';
     document.getElementById('tripNameInput').value = '';
@@ -242,9 +251,83 @@ class App {
   }
 
   /**
+   * Populate route dropdown with built-in and imported routes
+   */
+  populateRouteDropdown(selectId) {
+    const select = document.getElementById(selectId);
+
+    // Clear existing options except the first one (placeholder)
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+
+    // Built-in routes (hardcoded for now)
+    const builtInRoutes = [
+      { id: 'vaishno-devi', name: 'Vaishno Devi Yatra' },
+      { id: 'pune-eisha-cisco', name: 'Pune: Eisha Zenith to Cisco Hinjewadi' }
+    ];
+
+    // Add built-in routes
+    builtInRoutes.forEach(route => {
+      const option = document.createElement('option');
+      option.value = route.id;
+      option.textContent = route.name;
+      select.appendChild(option);
+    });
+
+    // Get imported routes from localStorage
+    const importedRoutes = this.getImportedRoutes();
+
+    // Add separator if there are imported routes
+    if (importedRoutes.length > 0) {
+      const separator = document.createElement('option');
+      separator.disabled = true;
+      separator.textContent = '--- Imported Routes ---';
+      select.appendChild(separator);
+
+      // Add imported routes
+      importedRoutes.forEach(route => {
+        const option = document.createElement('option');
+        option.value = route.id;
+        option.textContent = `${route.name} (imported)`;
+        select.appendChild(option);
+      });
+    }
+  }
+
+  /**
+   * Get all imported routes from localStorage
+   */
+  getImportedRoutes() {
+    const routes = [];
+
+    // Scan localStorage for route_config_* keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('route_config_')) {
+        try {
+          const config = JSON.parse(localStorage.getItem(key));
+          routes.push({
+            id: config.id,
+            name: config.name,
+            region: config.region
+          });
+        } catch (error) {
+          console.warn(`Failed to parse route config: ${key}`, error);
+        }
+      }
+    }
+
+    return routes;
+  }
+
+  /**
    * Show switch route modal
    */
   showSwitchRouteModal() {
+    // Populate route dropdown
+    this.populateRouteDropdown('switchRouteSelect');
+
     document.getElementById('switchRouteModal').style.display = 'flex';
     document.getElementById('switchRouteSelect').value = '';
     document.getElementById('switchTripNameInput').value = '';
@@ -391,12 +474,26 @@ class App {
         await this.initV2Modules();
 
         // For v2 routes, we still need basic config for map center
+        const firstJunction = this.routeV2.junctions[0];
+        let centerLat, centerLng;
+
+        // Support both location [lon, lat] and coordinates [lat, lon] formats
+        if (firstJunction.location) {
+          centerLng = firstJunction.location[0];
+          centerLat = firstJunction.location[1];
+        } else if (firstJunction.coordinates) {
+          centerLat = firstJunction.coordinates[0];
+          centerLng = firstJunction.coordinates[1];
+        } else {
+          throw new Error('Junction has neither location nor coordinates');
+        }
+
         this.routeConfig = {
           id: this.routeV2.id,
           name: this.routeV2.name,
           center: {
-            lat: this.routeV2.junctions[0].location[1],
-            lng: this.routeV2.junctions[0].location[0],
+            lat: centerLat,
+            lng: centerLng,
             zoom: 13
           }
         };
@@ -2029,11 +2126,11 @@ class App {
 // Initialize app when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    const app = new App();
-    app.init();
+    window.app = new App();
+    window.app.init();
   });
 } else {
-  const app = new App();
-  app.init();
+  window.app = new App();
+  window.app.init();
 }
 

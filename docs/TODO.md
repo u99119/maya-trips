@@ -7,15 +7,414 @@
 ✅ **Deployed to Cloudflare Pages** - https://maya-trips.pages.dev/ (auto-deploys from GitHub main branch)
 ✅ **Deployed to Netlify** - https://maya-trips.netlify.app (auto-deploys from GitHub)
 
-## 🚧 ACTIVE: Phase 1.6 - Multi-Route Architecture (IN PROGRESS)
+## ✅ COMPLETE: Phase 1.6 - Multi-Route Architecture
+
+**Status:** 9/10 tasks complete (90%) - Production deployed ✅
 
 **Branch Strategy:**
-- `dev-junction` - Junction-based graph architecture (ACTIVE - Option A)
-- `dev-linear` - Linear route with sub-milestones (BACKUP - Option B)
-- `dev` - Merged from stable branch after testing
-- `main` - Production deployment
+- `main` - Production deployment (v2 junction architecture)
+- `dev-junction` - Active development branch
+- `main-v1-backup` - Archived v1 linear architecture
 
-**Current Work:** Implementing Option A (Full Junction-Based Architecture) in `dev-junction` branch
+**Completed Tasks:**
+- ✅ Task 1.6.1-1.6.9: All implementation tasks complete
+- ⏳ Task 1.6.10: End-to-End Testing (pending real-world GPS testing - see below)
+
+**Next:** Phase 1.7 (Trip Creation Interface) to enable local trip testing
+
+---
+
+## 🆕 NEXT: Phase 1.7 - Trip Creation & Management System (PRIORITY)
+
+**Status:** 📋 PLANNED - Before Phase 2
+
+**Goal:** Enable users to create, import, manage, and edit trips via ChatGPT-assisted workflow and PWA interface
+
+**Branch:** `dev-junction` → `main` when ready
+
+**Estimated Effort:**
+- **Core (Tasks 1.7.1-1.7.4):** 8-10 hours
+- **Optional ChatGPT Integration (Task 1.7.5):** 4-6 hours (can be done later)
+- **Trip Editor (Task 1.7.6):** 3-5 hours
+- **Total (all tasks):** 15-21 hours
+- **Minimum viable (1.7.1-1.7.4):** 8-10 hours
+
+**Why This First:**
+- ✅ Enables testing Phase 1.6 with local trips (real GPS data)
+- ✅ Critical for creating test routes near current location
+- ✅ Foundation for user-generated content
+- ✅ Required before Phase 2 (cloud sync of user trips)
+
+### Task 1.7.1: Trip Template & ChatGPT Integration (1-2 hours)
+
+- [x] Create trip template documentation (`docs/TRIP-TEMPLATE.md`)
+- [x] Create trip creation guide (`docs/TRIP-CREATION-GUIDE.md`)
+- [ ] Test template with ChatGPT (create sample trip)
+- [ ] Refine ChatGPT prompt based on testing
+- [ ] Create 2-3 example trips (simple, multi-route, complex)
+
+**Deliverables:**
+- ✅ `docs/TRIP-TEMPLATE.md` created
+- ✅ `docs/TRIP-CREATION-GUIDE.md` created
+- [ ] ChatGPT prompt tested and refined
+- [ ] 2-3 example trips generated and validated
+
+### Task 1.7.2: JSON Validation Module (2-3 hours)
+
+- [ ] Create `public/js/trip-validator.js`
+- [ ] Implement validation functions:
+  - [ ] Schema validation (all required fields present)
+  - [ ] ID uniqueness (junctions, segments)
+  - [ ] Reference integrity (from/to junctions exist)
+  - [ ] Coordinate validation (valid lat/lon)
+  - [ ] Distance/time sanity checks
+  - [ ] Path validation (minimum 2 points)
+  - [ ] outgoingSegments validation
+- [ ] Error reporting with specific messages
+- [ ] Warning system (non-critical issues)
+- [ ] Validation summary (errors, warnings, info)
+
+**Deliverables:**
+- [ ] Validation module working
+- [ ] Comprehensive error messages
+- [ ] Returns structured validation results
+- [ ] Unit tests (optional)
+
+### Task 1.7.3: Trip Import UI (3-4 hours)
+
+- [ ] Add "Import Trip" button to menu
+- [ ] Create import modal/panel:
+  - [ ] JSON text area (paste JSON)
+  - [ ] File upload (.json)
+  - [ ] Validate button
+  - [ ] Validation results display (errors, warnings)
+  - [ ] Preview button (enabled only if valid)
+- [ ] Map preview mode:
+  - [ ] Show all junctions with markers
+  - [ ] Show all segments with paths
+  - [ ] Highlight start/end junctions
+  - [ ] Show trip stats (distance, time, junctions, segments)
+  - [ ] Zoom to fit trip bounds
+- [ ] Confirm and save workflow
+- [ ] Error handling and user feedback
+- [ ] Mobile-responsive design
+
+**Deliverables:**
+- [ ] Import UI working on desktop and mobile
+- [ ] Validation integrated and user-friendly
+- [ ] Map preview functional and informative
+- [ ] Trip saves to IndexedDB correctly
+
+### Task 1.7.4: Trip Management UI (2-3 hours)
+
+- [ ] Enhance trip list view:
+  - [ ] Show trip metadata (created date, source, version)
+  - [ ] Delete trip (with confirmation)
+  - [ ] Duplicate trip (creates copy with new ID)
+  - [ ] Export trip as JSON (download file)
+- [ ] Trip details view:
+  - [ ] Show all junctions and segments in list
+  - [ ] Show trip statistics
+  - [ ] View trip on map
+- [ ] Bulk operations:
+  - [ ] Import multiple trips (batch upload)
+  - [ ] Export all trips (single JSON file)
+  - [ ] Delete all trips (with strong confirmation)
+
+**Deliverables:**
+- [ ] Trip management UI complete
+- [ ] View/delete/export functionality working
+- [ ] Bulk operations safe and tested
+
+**Note:** Edit functionality moved to Task 1.7.6
+
+---
+
+### Task 1.7.5: ChatGPT Integration within PWA (OPTIONAL - 4-6 hours)
+
+**Status:** Optional enhancement - can be done later
+
+**Goal:** Integrate ChatGPT API directly into PWA for in-app trip creation
+
+**Why Optional:**
+- ✅ Requires OpenAI API key (costs money)
+- ✅ User can use ChatGPT externally for free
+- ✅ Not critical for core functionality
+- ✅ Can be added later as enhancement
+
+**Implementation (if/when needed):**
+
+- [ ] Set up OpenAI API integration
+  - [ ] API key management (user provides their own key)
+  - [ ] Or: Server-side proxy for API calls
+- [ ] Create in-app trip creation wizard:
+  - [ ] Natural language input form
+  - [ ] "Describe your trip" text area
+  - [ ] Submit to ChatGPT API
+  - [ ] Parse response (extract JSON)
+- [ ] Display ChatGPT response:
+  - [ ] Show generated JSON
+  - [ ] Allow editing before import
+  - [ ] Validate and preview
+- [ ] Error handling:
+  - [ ] API errors
+  - [ ] Invalid responses
+  - [ ] Retry mechanism
+- [ ] Cost management:
+  - [ ] Show estimated cost per request
+  - [ ] Request confirmation before API call
+  - [ ] Usage tracking
+
+**Deliverables (if implemented):**
+- [ ] ChatGPT API integrated
+- [ ] In-app trip creation wizard
+- [ ] Seamless flow: describe → generate → preview → save
+- [ ] Cost-effective (user's own API key or minimal server costs)
+
+**Alternative Approaches:**
+1. **User's own API key:** User provides their OpenAI API key (stored locally)
+2. **Server-side proxy:** Your server makes API calls (you control costs)
+3. **Free tier:** Use free ChatGPT web interface (current approach)
+
+**Recommendation:** Start with free ChatGPT web interface (Task 1.7.1), add API integration later if needed.
+
+---
+
+### Task 1.7.6: Trip Editor - Modify Existing Trips (3-5 hours)
+
+**Status:** Planned - after basic import/export works
+
+**Goal:** Allow users to edit trips after importing them
+
+**Why Important:**
+- ✅ Fix errors in imported trips
+- ✅ Update coordinates after field testing
+- ✅ Add/remove junctions and segments
+- ✅ Adjust distances and times based on real data
+- ✅ Refine trips iteratively
+
+**Implementation:**
+
+- [ ] Trip metadata editor:
+  - [ ] Edit trip name, description
+  - [ ] Edit region, country
+  - [ ] Edit difficulty, estimated duration
+  - [ ] Update total distance (auto-calculate option)
+- [ ] Junction editor:
+  - [ ] Add new junction
+  - [ ] Edit existing junction (name, description, coordinates)
+  - [ ] Delete junction (with validation - check if used in segments)
+  - [ ] Reorder junctions (optional)
+  - [ ] Edit facilities list
+  - [ ] Mark as start/end
+- [ ] Segment editor:
+  - [ ] Add new segment (select from/to junctions)
+  - [ ] Edit existing segment (name, description, mode, distance, time)
+  - [ ] Delete segment (with confirmation)
+  - [ ] Edit path coordinates (advanced)
+  - [ ] Add/edit/delete sub-milestones
+  - [ ] Adjust difficulty
+- [ ] Visual editor (advanced):
+  - [ ] Click on map to add junction
+  - [ ] Drag junctions to adjust coordinates
+  - [ ] Draw segments on map
+  - [ ] Auto-calculate distances from path
+- [ ] Validation:
+  - [ ] Real-time validation as user edits
+  - [ ] Show errors/warnings
+  - [ ] Prevent saving invalid trips
+  - [ ] Auto-fix common issues (optional)
+- [ ] Save and versioning:
+  - [ ] Save as new version (keep history)
+  - [ ] Or: Overwrite existing trip
+  - [ ] Export edited trip
+  - [ ] Undo/redo (optional)
+
+**Deliverables:**
+- [ ] Trip editor UI (form-based)
+- [ ] Junction CRUD operations
+- [ ] Segment CRUD operations
+- [ ] Real-time validation
+- [ ] Save edited trips
+- [ ] Visual map editor (optional, advanced)
+
+**UI Design Considerations:**
+- Mobile-friendly (Pixel 9A)
+- Compact forms (10-11px fonts)
+- Clear validation feedback
+- Easy to add/remove items
+- Preview changes on map before saving
+
+**Future Enhancements:**
+- Visual drag-and-drop editor
+- Collaborative editing (Phase 2+)
+- Version history and rollback
+- Merge trips (combine multiple trips)
+- Split trips (break into smaller trips)
+
+### Success Criteria
+
+**Core Functionality (Tasks 1.7.1-1.7.4):**
+- ✅ ChatGPT can generate valid trip JSON (external, free)
+- ✅ User can paste JSON and import trip
+- ✅ Validation catches all errors with helpful messages
+- ✅ Map preview shows trip correctly before saving
+- ✅ Trip saves and loads properly
+- ✅ Can create local test trip for GPS testing
+- ✅ Export/import round-trip works perfectly
+- ✅ Trip management (view, delete, duplicate, export) works
+
+**Optional Enhancements:**
+- ⏳ ChatGPT integrated within PWA (Task 1.7.5 - optional)
+- ⏳ Trip editor for modifying existing trips (Task 1.7.6 - planned)
+
+### Testing Plan
+
+1. **ChatGPT Generation Test:**
+   - Create 3 different trips with ChatGPT
+   - Verify JSON validity
+   - Import into PWA
+
+2. **Validation Test:**
+   - Test with invalid JSON (missing fields, bad IDs, etc.)
+   - Verify error messages are helpful
+   - Test edge cases (empty arrays, null values, etc.)
+
+3. **Import Test:**
+   - Import via paste
+   - Import via file upload
+   - Preview on map
+   - Save and reload
+
+4. **Real-World Test:**
+   - Create trip near current location
+   - Import into PWA
+   - Test GPS tracking on mobile
+   - Verify junction detection works
+
+---
+
+## 📋 Task 1.6.10: End-to-End Testing (PENDING)
+
+**Status:** Deferred until real-world GPS testing is possible
+
+**Goal:** Comprehensive testing to ensure production quality
+
+### Testing Areas
+
+#### 1. Junction Detection Accuracy
+- [ ] GPS proximity detection (30m arrival radius)
+- [ ] Junction approach warnings (100m)
+- [ ] Correct junction identification
+- [ ] Multiple junctions in close proximity
+- [ ] GPS signal loss at junction
+- [ ] Junction detection in tunnels/covered areas
+
+#### 2. Route Selection at Junctions
+- [ ] Route selector modal appears on arrival
+- [ ] All available segments shown correctly
+- [ ] Recommended route highlighted
+- [ ] Segment details accurate (distance, time, mode, difficulty)
+- [ ] Single-option junctions auto-select
+- [ ] Route selection saves to trip history
+
+#### 3. Segment Tracking and Completion
+- [ ] Segment starts correctly after selection
+- [ ] GPS tracking updates progress
+- [ ] Distance calculation accurate
+- [ ] ETA updates based on actual pace
+- [ ] Segment completion detection
+- [ ] Completed segments saved to trip
+- [ ] Manual completion via checkmarks works
+
+#### 4. Map Visualization
+- [ ] All junctions render correctly
+- [ ] All segments render with correct styling
+- [ ] Sub-milestones appear
+- [ ] Transport mode icons display
+- [ ] Difficulty colors accurate
+- [ ] Layer toggles work (show/hide)
+- [ ] Transport filters work
+- [ ] Segment highlighting on tap/click
+- [ ] Active segment animation
+- [ ] Completed segment styling (green)
+
+#### 5. Trip Statistics Accuracy
+- [ ] Distance calculations correct
+- [ ] Time tracking accurate
+- [ ] Transport mode breakdown correct
+- [ ] Efficiency score calculation
+- [ ] Route adherence tracking
+- [ ] Drawer stats match map stats panel
+- [ ] Real-time updates on segment completion
+- [ ] Export functions work (JSON, CSV, Text)
+
+#### 6. Offline Functionality
+- [ ] App loads without internet
+- [ ] Map tiles cached
+- [ ] Route data available offline
+- [ ] GPS tracking works offline
+- [ ] Trip data saves locally
+- [ ] Service worker updates
+- [ ] Offline indicator shows
+
+#### 7. Mobile Testing (Pixel 9A)
+- [ ] All buttons accessible and sized correctly
+- [ ] Drawer drag functionality smooth
+- [ ] Panels slide in/out smoothly
+- [ ] Text readable (10-11px fonts)
+- [ ] No UI overlap or clipping
+- [ ] Battery usage acceptable
+- [ ] Performance smooth (no lag)
+- [ ] Touch targets adequate (44px minimum)
+
+#### 8. Edge Cases
+- [ ] User skips junction without choosing route
+- [ ] User backtracks to previous junction
+- [ ] GPS signal loss mid-segment
+- [ ] App backgrounded during trip
+- [ ] Device rotation during trip
+- [ ] Low battery mode
+- [ ] Multiple trips active simultaneously
+- [ ] Trip deletion with active segment
+
+#### 9. Performance Testing
+- [ ] App startup time < 3 seconds
+- [ ] Route loading time < 2 seconds
+- [ ] Map rendering smooth (60fps)
+- [ ] Memory usage stable (no leaks)
+- [ ] Battery drain acceptable
+- [ ] Storage usage reasonable
+- [ ] Network usage minimal
+
+#### 10. Data Integrity
+- [ ] Trip state persists across sessions
+- [ ] No data loss on app crash
+- [ ] IndexedDB data consistent
+- [ ] Completed segments accurate
+- [ ] Junction choices recorded
+- [ ] Statistics calculations correct
+
+### Success Criteria
+
+- ✅ All critical tests pass
+- ✅ No data loss scenarios
+- ✅ Performance acceptable on target device
+- ✅ Offline functionality verified
+- ✅ Edge cases handled gracefully
+- ✅ Known limitations documented
+
+### Deliverables
+
+- [ ] Test report with findings
+- [ ] Bug fixes for critical issues
+- [ ] Performance optimizations
+- [ ] Updated documentation
+- [ ] Known limitations documented
+
+**Note:** Testing will be performed during actual trip to Vaishno Devi or similar location with real GPS movement.
+
+---
 
 ## ✅ COMPLETE: Phase 1.5 - Trip Instance System
 
@@ -988,13 +1387,13 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
 
 ---
 
-## � Phase 1.7: Smart Features (PLANNED)
+## 🧠 Phase 1.8: Smart Features (PLANNED)
 
-**Status**: 📋 PLANNED - Depends on Phase 1.6 completion
+**Status**: 📋 PLANNED - After Phase 1.7
 
 **Goal**: Add intelligent features to enhance user experience
 
-**Branch**: `dev` (merge from `dev-junction` after 1.6 complete)
+**Branch**: `dev-junction` → `main` when ready
 
 ### Features
 
@@ -1030,13 +1429,13 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
 
 ---
 
-## 📡 Phase 1.8: Offline Map Tiles (LOW PRIORITY)
+## 📡 Phase 1.9: Offline Map Tiles (LOW PRIORITY)
 
 **Status**: 📋 PLANNED - Low priority, future enhancement
 
 **Goal**: True offline capability with cached map tiles
 
-**Branch**: `dev` (after 1.7 or as separate feature)
+**Branch**: `dev-junction` → `main` when ready
 
 ### Features
 
@@ -1050,6 +1449,487 @@ A → B → [X → Y → Z → D] or [X → Z] or [B → C → D]
 **Estimated Effort:** ~0.5x Phase 1.5 (10-15 hours)
 
 **Note:** Low priority - current offline mode works for route data, only map tiles need internet on first load
+
+---
+
+## 🚀 NEXT: Phase 2 - Cloud Backend & Authentication (FOUNDATION)
+
+**Status**: 📋 PLANNED - Next major phase
+
+**Goal**: Set up cloud infrastructure for multi-user, multi-device support
+
+**Branch**: `dev-junction` → `main` when ready
+
+**Estimated Effort:** 15-20 hours
+
+### Why This First?
+
+- ✅ Foundation for all future features (photos, notes, sharing)
+- ✅ Enables multi-device sync
+- ✅ Enables collaborative trips
+- ✅ Required before photos/notes make sense
+- ✅ Offline-first architecture preserved
+
+### Task 2.1: Firebase Setup & Authentication (4-5 hours)
+
+- [ ] Create Firebase project
+- [ ] Install Firebase SDK
+- [ ] Set up Firebase Authentication
+- [ ] Implement login/signup UI
+  - Email/password
+  - Google Sign-In
+  - Phone number (optional)
+- [ ] User profile management
+- [ ] Anonymous → authenticated migration
+- [ ] Session persistence
+
+**Deliverables:**
+- Firebase project configured
+- Authentication UI working
+- User can sign up, log in, log out
+- Profile page with basic info
+
+### Task 2.2: Cloud Data Model Design (3-4 hours)
+
+- [ ] Design Firestore schema
+  - Users collection
+  - Trips collection (with owner + participants)
+  - Photos collection (future)
+  - Notes collection (future)
+- [ ] User permissions model
+  - Owner: full control
+  - Participant: add photos/notes
+  - Viewer: read-only
+- [ ] Sharing and invitation system design
+- [ ] Data migration plan (IndexedDB → Firestore)
+- [ ] Document schema in `docs/FIRESTORE-SCHEMA.md`
+
+**Deliverables:**
+- Complete Firestore schema documented
+- Security rules defined
+- Migration strategy documented
+
+### Task 2.3: Cloud Sync Implementation (5-6 hours)
+
+- [ ] Firestore integration
+- [ ] Real-time sync for trips
+  - Trip metadata (name, route, dates)
+  - Completed segments
+  - Junction choices
+  - Trip statistics
+- [ ] Offline support (Firestore offline persistence)
+- [ ] Conflict resolution strategy
+- [ ] Background sync
+- [ ] Sync status indicator
+
+**Deliverables:**
+- Trips sync to cloud automatically
+- Multi-device sync working
+- Offline changes sync when online
+- No data loss scenarios
+
+### Task 2.4: Sharing & Collaboration (3-4 hours)
+
+- [ ] Trip invitation system
+  - Invite by email
+  - Invite by shareable link
+  - Accept/decline invitations
+- [ ] Participant management UI
+  - View participants
+  - Remove participants (owner only)
+  - Change permissions
+- [ ] Permission controls
+  - Owner can edit/delete trip
+  - Participants can add content
+  - Viewers can only view
+- [ ] Real-time participant updates
+  - See who's online
+  - See participant locations (optional)
+
+**Deliverables:**
+- Trip sharing working
+- Multiple users can collaborate on same trip
+- Permissions enforced
+- Real-time updates across devices
+
+### Success Criteria
+
+- ✅ User authentication working
+- ✅ Trips stored in cloud
+- ✅ Multi-device sync working
+- ✅ Trip sharing working
+- ✅ Offline-first still works
+- ✅ No data loss
+- ✅ Security rules enforced
+
+---
+
+## 📸 Phase 3: Photos & Notes System (COLLABORATIVE)
+
+**Status**: 📋 PLANNED - After Phase 2
+
+**Goal**: Capture memories with multi-user collaboration
+
+**Branch**: `dev-junction` → `main` when ready
+
+**Estimated Effort:** 20-25 hours
+
+### Task 3.1: Photo Capture & Storage (6-8 hours)
+
+- [ ] Camera integration (mobile)
+- [ ] Photo upload to Firebase Storage
+- [ ] Image compression (client-side)
+  - Compress to max 1920px width
+  - Generate thumbnail (300px)
+- [ ] Geolocation tagging
+  - Auto-tag with current location
+  - Junction/segment association
+  - Manual location override
+- [ ] User attribution (who took it)
+- [ ] Upload progress indicator
+- [ ] Retry failed uploads
+
+**Deliverables:**
+- Camera works on mobile
+- Photos upload to cloud
+- Thumbnails generated
+- Location tagged automatically
+
+### Task 3.2: Photo Gallery (5-6 hours)
+
+- [ ] Grid view with lazy loading
+- [ ] Filter by:
+  - User (who took it)
+  - Location (junction/segment)
+  - Date/time
+  - Transport mode
+- [ ] Slideshow mode
+- [ ] Photo details view
+  - Full resolution
+  - Location on map
+  - User, timestamp
+  - Comments (future)
+- [ ] Download original
+- [ ] Delete (owner/author only)
+- [ ] Real-time updates (new photos appear)
+
+**Deliverables:**
+- Beautiful photo gallery
+- Filtering works
+- Slideshow mode
+- Real-time collaboration
+
+### Task 3.3: Notes System (4-5 hours)
+
+- [ ] Rich text editor
+  - Bold, italic, lists
+  - Links
+  - Markdown support (optional)
+- [ ] Geolocation tagging
+  - Auto-tag with current location
+  - Manual location selection
+  - Junction/segment association
+- [ ] User attribution
+- [ ] Edit/delete (author only)
+- [ ] Import from text file
+  - Parse location from text
+  - Bulk import
+- [ ] Voice notes (future enhancement)
+
+**Deliverables:**
+- Rich text notes working
+- Location tagging automatic
+- Import from text file
+- Real-time sync
+
+### Task 3.4: Real-time Collaboration (3-4 hours)
+
+- [ ] Real-time photo/note updates
+- [ ] Notifications
+  - New photo added
+  - New note added
+  - Participant joined
+- [ ] Activity feed
+  - Recent photos
+  - Recent notes
+  - Recent events
+- [ ] Participant presence
+  - Who's online
+  - Who's at which location (optional)
+
+**Deliverables:**
+- Real-time updates across all devices
+- Notifications working
+- Activity feed showing recent activity
+
+### Task 3.5: Import/Export (2-3 hours)
+
+- [ ] Import notes from text/CSV
+- [ ] Export trip as PDF
+  - Cover page with stats
+  - Map with route
+  - Photos with captions
+  - Notes with locations
+- [ ] Export photo album as ZIP
+- [ ] Export data as JSON
+
+**Deliverables:**
+- Import/export working
+- PDF looks professional
+- All data exportable
+
+### Success Criteria
+
+- ✅ Multi-user photo sharing
+- ✅ Collaborative notes
+- ✅ Real-time updates
+- ✅ Import/export working
+- ✅ Beautiful gallery experience
+
+---
+
+## 🎨 Phase 4: Trip Views & Experience (POST-TRIP)
+
+**Status**: 📋 PLANNED - After Phase 3
+
+**Goal**: Rich post-trip experience and sharing
+
+**Branch**: `dev-junction` → `main` when ready
+
+**Estimated Effort:** 15-18 hours
+
+### Task 4.1: Trip Summary Page (4-5 hours)
+
+- [ ] New route: `/trip/:tripId/summary`
+- [ ] Overview section
+  - Trip name, dates, participants
+  - Route map with completed segments
+  - Total distance, time, efficiency score
+- [ ] Statistics cards
+  - Distance breakdown (by transport mode)
+  - Time breakdown
+  - Efficiency metrics
+  - Route choices analysis
+- [ ] Participant list
+  - Profile pictures
+  - Contribution stats (photos, notes)
+- [ ] Photo count, note count
+- [ ] Timeline visualization
+  - Start to end
+  - Key milestones
+- [ ] Share trip button
+  - Generate public link
+  - Social media preview card
+
+**Deliverables:**
+- Beautiful trip summary page
+- All stats displayed
+- Shareable link generated
+
+### Task 4.2: Trip Gallery Page (4-5 hours)
+
+- [ ] New route: `/trip/:tripId/gallery`
+- [ ] Photo grid view
+  - Masonry layout
+  - Lazy loading
+  - Infinite scroll
+- [ ] Filters
+  - By user
+  - By location
+  - By date
+  - By transport mode
+- [ ] View modes
+  - Grid view
+  - Map view (photos on map)
+  - Timeline view (chronological)
+- [ ] Slideshow mode
+  - Full screen
+  - Auto-advance
+  - Captions
+- [ ] Download all photos button
+
+**Deliverables:**
+- Photo gallery page
+- Multiple view modes
+- Filtering works
+- Slideshow mode
+
+### Task 4.3: Trip Timeline Page (3-4 hours)
+
+- [ ] New route: `/trip/:tripId/timeline`
+- [ ] Chronological feed
+  - Photos
+  - Notes
+  - Junctions reached
+  - Segments completed
+  - Route choices
+- [ ] Filter by type
+  - All events
+  - Photos only
+  - Notes only
+  - Milestones only
+- [ ] Filter by user
+- [ ] Scroll to date/time
+- [ ] Export timeline as PDF
+
+**Deliverables:**
+- Timeline page working
+- All events shown chronologically
+- Filtering works
+- Export to PDF
+
+### Task 4.4: Trip Export & Sharing (4-5 hours)
+
+- [ ] PDF trip report
+  - Cover page (trip name, dates, stats)
+  - Route map
+  - Photo gallery (grid)
+  - Notes section
+  - Timeline
+  - Professional layout
+- [ ] Public trip link
+  - View-only access
+  - No login required
+  - Custom URL slug
+  - Privacy controls (public/unlisted/private)
+- [ ] Social media sharing
+  - Open Graph meta tags
+  - Twitter Card
+  - Preview image (route map + stats)
+- [ ] Embed trip on website
+  - iframe embed code
+  - Responsive
+  - Customizable (show/hide sections)
+
+**Deliverables:**
+- PDF export working
+- Public trip links
+- Social media previews
+- Embed code generated
+
+### Success Criteria
+
+- ✅ Beautiful trip summary
+- ✅ Photo gallery experience
+- ✅ Timeline view
+- ✅ Shareable trip links
+- ✅ Professional PDF export
+
+---
+
+## 🧠 Phase 5: Smart Features (INTELLIGENT)
+
+**Status**: 📋 PLANNED - After Phase 4
+
+**Goal**: Intelligent recommendations using historical data
+
+**Branch**: `dev-junction` → `main` when ready
+
+**Estimated Effort:** 18-22 hours
+
+### Task 5.1: User-Contributed Reports (5-6 hours)
+
+- [ ] Report system
+  - Report types: crowd level, conditions, closures, hazards
+  - Location-based (junction/segment)
+  - Timestamp
+  - User attribution
+- [ ] Upvote/downvote reports
+  - Community validation
+  - Trust score
+- [ ] Report expiry
+  - Auto-expire after 24-48 hours
+  - Manual mark as resolved
+- [ ] Display on map
+  - Icon badges on segments
+  - Color coding (green/yellow/red)
+- [ ] Notifications
+  - Alert when approaching reported issue
+  - "Heavy crowd ahead at Adhkuwari (500m)"
+
+**Deliverables:**
+- Report submission working
+- Reports displayed on map
+- Notifications for nearby reports
+- Community validation
+
+### Task 5.2: Historical Data Analysis (4-5 hours)
+
+- [ ] Compare trips over time
+  - Personal best times
+  - Improvement tracking
+  - Seasonal patterns
+- [ ] Crowd level predictions
+  - Based on historical user data
+  - Time of day patterns
+  - Day of week patterns
+  - Holiday/festival predictions
+- [ ] Route popularity
+  - Most taken routes
+  - Least crowded alternatives
+- [ ] Personal insights
+  - "You're 15% faster than last time"
+  - "This segment usually takes 30 min"
+
+**Deliverables:**
+- Trip comparison view
+- Crowd predictions
+- Personal insights
+
+### Task 5.3: Smart Recommendations (5-6 hours)
+
+- [ ] Route suggestions
+  - Based on time of day
+  - Based on crowd levels
+  - Based on weather
+  - Based on user fitness level
+- [ ] Avoid crowded segments
+  - Suggest alternatives
+  - Show time savings
+- [ ] Weather-based recommendations
+  - OpenWeatherMap API integration
+  - "Rain expected, consider ropeway"
+  - "Clear skies, great for trek"
+- [ ] Personalized suggestions
+  - Based on past trips
+  - Based on preferences
+  - "You usually prefer walking routes"
+
+**Deliverables:**
+- Smart route recommendations
+- Weather integration
+- Personalized suggestions
+
+### Task 5.4: Progress Predictions (4-5 hours)
+
+- [ ] ETA updates based on actual pace
+  - Real-time pace calculation
+  - Adjust ETA dynamically
+  - "You're moving faster than expected"
+- [ ] Segment time predictions
+  - Based on historical data
+  - Based on current pace
+  - Confidence intervals
+- [ ] Battery usage predictions
+  - Estimate remaining battery
+  - Suggest battery saver mode
+  - "Battery will last until Bhawan"
+- [ ] Suggest breaks
+  - Based on pace decline
+  - Based on time since last break
+  - "Consider a break at next junction"
+
+**Deliverables:**
+- Accurate ETA predictions
+- Battery predictions
+- Break suggestions
+
+### Success Criteria
+
+- ✅ Community reports working
+- ✅ Historical insights valuable
+- ✅ Smart recommendations helpful
+- ✅ Accurate predictions
 
 ---
 
