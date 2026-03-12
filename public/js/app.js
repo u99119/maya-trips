@@ -22,6 +22,11 @@ import { tripImportUI } from './trip-import.js';
 
 // Phase 2: Cloud Backend & Authentication
 import { initAuthUI } from './auth-ui.js';
+import { onAuthChange, getCurrentUser } from './auth.js';
+import firestoreSync from './firestore-sync.js';
+
+// Phase 2.4 & 2.5: Social Features
+import socialUI from './social-ui.js';
 
 class App {
   constructor() {
@@ -63,8 +68,45 @@ class App {
       // Initialize authentication UI (Phase 2)
       initAuthUI();
 
+      // Initialize social UI (Phase 2.4 & 2.5)
+      socialUI.init();
+
+      // Initialize Firestore sync when user logs in (Phase 2.3)
+      onAuthChange(async (user) => {
+        if (user) {
+          console.log('🔄 User logged in, initializing Firestore sync...');
+          await firestoreSync.init(user);
+
+          // Refresh trips list after sync completes
+          console.log('🔄 Refreshing trips list after Firestore sync...');
+          await this.loadTripsList();
+        } else {
+          console.log('🔄 User logged out, sync disabled');
+
+          // Clear trips list and return to trip selection
+          if (this.isMapView) {
+            this.showTripSelection();
+          }
+
+          // Clear trips list UI
+          const tripsList = document.getElementById('tripsList');
+          const emptyState = document.getElementById('emptyState');
+          if (tripsList) tripsList.innerHTML = '';
+          if (emptyState) emptyState.style.display = 'flex';
+        }
+      });
+
       // Initialize trip import UI (Phase 1.7)
       tripImportUI.init();
+
+      // Listen for segment completion to trigger sync (Phase 2.3)
+      segmentTracker.on('segmentCompleted', async (segmentData) => {
+        console.log('🔄 Segment completed, syncing trip...');
+        const currentTrip = tripManager.getCurrentTrip();
+        if (currentTrip) {
+          await firestoreSync.syncTrip(currentTrip.tripId);
+        }
+      });
 
       // Check if there's a current trip
       const currentTrip = tripManager.getCurrentTrip();
@@ -107,6 +149,17 @@ class App {
     const btnConfirmCreate = document.getElementById('btnConfirmCreate');
     btnConfirmCreate.addEventListener('click', () => this.handleCreateTrip());
 
+    // Delete Trip Modal Buttons
+    const deleteModalClose = document.getElementById('deleteModalClose');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+    const deleteModalOverlay = document.getElementById('deleteModalOverlay');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+
+    deleteModalClose.addEventListener('click', () => this.hideDeleteTripModal());
+    btnCancelDelete.addEventListener('click', () => this.hideDeleteTripModal());
+    deleteModalOverlay.addEventListener('click', () => this.hideDeleteTripModal());
+    btnConfirmDelete.addEventListener('click', () => this.deleteTrip());
+
     // Back to Trips Button
     const btnBackToTrips = document.getElementById('btnBackToTrips');
     btnBackToTrips.addEventListener('click', () => this.showTripSelection());
@@ -135,6 +188,9 @@ class App {
   async showTripSelection() {
     this.isMapView = false;
 
+    // Clear current trip from social UI (Phase 2.4 & 2.5)
+    socialUI.setCurrentTrip(null);
+
     // Hide map view elements
     document.getElementById('appHeader').style.display = 'none';
     document.getElementById('map').style.display = 'none';
@@ -155,6 +211,17 @@ class App {
    * Load and display trips list
    */
   async loadTripsList() {
+    // Require authentication to view trips
+    const user = getCurrentUser();
+    if (!user) {
+      console.log('⚠️ No user logged in, showing empty state');
+      const emptyState = document.getElementById('emptyState');
+      const tripsList = document.getElementById('tripsList');
+      if (emptyState) emptyState.style.display = 'flex';
+      if (tripsList) tripsList.innerHTML = '';
+      return;
+    }
+
     const hasTrips = await tripManager.hasAnyTrips();
     const emptyState = document.getElementById('emptyState');
     const tripsList = document.getElementById('tripsList');
@@ -210,7 +277,17 @@ class App {
           <h3>${trip.tripName}</h3>
           <p>${tripManager.formatDate(trip.createdAt)}</p>
         </div>
-        <span class="trip-status-badge ${statusClass}">${trip.status}</span>
+        <div class="trip-card-actions">
+          <span class="trip-status-badge ${statusClass}">${trip.status}</span>
+          <button class="trip-delete-btn" data-trip-id="${trip.tripId}" title="Delete trip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="trip-card-meta">
         <div class="trip-card-meta-item">
@@ -230,8 +307,19 @@ class App {
       </div>
     `;
 
-    // Click to load trip
-    card.addEventListener('click', () => this.loadTrip(trip.tripId));
+    // Click to load trip (but not on delete button)
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.trip-delete-btn')) {
+        this.loadTrip(trip.tripId);
+      }
+    });
+
+    // Delete button handler
+    const deleteBtn = card.querySelector('.trip-delete-btn');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent card click
+      this.showDeleteTripConfirmation(trip);
+    });
 
     return card;
   }
@@ -254,6 +342,56 @@ class App {
    */
   hideCreateTripModal() {
     document.getElementById('createTripModal').style.display = 'none';
+  }
+
+  /**
+   * Show delete trip confirmation modal
+   */
+  showDeleteTripConfirmation(trip) {
+    this.tripToDelete = trip;
+    document.getElementById('deleteTripName').textContent = trip.tripName;
+    document.getElementById('deleteTripModal').style.display = 'flex';
+  }
+
+  /**
+   * Hide delete trip modal
+   */
+  hideDeleteTripModal() {
+    document.getElementById('deleteTripModal').style.display = 'none';
+    this.tripToDelete = null;
+  }
+
+  /**
+   * Delete trip (from IndexedDB and Firestore)
+   */
+  async deleteTrip() {
+    if (!this.tripToDelete) return;
+
+    const tripId = this.tripToDelete.tripId;
+    const tripName = this.tripToDelete.tripName;
+
+    try {
+      console.log(`🗑️ Deleting trip: ${tripName} (${tripId})`);
+
+      // Delete from IndexedDB
+      await storage.deleteTrip(tripId);
+      console.log(`✅ Deleted from IndexedDB: ${tripId}`);
+
+      // Delete from Firestore
+      await firestoreSync.deleteTrip(tripId);
+      console.log(`✅ Deleted from Firestore: ${tripId}`);
+
+      // Hide modal
+      this.hideDeleteTripModal();
+
+      // Refresh trips list
+      await this.loadTripsList();
+
+      console.log(`✅ Trip deleted successfully: ${tripName}`);
+    } catch (error) {
+      console.error('❌ Error deleting trip:', error);
+      alert(`Failed to delete trip: ${error.message}`);
+    }
   }
 
   /**
@@ -429,12 +567,23 @@ class App {
    * Load trip and show map view
    */
   async loadTrip(tripId) {
+    // Require authentication to load trips
+    const user = getCurrentUser();
+    if (!user) {
+      console.log('⚠️ No user logged in, cannot load trip');
+      alert('Please sign in to access your trips');
+      return;
+    }
+
     try {
       this.showLoading(true);
 
       // Set active trip
       await tripManager.setActiveTrip(tripId);
       this.currentTrip = tripManager.getCurrentTrip();
+
+      // Set current trip for social UI (Phase 2.4 & 2.5)
+      socialUI.setCurrentTrip(tripId);
 
       // Load route data
       await this.loadRoute(this.currentTrip.routeId);
@@ -639,16 +788,49 @@ class App {
     console.log(`  Loading ${this.routeV2.segments.length} segments...`);
     const segmentPromises = this.routeV2.segments.map(async (segment) => {
       try {
-        const response = await fetch(segment.geojson);
-        if (!response.ok) {
-          throw new Error(`Failed to load segment: ${segment.id}`);
+        let geojson;
+
+        // Check if segment has embedded path data (Trip Template format)
+        if (segment.path && Array.isArray(segment.path)) {
+          // Convert path array to GeoJSON LineString
+          geojson = {
+            type: "Feature",
+            properties: {
+              id: segment.id,
+              name: segment.name,
+              mode: segment.mode,
+              distance: segment.distance,
+              estimatedTime: segment.estimatedTime,
+              difficulty: segment.difficulty,
+              description: segment.description
+            },
+            geometry: {
+              type: "LineString",
+              coordinates: segment.path.map(coord => [coord[1], coord[0]]) // Convert [lat, lon] to [lon, lat]
+            }
+          };
+        } else if (segment.geojson) {
+          // Load from external GeoJSON file (Route Schema v2.0 format)
+          const response = await fetch(segment.geojson);
+          if (!response.ok) {
+            throw new Error(`Failed to load segment: ${segment.id}`);
+          }
+          geojson = await response.json();
+        } else {
+          throw new Error(`Segment ${segment.id} has no path data or geojson file`);
         }
-        const geojson = await response.json();
+
         layers.addSegmentLayer(segment, geojson);
 
         // 3. Add sub-milestones for this segment
         if (segment.milestones && segment.milestones.length > 0) {
           segment.milestones.forEach(subMilestone => {
+            layers.addSubMilestoneMarker(subMilestone, segment.id);
+          });
+        }
+        // Also check subMilestones (Trip Template format)
+        if (segment.subMilestones && segment.subMilestones.length > 0) {
+          segment.subMilestones.forEach(subMilestone => {
             layers.addSubMilestoneMarker(subMilestone, segment.id);
           });
         }

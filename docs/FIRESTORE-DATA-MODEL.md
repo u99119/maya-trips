@@ -19,13 +19,20 @@ firestore/
 ├── users/                    # User profiles
 │   └── {userId}/
 │       ├── profile           # User metadata
-│       └── trips/            # Subcollection: User's trips
-│           └── {tripId}/
-│               ├── metadata  # Trip info
-│               ├── segments/ # Completed segments
-│               └── notes/    # Trip notes
+│       ├── trips/            # Subcollection: User's trips
+│       │   └── {tripId}/
+│       │       ├── metadata  # Trip info
+│       │       ├── segments/ # Completed segments
+│       │       └── notes/    # Trip notes
+│       ├── friends/          # Subcollection: User's friends (Phase 2.4)
+│       │   └── {friendId}    # Friend relationship
+│       └── notifications/    # Subcollection: User's notifications (Phase 2.4)
+│           └── {notificationId}
 │
-├── shared-trips/             # Shared trip access
+├── friendRequests/           # Global friend requests (Phase 2.4)
+│   └── {requestId}
+│
+├── shared-trips/             # Shared trip access (Phase 2.5)
 │   └── {tripId}/
 │       ├── metadata          # Trip owner, participants
 │       └── participants/     # Subcollection: Access control
@@ -369,14 +376,254 @@ service cloud.firestore {
 
 ---
 
+## 🤝 Phase 2.4: Friends System
+
+### 4. `users/{userId}/friends/{friendId}`
+
+**Document fields:**
+```javascript
+{
+  friendId: "user_abc123",
+  friendEmail: "friend@example.com",
+  friendName: "John Doe",
+  friendPhotoURL: "https://...",
+
+  status: "accepted", // Always "accepted" in this collection
+
+  addedAt: Timestamp,
+  acceptedAt: Timestamp,
+  lastInteraction: Timestamp, // Last trip shared, message sent, etc.
+
+  // Metadata
+  sharedTripsCount: 3, // Number of trips shared with this friend
+  mutualFriends: 5 // Number of mutual friends (optional, computed)
+}
+```
+
+**Indexes:**
+- `friendEmail` (for search)
+- `addedAt` (for sorting)
+- `lastInteraction` (for sorting by recent)
+
+**Notes:**
+- Only accepted friends are stored here
+- Pending requests are in the global `friendRequests` collection
+- Both users have a document in each other's friends subcollection
+
+---
+
+### 5. `friendRequests/{requestId}`
+
+**Document fields:**
+```javascript
+{
+  requestId: "req_xyz789",
+
+  // Sender info
+  fromUserId: "user_abc123",
+  fromUserEmail: "sender@example.com",
+  fromUserName: "John Doe",
+  fromUserPhotoURL: "https://...",
+
+  // Recipient info
+  toUserId: "user_def456",
+  toUserEmail: "recipient@example.com",
+
+  // Request details
+  status: "pending", // "pending", "accepted", "declined", "cancelled", "expired"
+  message: "Hey! Let's plan trips together!", // Optional message
+
+  // Timestamps
+  createdAt: Timestamp,
+  respondedAt: Timestamp,
+  expiresAt: Timestamp // Auto-expire after 10 days (SOCIAL_CONFIG.REQUEST_EXPIRY_DAYS)
+}
+```
+
+**Indexes:**
+- `fromUserId` (to query sent requests)
+- `toUserId` (to query received requests)
+- `status` (to filter by status)
+- `expiresAt` (for cleanup)
+
+**Lifecycle:**
+1. User A sends request → Document created with `status: "pending"`
+2. User B accepts → `status: "accepted"`, both users get friend documents
+3. User B declines → `status: "declined"`
+4. User A cancels → `status: "cancelled"`
+5. After 10 days → `status: "expired"` (auto-cleanup)
+
+---
+
+### 6. `users/{userId}/notifications/{notificationId}`
+
+**Document fields:**
+```javascript
+{
+  notificationId: "notif_abc123",
+  userId: "user_def456", // Recipient
+
+  // Notification type and priority
+  type: "friend_request", // See NOTIFICATION_TYPES in social-config.js
+  priority: "normal", // "low", "normal", "high", "urgent"
+
+  // Content
+  title: "New Friend Request",
+  message: "John Doe sent you a friend request",
+  icon: "👥", // Emoji or icon identifier
+
+  // Related data (for context)
+  relatedUserId: "user_abc123", // Who triggered this notification
+  relatedUserName: "John Doe",
+  relatedUserPhotoURL: "https://...",
+
+  relatedTripId: "trip_xyz789", // If trip-related
+  relatedTripName: "Vaishno Devi - May 2024",
+
+  relatedRequestId: "req_xyz789", // If friend request
+
+  // Actions
+  actionUrl: "/friends/requests", // Where to navigate on click
+  actionType: "friend_request", // What action to take
+  actionData: { requestId: "req_xyz789" }, // Additional data for action
+
+  // Status
+  read: false,
+  readAt: Timestamp,
+  dismissed: false,
+  dismissedAt: Timestamp,
+
+  // Timestamps
+  createdAt: Timestamp,
+  expiresAt: Timestamp // Auto-delete after 30 days
+}
+```
+
+**Indexes:**
+- `userId` (implicit - subcollection)
+- `type` (to filter by notification type)
+- `read` (to query unread notifications)
+- `createdAt` (for sorting)
+- `expiresAt` (for cleanup)
+
+**Automatic Cleanup:**
+- Notifications older than 30 days are auto-deleted
+- Only last 50 notifications are kept per user
+- Cleanup runs every hour (configurable in `social-config.js`)
+
+---
+
+## 🎁 Phase 2.5: Trip Sharing
+
+### 7. Updated `users/{userId}/trips/{tripId}`
+
+**New fields for sharing:**
+```javascript
+{
+  // ... existing trip fields ...
+
+  // Ownership & Visibility
+  owner: "user_abc123", // Trip owner (creator)
+  visibility: "private", // "private", "friends", "public"
+
+  // Participants (collaborators)
+  participants: [
+    {
+      userId: "user_def456",
+      email: "friend@example.com",
+      name: "John Doe",
+      photoURL: "https://...",
+      role: "participant", // "owner", "participant", "viewer"
+      addedAt: Timestamp,
+      addedBy: "user_abc123",
+      lastActive: Timestamp
+    }
+  ],
+
+  // Pending invites
+  invites: [
+    {
+      inviteId: "invite_xyz789",
+      email: "pending@example.com",
+      role: "participant",
+      status: "pending", // "pending", "accepted", "declined", "expired"
+      invitedAt: Timestamp,
+      invitedBy: "user_abc123",
+      expiresAt: Timestamp // Auto-expire after 7 days
+    }
+  ],
+
+  // Collaboration stats
+  totalPhotos: 15,
+  totalNotes: 8,
+  lastActivity: Timestamp,
+  lastActivityBy: "user_def456"
+}
+```
+
+**Participant Roles:**
+- **Owner**: Full control (edit, delete, manage participants)
+- **Participant**: Can add photos/notes, mark milestones
+- **Viewer**: Read-only access
+
+---
+
+### 8. `shared-trips/{tripId}`
+
+**Purpose:** Public index for trip discovery (friends/public trips)
+
+**Document fields:**
+```javascript
+{
+  tripId: "trip_abc123",
+  tripName: "Vaishno Devi - May 2024",
+  routeId: "vaishno-devi",
+  routeName: "Vaishno Devi Yatra",
+
+  // Owner info
+  owner: "user_abc123",
+  ownerName: "Mayank Singh",
+  ownerPhotoURL: "https://...",
+
+  // Sharing settings
+  visibility: "friends", // "friends", "public"
+  participantCount: 3,
+
+  // Timestamps
+  createdAt: Timestamp,
+  lastActivity: Timestamp,
+
+  // For search/filtering
+  tags: ["pilgrimage", "trekking", "family"],
+  region: "Jammu & Kashmir",
+  difficulty: "moderate"
+}
+```
+
+**Indexes:**
+- `owner` (to query user's shared trips)
+- `visibility` (to filter public/friends trips)
+- `tags` (array-contains for search)
+- `region` (for location-based search)
+- `lastActivity` (for sorting by recent)
+
+**Notes:**
+- Only created when trip visibility is "friends" or "public"
+- Deleted when trip is made private or deleted
+- Used for discovery, not for actual trip data
+
+---
+
 ## 📝 Next Steps
 
 1. ✅ Review this data model
-2. ⏳ Create Firestore sync module (`firestore-sync.js`)
-3. ⏳ Implement user profile sync
-4. ⏳ Implement trip sync
-5. ⏳ Deploy security rules
-6. ⏳ Test multi-device sync
+2. ✅ Create Firestore sync module (`firestore-sync.js`)
+3. ✅ Implement user profile sync
+4. ✅ Implement trip sync
+5. ✅ Deploy security rules
+6. ✅ Test multi-device sync
+7. ⏳ Implement friends system (Phase 2.4)
+8. ⏳ Implement trip sharing (Phase 2.5)
 
 ---
 

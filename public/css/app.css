@@ -162,6 +162,29 @@ body {
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.map-auth-container {
+  display: flex;
+  align-items: center;
+}
+
+.map-user-btn {
+  font-size: 11px !important;
+  padding: 8px 16px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+}
+
+.map-user-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
 .route-name {
   font-size: 18px;
   font-weight: 600;
@@ -1180,6 +1203,36 @@ input:checked + .toggle-slider:before {
   color: var(--text-secondary);
 }
 
+.trip-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-delete-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  opacity: 0.6;
+}
+
+.trip-delete-btn:hover {
+  background: #FFEBEE;
+  opacity: 1;
+}
+
+.trip-delete-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #D32F2F;
+}
+
 .trip-status-badge {
   padding: 4px 12px;
   border-radius: 12px;
@@ -1298,6 +1351,10 @@ input:checked + .toggle-slider:before {
   max-height: 90vh;
   overflow-y: auto;
   animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-small {
+  max-width: 400px;
 }
 
 @keyframes modalSlideIn {
@@ -1634,6 +1691,31 @@ input:checked + .toggle-slider:before {
 
 .btn-secondary:hover {
   background: var(--bg-secondary);
+}
+
+.btn-danger {
+  background: #D32F2F;
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background: #B71C1C;
+}
+
+.warning-text {
+  color: #D32F2F;
+  font-weight: 500;
+  margin: 12px 0 8px 0;
+}
+
+.warning-list {
+  margin: 8px 0 12px 20px;
+  color: var(--text-secondary);
+}
+
+.warning-list li {
+  margin: 4px 0;
 }
 
 /* Back Button in Header */

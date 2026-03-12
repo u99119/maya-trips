@@ -220,18 +220,51 @@ async function handleForgotPassword(e) {
  * Update auth button based on user state
  */
 function updateAuthButton(user) {
-  const button = document.getElementById('signInButton');
+  // Update trip selection header button
+  const tripSelectionButton = document.getElementById('signInButton');
+  if (tripSelectionButton) {
+    if (user) {
+      // User is logged in
+      tripSelectionButton.textContent = user.displayName || user.email.split('@')[0];
+      tripSelectionButton.title = user.email;
+    } else {
+      // User is logged out
+      tripSelectionButton.textContent = 'Sign In';
+      tripSelectionButton.title = 'Sign in to sync your trips';
+    }
+  }
 
-  if (!button) return;
+  // Update map view header button
+  const mapAuthContainer = document.getElementById('mapAuthButtonContainer');
+  if (mapAuthContainer) {
+    if (user) {
+      // User is logged in - show user name and sign out button
+      const userName = user.displayName || user.email.split('@')[0];
+      mapAuthContainer.innerHTML = `
+        <button class="btn btn-secondary map-user-btn" id="mapUserButton" title="${user.email}">
+          ${userName}
+        </button>
+      `;
 
-  if (user) {
-    // User is logged in
-    button.textContent = user.displayName || user.email.split('@')[0];
-    button.title = user.email;
-  } else {
-    // User is logged out
-    button.textContent = 'Sign In';
-    button.title = 'Sign in to sync your trips';
+      // Add click handler for sign out
+      const mapUserButton = document.getElementById('mapUserButton');
+      if (mapUserButton) {
+        mapUserButton.addEventListener('click', showUserMenu);
+      }
+    } else {
+      // User is logged out - show sign in button
+      mapAuthContainer.innerHTML = `
+        <button class="btn btn-secondary" id="mapSignInButton" style="font-size: 11px; padding: 8px 16px;">
+          Sign In
+        </button>
+      `;
+
+      // Add click handler for sign in
+      const mapSignInButton = document.getElementById('mapSignInButton');
+      if (mapSignInButton) {
+        mapSignInButton.addEventListener('click', () => openAuthModal('signin'));
+      }
+    }
   }
 }
 
