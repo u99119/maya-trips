@@ -39,6 +39,23 @@ fi
 echo "✅ Firebase CLI authenticated"
 echo ""
 
+# Check if Firebase is initialized
+if [ ! -f ".firebaserc" ] && [ ! -f "firebase.json" ]; then
+    echo "❌ Firebase not initialized in this directory."
+    echo ""
+    echo "Please run:"
+    echo "  firebase init"
+    echo ""
+    echo "Then select:"
+    echo "  - Firestore"
+    echo "  - Use existing project: maya-family-trips"
+    echo "  - Accept default firestore.rules location"
+    echo ""
+    echo "See FIREBASE-INIT-GUIDE.md for detailed instructions."
+    echo ""
+    exit 1
+fi
+
 # Show current project
 echo "Current Firebase project:"
 firebase use
