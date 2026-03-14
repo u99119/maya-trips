@@ -4,6 +4,7 @@
  */
 
 import storage from './storage.js';
+import firestoreSync from './firestore-sync.js';
 
 class TripManager {
   constructor() {
@@ -54,6 +55,10 @@ class TripManager {
     }
 
     console.log('Trip created:', trip.tripName, trip.tripId);
+
+    // Sync to Firestore (Phase 2.3)
+    await firestoreSync.syncTrip(trip.tripId);
+
     return trip;
   }
 
@@ -260,6 +265,10 @@ class TripManager {
     this.currentTrip.completedAt = new Date().toISOString();
 
     console.log('Trip completed:', this.currentTrip.tripName);
+
+    // Sync to Firestore (Phase 2.3)
+    await firestoreSync.syncTrip(this.currentTrip.tripId);
+
     return this.currentTrip;
   }
 
@@ -305,6 +314,9 @@ class TripManager {
     }
 
     console.log('Trip renamed:', newName);
+
+    // Sync to Firestore (Phase 2.3)
+    await firestoreSync.syncTrip(tripId);
   }
 
   /**

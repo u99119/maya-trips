@@ -1,0 +1,244 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner of the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is trying to access their own data
+    function isSelf() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Check if request data has required fields
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    // Check if user is a friend
+    function isFriend(userId) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid));
+    }
+    
+    // Check if user is a trip participant
+    function isTripParticipant(tripId, ownerId) {
+      return isAuthenticated() && (
+        request.auth.uid == ownerId ||
+        exists(/databases/$(database)/documents/users/$(ownerId)/trips/$(tripId)/participants/$(request.auth.uid))
+      );
+    }
+    
+    // ========================================
+    // USERS COLLECTION
+    // ========================================
+    
+    match /users/{userId} {
+      // Users can read their own profile
+      // Also allow reading other users' basic info for friend requests
+      allow read: if isAuthenticated();
+
+      // Users can create their own profile on first login
+      allow create: if isOwner(userId) &&
+                       hasRequiredFields(['userId', 'email', 'createdAt']);
+
+      // Users can update their own profile
+      allow update: if isOwner(userId);
+
+      // Users cannot delete their profile (use Firebase Auth)
+      allow delete: if false;
+      
+      // ========================================
+      // TRIPS SUBCOLLECTION
+      // ========================================
+      
+      match /trips/{tripId} {
+        // Users can read their own trips
+        allow read: if isOwner(userId);
+        
+        // Users can create trips in their own collection
+        allow create: if isOwner(userId) && 
+                         hasRequiredFields(['tripId', 'routeId', 'tripName', 'status', 'createdAt']);
+        
+        // Users can update their own trips
+        allow update: if isOwner(userId);
+        
+        // Users can delete their own trips
+        allow delete: if isOwner(userId);
+        
+        // Trip segments subcollection
+        match /segments/{segmentId} {
+          allow read, write: if isOwner(userId);
+        }
+        
+        // Trip notes subcollection
+        match /notes/{noteId} {
+          allow read, write: if isOwner(userId);
+        }
+        
+        // Trip participants subcollection (Phase 2.5)
+        match /participants/{participantId} {
+          // Owner can read/write all participants
+          allow read, write: if isOwner(userId);
+          
+          // Participants can read their own participation record
+          allow read: if isAuthenticated() && request.auth.uid == participantId;
+        }
+      }
+      
+      // ========================================
+      // FRIENDS SUBCOLLECTION (Phase 2.4)
+      // ========================================
+      
+      match /friends/{friendId} {
+        // Users can read their own friends list
+        allow read: if isOwner(userId);
+        
+        // Users can add friends (after request is accepted)
+        allow create: if isOwner(userId) && 
+                         hasRequiredFields(['friendId', 'friendEmail', 'friendName', 'createdAt']);
+        
+        // Users can update friend metadata
+        allow update: if isOwner(userId);
+        
+        // Users can remove friends
+        allow delete: if isOwner(userId);
+      }
+      
+      // ========================================
+      // NOTIFICATIONS SUBCOLLECTION (Phase 2.4)
+      // ========================================
+      
+      match /notifications/{notificationId} {
+        // Users can read their own notifications
+        allow read: if isOwner(userId);
+        
+        // System can create notifications (via Cloud Functions or client-side)
+        // Users can create notifications for others (e.g., friend requests)
+        allow create: if isAuthenticated() && 
+                         hasRequiredFields(['type', 'title', 'message', 'createdAt', 'read']);
+        
+        // Users can update their own notifications (mark as read)
+        allow update: if isOwner(userId);
+        
+        // Users can delete their own notifications
+        allow delete: if isOwner(userId);
+      }
+    }
+    
+    // ========================================
+    // FRIEND REQUESTS COLLECTION (Phase 2.4)
+    // ========================================
+    
+    match /friendRequests/{requestId} {
+      // Users can read requests they sent or received
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.fromUserId ||
+        request.auth.uid == resource.data.toUserId
+      );
+      
+      // Users can create friend requests
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.fromUserId &&
+                       hasRequiredFields(['fromUserId', 'fromUserEmail', 'fromUserName', 
+                                         'toUserId', 'toUserEmail', 'status', 'createdAt']);
+      
+      // Users can update requests they received (accept/decline) or sent (cancel)
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.toUserId ||
+        request.auth.uid == resource.data.fromUserId
+      );
+      
+      // Users can delete requests they sent or received
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.fromUserId ||
+        request.auth.uid == resource.data.toUserId
+      );
+    }
+
+    // ========================================
+    // SHARED TRIPS COLLECTION (Phase 2.5)
+    // ========================================
+
+    match /sharedTrips/{tripId} {
+      // Anyone who is a participant can read the shared trip metadata
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.ownerId ||
+        exists(/databases/$(database)/documents/sharedTrips/$(tripId)/participants/$(request.auth.uid))
+      );
+
+      // Only the owner can create shared trips
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == request.resource.data.ownerId &&
+                       hasRequiredFields(['tripId', 'ownerId', 'ownerEmail', 'ownerName',
+                                         'tripName', 'routeId', 'visibility', 'createdAt']);
+
+      // Only the owner can update shared trip metadata
+      allow update: if isAuthenticated() &&
+                       request.auth.uid == resource.data.ownerId;
+
+      // Only the owner can delete shared trips
+      allow delete: if isAuthenticated() &&
+                       request.auth.uid == resource.data.ownerId;
+
+      // Participants subcollection
+      match /participants/{participantId} {
+        // Participants and owner can read the participants list
+        allow read: if isAuthenticated() && (
+          request.auth.uid == get(/databases/$(database)/documents/sharedTrips/$(tripId)).data.ownerId ||
+          request.auth.uid == participantId
+        );
+
+        // Only the owner can add participants
+        allow create: if isAuthenticated() &&
+                         request.auth.uid == get(/databases/$(database)/documents/sharedTrips/$(tripId)).data.ownerId &&
+                         hasRequiredFields(['userId', 'userEmail', 'userName', 'role', 'addedAt']);
+
+        // Only the owner can update participant roles
+        allow update: if isAuthenticated() &&
+                         request.auth.uid == get(/databases/$(database)/documents/sharedTrips/$(tripId)).data.ownerId;
+
+        // Owner can remove participants, or participants can remove themselves
+        allow delete: if isAuthenticated() && (
+          request.auth.uid == get(/databases/$(database)/documents/sharedTrips/$(tripId)).data.ownerId ||
+          request.auth.uid == participantId
+        );
+      }
+    }
+
+    // ========================================
+    // ROUTES COLLECTION (Optional - Public Read)
+    // ========================================
+
+    match /routes/{routeId} {
+      // Anyone can read routes (they're public)
+      allow read: if true;
+
+      // Only admins can create/update/delete routes
+      // For now, we'll manage routes manually via Firebase Console
+      allow write: if false;
+    }
+
+    // ========================================
+    // DENY ALL OTHER COLLECTIONS
+    // ========================================
+
+    // Explicitly deny access to any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

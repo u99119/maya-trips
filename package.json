@@ -8,9 +8,11 @@
     "dev": "vite",
     "dev:host": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check-usage": "node scripts/ms-check-usage.js"
   },
   "dependencies": {
+    "firebase": "^12.10.0",
     "idb": "^8.0.0",
     "leaflet": "^1.9.4"
   },
