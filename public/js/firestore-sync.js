@@ -543,32 +543,14 @@ class FirestoreSync {
         return { success: false, error: 'Not logged in' };
       }
 
-      // Update request status
-      await updateDoc(requestRef, {
-        status: FRIEND_REQUEST_STATUS.ACCEPTED,
-        respondedAt: serverTimestamp()
-      });
-
-      // Add to both users' friends collections
+      // U2 creates their own friend document (adding U1 as friend)
       const friend1Data = {
         friendId: requestData.fromUserId,
         friendEmail: requestData.fromUserEmail,
         friendName: requestData.fromUserName,
         friendPhotoURL: requestData.fromUserPhotoURL,
         status: 'accepted',
-        addedAt: serverTimestamp(),
-        acceptedAt: serverTimestamp(),
-        lastInteraction: serverTimestamp(),
-        sharedTripsCount: 0,
-        mutualFriends: 0
-      };
-
-      const friend2Data = {
-        friendId: this.userId,
-        friendEmail: currentUser.email,
-        friendName: currentUser.displayName || currentUser.email.split('@')[0],
-        friendPhotoURL: currentUser.photoURL || '',
-        status: 'accepted',
+        createdAt: serverTimestamp(),
         addedAt: serverTimestamp(),
         acceptedAt: serverTimestamp(),
         lastInteraction: serverTimestamp(),
@@ -577,21 +559,32 @@ class FirestoreSync {
       };
 
       await setDoc(doc(db, 'users', this.userId, 'friends', requestData.fromUserId), friend1Data);
-      await setDoc(doc(db, 'users', requestData.fromUserId, 'friends', this.userId), friend2Data);
 
-      // Create notification for sender
+      // Update the friend request to 'accepted' status instead of deleting
+      // This allows U1 to see it was accepted and create their own friend document
+      await updateDoc(requestRef, {
+        status: FRIEND_REQUEST_STATUS.ACCEPTED,
+        acceptedAt: serverTimestamp(),
+        acceptedBy: this.userId
+      });
+
+      // Create notification for sender (U1) with special action to trigger friend creation
+      const acceptorName = currentUser.displayName || currentUser.email.split('@')[0];
       await this.createNotification(requestData.fromUserId, {
         type: NOTIFICATION_TYPES.FRIEND_ACCEPTED,
         priority: NOTIFICATION_PRIORITY.NORMAL,
         title: 'Friend Request Accepted',
-        message: `${friend2Data.friendName} accepted your friend request`,
+        message: `${acceptorName} accepted your friend request`,
         icon: '✅',
         relatedUserId: this.userId,
-        relatedUserName: friend2Data.friendName,
-        relatedUserPhotoURL: friend2Data.friendPhotoURL,
+        relatedUserName: acceptorName,
+        relatedUserPhotoURL: currentUser.photoURL || '',
         actionUrl: `/friends/${this.userId}`,
-        actionType: 'view_friend',
-        actionData: { friendId: this.userId }
+        actionType: 'friend_request_accepted',
+        actionData: {
+          friendId: this.userId,
+          requestId: requestId
+        }
       });
 
       console.log('✅ Friend request accepted:', requestId);
@@ -631,9 +624,27 @@ class FirestoreSync {
         return { success: false, error: 'Not authorized to decline this request' };
       }
 
-      await updateDoc(requestRef, {
-        status: FRIEND_REQUEST_STATUS.DECLINED,
-        respondedAt: serverTimestamp()
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        return { success: false, error: 'Not logged in' };
+      }
+
+      // Delete the friend request document
+      await deleteDoc(requestRef);
+
+      // Create notification for sender (U1) to inform them of the decline
+      await this.createNotification(requestData.fromUserId, {
+        type: NOTIFICATION_TYPES.FRIEND_DECLINED,
+        priority: NOTIFICATION_PRIORITY.LOW,
+        title: 'Friend Request Declined',
+        message: `${currentUser.displayName || currentUser.email.split('@')[0]} declined your friend request`,
+        icon: '❌',
+        relatedUserId: this.userId,
+        relatedUserName: currentUser.displayName || currentUser.email.split('@')[0],
+        relatedUserPhotoURL: currentUser.photoURL || '',
+        actionUrl: '/friends',
+        actionType: 'view_friends',
+        actionData: {}
       });
 
       console.log('✅ Friend request declined:', requestId);
@@ -673,10 +684,12 @@ class FirestoreSync {
         return { success: false, error: 'Not authorized to cancel this request' };
       }
 
-      await updateDoc(requestRef, {
-        status: FRIEND_REQUEST_STATUS.CANCELLED,
-        respondedAt: serverTimestamp()
-      });
+      // Delete the friend request document
+      await deleteDoc(requestRef);
+
+      // Note: We can't delete the notification from the recipient's collection due to security rules
+      // The notification will remain, but the friend request will be gone
+      // The UI should handle this by checking if the related request still exists
 
       console.log('✅ Friend request cancelled:', requestId);
       return { success: true };
@@ -702,9 +715,27 @@ class FirestoreSync {
     }
 
     try {
-      // Remove from both users' friends collections
+      // Each user can only delete their own friend document
+      // Delete this user's friend document
       await deleteDoc(doc(db, 'users', this.userId, 'friends', friendId));
-      await deleteDoc(doc(db, 'users', friendId, 'friends', this.userId));
+
+      // Create a notification for the other user so they know to remove their friend doc
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        await this.createNotification(friendId, {
+          type: 'friend_removed',
+          priority: NOTIFICATION_PRIORITY.LOW,
+          title: 'Friend Removed',
+          message: `${currentUser.displayName || currentUser.email.split('@')[0]} removed you as a friend`,
+          icon: '👋',
+          relatedUserId: this.userId,
+          relatedUserName: currentUser.displayName || currentUser.email.split('@')[0],
+          relatedUserPhotoURL: currentUser.photoURL || '',
+          actionUrl: '/friends',
+          actionType: 'friend_removed',
+          actionData: { removedByUserId: this.userId }
+        });
+      }
 
       console.log('✅ Friend removed:', friendId);
       return { success: true };
@@ -818,6 +849,263 @@ class FirestoreSync {
       console.error('❌ Error getting sent friend requests:', error);
       return [];
     }
+  }
+
+  /**
+   * Listen to pending friend requests (real-time)
+   * @param {Function} callback - Callback function to receive updates
+   * @returns {Function} Unsubscribe function
+   */
+  listenToPendingFriendRequests(callback) {
+    if (!this.userId) {
+      console.warn('Cannot listen to friend requests: not logged in');
+      return () => {};
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would listen to pending friend requests');
+      callback([]);
+      return () => {};
+    }
+
+    const requestsRef = collection(db, 'friendRequests');
+    const q = query(
+      requestsRef,
+      where('toUserId', '==', this.userId),
+      where('status', '==', FRIEND_REQUEST_STATUS.PENDING),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const requests = [];
+        snapshot.forEach((doc) => {
+          requests.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(`🔔 Real-time: Received ${requests.length} friend requests`);
+        callback(requests);
+      },
+      (error) => {
+        console.error('❌ Error listening to friend requests:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  /**
+   * Listen to sent friend requests (real-time)
+   * @param {Function} callback - Callback function to receive updates
+   * @returns {Function} Unsubscribe function
+   */
+  listenToSentFriendRequests(callback) {
+    if (!this.userId) {
+      console.warn('Cannot listen to sent requests: not logged in');
+      return () => {};
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would listen to sent friend requests');
+      callback([]);
+      return () => {};
+    }
+
+    const requestsRef = collection(db, 'friendRequests');
+    const q = query(
+      requestsRef,
+      where('fromUserId', '==', this.userId),
+      where('status', '==', FRIEND_REQUEST_STATUS.PENDING),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const requests = [];
+        snapshot.forEach((doc) => {
+          requests.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(`🔔 Real-time: Sent ${requests.length} friend requests`);
+        callback(requests);
+      },
+      (error) => {
+        console.error('❌ Error listening to sent requests:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  /**
+   * Listen to accepted friend requests and auto-create friend documents
+   * This handles the case where U2 accepts a request and U1 needs to create their friend doc
+   * @returns {Function} Unsubscribe function
+   */
+  listenToAcceptedFriendRequests() {
+    if (!this.userId) {
+      console.warn('Cannot listen to accepted requests: not logged in');
+      return () => {};
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would listen to accepted friend requests');
+      return () => {};
+    }
+
+    const requestsRef = collection(db, 'friendRequests');
+    const q = query(
+      requestsRef,
+      where('fromUserId', '==', this.userId),
+      where('status', '==', FRIEND_REQUEST_STATUS.ACCEPTED)
+    );
+
+    const unsubscribe = onSnapshot(q,
+      async (snapshot) => {
+        // Process each accepted request
+        for (const docSnapshot of snapshot.docs) {
+          const requestData = docSnapshot.data();
+          const requestId = docSnapshot.id;
+
+          // Check if we already have this friend
+          const friendRef = doc(db, 'users', this.userId, 'friends', requestData.toUserId);
+          const friendDoc = await getDoc(friendRef);
+
+          if (!friendDoc.exists()) {
+            // Get the friend's user data to get their name
+            const friendUserRef = doc(db, 'users', requestData.toUserId);
+            const friendUserDoc = await getDoc(friendUserRef);
+
+            let friendName = requestData.toUserEmail.split('@')[0]; // Default to email prefix
+            let friendPhotoURL = '';
+
+            if (friendUserDoc.exists()) {
+              const friendUserData = friendUserDoc.data();
+              friendName = friendUserData.displayName || friendUserData.name || friendName;
+              friendPhotoURL = friendUserData.photoURL || '';
+            }
+
+            // Create friend document for U1
+            const friendData = {
+              friendId: requestData.toUserId,
+              friendEmail: requestData.toUserEmail,
+              friendName: friendName,
+              friendPhotoURL: friendPhotoURL,
+              status: 'accepted',
+              createdAt: serverTimestamp(),
+              addedAt: serverTimestamp(),
+              acceptedAt: serverTimestamp(),
+              lastInteraction: serverTimestamp(),
+              sharedTripsCount: 0,
+              mutualFriends: 0
+            };
+
+            await setDoc(friendRef, friendData);
+            console.log('✅ Auto-created friend document for accepted request:', requestId);
+
+            // Delete the friend request now that both sides have created their friend docs
+            await deleteDoc(docSnapshot.ref);
+            console.log('✅ Deleted accepted friend request:', requestId);
+          }
+        }
+      },
+      (error) => {
+        console.error('❌ Error listening to accepted requests:', error);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  /**
+   * Listen to friends list (real-time)
+   * @param {Function} callback - Callback function to receive updates
+   * @returns {Function} Unsubscribe function
+   */
+  listenToFriends(callback) {
+    if (!this.userId) {
+      console.warn('Cannot listen to friends: not logged in');
+      return () => {};
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would listen to friends');
+      callback([]);
+      return () => {};
+    }
+
+    const friendsRef = collection(db, 'users', this.userId, 'friends');
+    const q = query(friendsRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const friends = [];
+        snapshot.forEach((doc) => {
+          friends.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(`🔔 Real-time: ${friends.length} friends`);
+        callback(friends);
+      },
+      (error) => {
+        console.error('❌ Error listening to friends:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  }
+
+  /**
+   * Listen to friend_removed notifications and auto-delete friend documents
+   * This handles the case where U1 removes U2, and U2 needs to auto-remove U1
+   * @returns {Function} Unsubscribe function
+   */
+  listenToFriendRemovedNotifications() {
+    if (!this.userId) {
+      console.warn('Cannot listen to friend removed notifications: not logged in');
+      return () => {};
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would listen to friend removed notifications');
+      return () => {};
+    }
+
+    const notifsRef = collection(db, 'users', this.userId, 'notifications');
+    const q = query(
+      notifsRef,
+      where('actionType', '==', 'friend_removed'),
+      where('read', '==', false)
+    );
+
+    const unsubscribe = onSnapshot(q,
+      async (snapshot) => {
+        // Process each friend_removed notification
+        for (const docSnapshot of snapshot.docs) {
+          const notifData = docSnapshot.data();
+          const removedByUserId = notifData.actionData?.removedByUserId;
+
+          if (removedByUserId) {
+            // Delete the friend document
+            const friendRef = doc(db, 'users', this.userId, 'friends', removedByUserId);
+            try {
+              await deleteDoc(friendRef);
+              console.log('✅ Auto-removed friend document after being removed:', removedByUserId);
+
+              // Mark the notification as read
+              await this.markNotificationAsRead(docSnapshot.id);
+            } catch (error) {
+              console.error('❌ Error auto-removing friend:', error);
+            }
+          }
+        }
+      },
+      (error) => {
+        console.error('❌ Error listening to friend removed notifications:', error);
+      }
+    );
+
+    return unsubscribe;
   }
 
   /**
@@ -1006,6 +1294,11 @@ class FirestoreSync {
       console.log('✅ Notification marked as read:', notificationId);
       return { success: true };
     } catch (error) {
+      // If the notification was already deleted (e.g., by dismiss), that's OK
+      if (error.code === 'not-found' || error.message.includes('No document to update')) {
+        console.log('ℹ️ Notification already deleted:', notificationId);
+        return { success: true }; // Treat as success since the notification is gone anyway
+      }
       console.error('❌ Error marking notification as read:', error);
       return { success: false, error: error.message };
     }
@@ -1100,6 +1393,84 @@ class FirestoreSync {
       return { success: true };
     } catch (error) {
       console.error('❌ Error deleting notification:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Check if a friend request exists
+   * @param {string} requestId - Friend request ID
+   * @returns {Promise<boolean>}
+   */
+  async checkFriendRequestExists(requestId) {
+    if (!requestId) return false;
+
+    if (!ENABLE_SYNC) {
+      return true; // In debug mode, assume it exists
+    }
+
+    try {
+      const requestRef = doc(db, 'friendRequests', requestId);
+      const requestDoc = await getDoc(requestRef);
+      return requestDoc.exists();
+    } catch (error) {
+      // Permission errors mean the document doesn't exist or we can't access it
+      // Either way, treat it as "doesn't exist" for UI purposes
+      if (error.code === 'permission-denied') {
+        return false;
+      }
+      console.error('❌ Error checking friend request:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Clean up orphaned friend request notifications
+   * (notifications whose related friend requests no longer exist)
+   * @returns {Promise<{success: boolean, deletedCount?: number, error?: string}>}
+   */
+  async cleanupOrphanedFriendRequestNotifications() {
+    if (!this.userId) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would cleanup orphaned notifications');
+      return { success: true, deletedCount: 0 };
+    }
+
+    try {
+      // Get all friend request notifications
+      const notificationsRef = collection(db, 'users', this.userId, 'notifications');
+      const q = query(notificationsRef, where('type', '==', NOTIFICATION_TYPES.FRIEND_REQUEST));
+      const querySnapshot = await getDocs(q);
+
+      let deletedCount = 0;
+      const deletePromises = [];
+
+      for (const notifDoc of querySnapshot.docs) {
+        const notifData = notifDoc.data();
+        const requestId = notifData.relatedRequestId;
+
+        if (requestId) {
+          // Check if the friend request still exists
+          const requestExists = await this.checkFriendRequestExists(requestId);
+
+          if (!requestExists) {
+            // Request doesn't exist, delete the notification
+            deletePromises.push(deleteDoc(notifDoc.ref));
+            deletedCount++;
+            console.log(`🗑️ Deleting orphaned notification for request: ${requestId}`);
+          }
+        }
+      }
+
+      await Promise.all(deletePromises);
+
+      console.log(`✅ Cleaned up ${deletedCount} orphaned friend request notifications`);
+      return { success: true, deletedCount };
+    } catch (error) {
+      console.error('❌ Error cleaning up orphaned notifications:', error);
       return { success: false, error: error.message };
     }
   }

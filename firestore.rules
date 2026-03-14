@@ -47,15 +47,16 @@ service cloud.firestore {
     
     match /users/{userId} {
       // Users can read their own profile
-      allow read: if isOwner(userId);
-      
+      // Also allow reading other users' basic info for friend requests
+      allow read: if isAuthenticated();
+
       // Users can create their own profile on first login
-      allow create: if isOwner(userId) && 
+      allow create: if isOwner(userId) &&
                        hasRequiredFields(['userId', 'email', 'createdAt']);
-      
+
       // Users can update their own profile
       allow update: if isOwner(userId);
-      
+
       // Users cannot delete their profile (use Firebase Auth)
       allow delete: if false;
       

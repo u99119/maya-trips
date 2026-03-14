@@ -83,8 +83,8 @@ class DrawerManager {
     this.drawer.style.height = `${newHeight}px`;
     document.documentElement.style.setProperty('--drawer-height', `${newHeight}px`);
 
-    // Update Leaflet controls position
-    this.updateLeafletControlsPosition(newHeight);
+    // Leaflet controls are positioned via CSS using --drawer-height variable
+    // No need to manually update their position
 
     e.preventDefault();
   }

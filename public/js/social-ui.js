@@ -11,6 +11,13 @@ class SocialUI {
   constructor() {
     this.currentTripId = null;
     this.notificationCheckInterval = null;
+    // Real-time listener unsubscribe functions
+    this.unsubscribeFriendRequests = null;
+    this.unsubscribeSentRequests = null;
+    this.unsubscribeFriends = null;
+    this.unsubscribeNotifications = null;
+    this.unsubscribeAcceptedRequests = null;
+    this.unsubscribeFriendRemoved = null;
   }
 
   /**
@@ -177,7 +184,6 @@ class SocialUI {
       cancelBtn.addEventListener('click', () => this.closeShareTripModal());
     }
   }
-}
 
   // ========================================
   // NOTIFICATIONS PANEL
@@ -220,6 +226,10 @@ class SocialUI {
     if (!body) return;
 
     try {
+      // First, clean up any orphaned friend request notifications
+      await firestoreSync.cleanupOrphanedFriendRequestNotifications();
+
+      // Then load the notifications
       const notifications = await firestoreSync.getNotifications();
 
       if (notifications.length === 0) {
@@ -268,6 +278,12 @@ class SocialUI {
           <span class="notification-time">${timeAgo}</span>
           ${this.renderNotificationActions(notif)}
         </div>
+        <button class="notification-delete" onclick="event.stopPropagation(); socialUI.deleteNotification('${notif.id}')" title="Delete notification">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
     `;
   }
@@ -279,8 +295,9 @@ class SocialUI {
     if (notif.type === NOTIFICATION_TYPES.FRIEND_REQUEST) {
       return `
         <div class="notification-actions">
-          <button class="btn btn-primary btn-sm" onclick="socialUI.acceptFriendRequest('${notif.relatedRequestId}')">Accept</button>
-          <button class="btn btn-secondary btn-sm" onclick="socialUI.declineFriendRequest('${notif.relatedRequestId}')">Decline</button>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); socialUI.acceptFriendRequest('${notif.relatedRequestId}', '${notif.id}')">Accept</button>
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); socialUI.declineFriendRequest('${notif.relatedRequestId}', '${notif.id}')">Decline</button>
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); socialUI.dismissNotification('${notif.id}')">Dismiss</button>
         </div>
       `;
     }
@@ -316,6 +333,28 @@ class SocialUI {
       console.error('Error marking all as read:', error);
       this.showToast('❌', 'Error', 'Failed to mark notifications as read');
     }
+  }
+
+  /**
+   * Dismiss a notification (delete it)
+   */
+  async dismissNotification(notificationId) {
+    try {
+      await firestoreSync.deleteNotification(notificationId);
+      await this.loadNotifications();
+      await this.updateNotificationBadge();
+      this.showToast('✅', 'Notification dismissed', '');
+    } catch (error) {
+      console.error('Error dismissing notification:', error);
+      this.showToast('❌', 'Error', 'Failed to dismiss notification');
+    }
+  }
+
+  /**
+   * Delete a notification (alias for dismissNotification)
+   */
+  async deleteNotification(notificationId) {
+    await this.dismissNotification(notificationId);
   }
 
   /**
@@ -375,8 +414,233 @@ class SocialUI {
     const panel = document.getElementById('friendsPanel');
     if (panel) {
       panel.classList.add('active');
-      await this.loadFriends();
+
+      // Start real-time listeners for all tabs
+      this.startFriendsListener();
+      this.startFriendRequestsListener();
+      this.startSentRequestsListener();
+      this.startAcceptedRequestsListener();
+      this.startFriendRemovedListener();
+
+      console.log('🔔 Real-time listeners started for Friends panel');
     }
+  }
+
+  /**
+   * Update all tab badge counts
+   */
+  async updateTabCounts() {
+    try {
+      // Update requests count
+      const requests = await firestoreSync.getPendingFriendRequests();
+      const requestsCount = document.getElementById('requestsCount');
+      if (requestsCount) {
+        requestsCount.textContent = requests.length;
+      }
+
+      // Update sent count
+      const sentRequests = await firestoreSync.getSentFriendRequests();
+      const sentCount = document.getElementById('sentCount');
+      if (sentCount) {
+        sentCount.textContent = sentRequests.length;
+      }
+    } catch (error) {
+      console.error('Error updating tab counts:', error);
+    }
+  }
+
+  /**
+   * Start real-time listeners for friend requests
+   */
+  startFriendRequestsListener() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    // Stop existing listener if any
+    if (this.unsubscribeFriendRequests) {
+      this.unsubscribeFriendRequests();
+    }
+
+    // Start listening to received friend requests
+    this.unsubscribeFriendRequests = firestoreSync.listenToPendingFriendRequests((requests) => {
+      console.log('🔔 Real-time update: Received friend requests changed', requests.length);
+
+      // Update the UI
+      const list = document.getElementById('requestsList');
+      const emptyState = document.getElementById('requestsEmpty');
+      const countBadge = document.getElementById('requestsCount');
+
+      if (countBadge) {
+        countBadge.textContent = requests.length;
+      }
+
+      if (!list) return;
+
+      if (requests.length === 0) {
+        list.innerHTML = '';
+        if (emptyState) {
+          emptyState.style.display = 'flex';
+        }
+      } else {
+        if (emptyState) {
+          emptyState.style.display = 'none';
+        }
+        list.innerHTML = requests.map(request => this.renderFriendRequest(request)).join('');
+      }
+    });
+  }
+
+  /**
+   * Start real-time listeners for sent friend requests
+   */
+  startSentRequestsListener() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    // Stop existing listener if any
+    if (this.unsubscribeSentRequests) {
+      this.unsubscribeSentRequests();
+    }
+
+    // Start listening to sent friend requests
+    this.unsubscribeSentRequests = firestoreSync.listenToSentFriendRequests((requests) => {
+      console.log('🔔 Real-time update: Sent friend requests changed', requests.length);
+
+      // Update the UI
+      const list = document.getElementById('sentList');
+      const emptyState = document.getElementById('sentEmpty');
+      const countBadge = document.getElementById('sentCount');
+
+      if (countBadge) {
+        countBadge.textContent = requests.length;
+      }
+
+      if (!list) return;
+
+      if (requests.length === 0) {
+        list.innerHTML = '';
+        if (emptyState) {
+          emptyState.style.display = 'flex';
+        }
+      } else {
+        if (emptyState) {
+          emptyState.style.display = 'none';
+        }
+        list.innerHTML = requests.map(request => this.renderSentRequest(request)).join('');
+      }
+    });
+  }
+
+  /**
+   * Start real-time listeners for friends list
+   */
+  startFriendsListener() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    // Stop existing listener if any
+    if (this.unsubscribeFriends) {
+      this.unsubscribeFriends();
+    }
+
+    // Start listening to friends list
+    this.unsubscribeFriends = firestoreSync.listenToFriends((friends) => {
+      console.log('🔔 Real-time update: Friends list changed', friends.length);
+
+      // Update the UI
+      const list = document.getElementById('friendsList');
+      const emptyState = document.getElementById('friendsEmpty');
+
+      if (!list) return;
+
+      if (friends.length === 0) {
+        list.innerHTML = '';
+        if (emptyState) {
+          emptyState.style.display = 'flex';
+        }
+      } else {
+        if (emptyState) {
+          emptyState.style.display = 'none';
+        }
+        list.innerHTML = friends.map(friend => this.renderFriend(friend)).join('');
+
+        // Attach event listeners to remove buttons
+        friends.forEach(friend => {
+          const removeBtn = document.getElementById(`remove-${friend.id}`);
+          if (removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.removeFriend(friend.friendId, friend.friendName);
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Start real-time listener for accepted friend requests
+   * This auto-creates friend documents when requests are accepted
+   */
+  startAcceptedRequestsListener() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    // Stop existing listener if any
+    if (this.unsubscribeAcceptedRequests) {
+      this.unsubscribeAcceptedRequests();
+    }
+
+    // Start listening to accepted friend requests
+    this.unsubscribeAcceptedRequests = firestoreSync.listenToAcceptedFriendRequests();
+  }
+
+  /**
+   * Start real-time listener for friend_removed notifications
+   * This auto-deletes friend documents when removed by the other user
+   */
+  startFriendRemovedListener() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    // Stop existing listener if any
+    if (this.unsubscribeFriendRemoved) {
+      this.unsubscribeFriendRemoved();
+    }
+
+    // Start listening to friend_removed notifications
+    this.unsubscribeFriendRemoved = firestoreSync.listenToFriendRemovedNotifications();
+  }
+
+  /**
+   * Stop all real-time listeners
+   */
+  stopAllListeners() {
+    if (this.unsubscribeFriendRequests) {
+      this.unsubscribeFriendRequests();
+      this.unsubscribeFriendRequests = null;
+    }
+    if (this.unsubscribeSentRequests) {
+      this.unsubscribeSentRequests();
+      this.unsubscribeSentRequests = null;
+    }
+    if (this.unsubscribeFriends) {
+      this.unsubscribeFriends();
+      this.unsubscribeFriends = null;
+    }
+    if (this.unsubscribeNotifications) {
+      this.unsubscribeNotifications();
+      this.unsubscribeNotifications = null;
+    }
+    if (this.unsubscribeAcceptedRequests) {
+      this.unsubscribeAcceptedRequests();
+      this.unsubscribeAcceptedRequests = null;
+    }
+    if (this.unsubscribeFriendRemoved) {
+      this.unsubscribeFriendRemoved();
+      this.unsubscribeFriendRemoved = null;
+    }
+    console.log('🔕 All real-time listeners stopped');
   }
 
   /**
@@ -386,6 +650,9 @@ class SocialUI {
     const panel = document.getElementById('friendsPanel');
     if (panel) {
       panel.classList.remove('active');
+
+      // Stop real-time listeners to save resources
+      this.stopAllListeners();
     }
   }
 
@@ -450,7 +717,7 @@ class SocialUI {
         if (removeBtn) {
           removeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.removeFriend(friend.id, friend.friendName);
+            this.removeFriend(friend.friendId, friend.friendName);
           });
         }
       });
@@ -604,17 +871,36 @@ class SocialUI {
   /**
    * Accept friend request
    */
-  async acceptFriendRequest(requestId) {
+  async acceptFriendRequest(requestId, notificationId = null) {
     try {
       const result = await firestoreSync.acceptFriendRequest(requestId);
 
       if (result.success) {
         this.showToast('✅', 'Friend Request Accepted', 'You are now friends!');
+
+        // Dismiss the notification if provided
+        if (notificationId) {
+          await firestoreSync.deleteNotification(notificationId);
+        }
+
         await this.loadFriendRequests();
         await this.loadFriends();
         await this.loadNotifications();
       } else {
-        this.showToast('❌', 'Error', result.error || 'Failed to accept friend request');
+        // Handle "request not found" gracefully
+        if (result.error && result.error.includes('not found')) {
+          this.showToast('⚠️', 'Request No Longer Available', 'This request may have been cancelled');
+
+          // Dismiss the notification if provided
+          if (notificationId) {
+            await firestoreSync.deleteNotification(notificationId);
+          }
+
+          await this.loadFriendRequests();
+          await this.loadNotifications();
+        } else {
+          this.showToast('❌', 'Error', result.error || 'Failed to accept friend request');
+        }
       }
     } catch (error) {
       console.error('Error accepting friend request:', error);
@@ -625,16 +911,35 @@ class SocialUI {
   /**
    * Decline friend request
    */
-  async declineFriendRequest(requestId) {
+  async declineFriendRequest(requestId, notificationId = null) {
     try {
       const result = await firestoreSync.declineFriendRequest(requestId);
 
       if (result.success) {
         this.showToast('✅', 'Request Declined', '');
+
+        // Dismiss the notification if provided
+        if (notificationId) {
+          await firestoreSync.deleteNotification(notificationId);
+        }
+
         await this.loadFriendRequests();
         await this.loadNotifications();
       } else {
-        this.showToast('❌', 'Error', result.error || 'Failed to decline request');
+        // Handle "request not found" gracefully
+        if (result.error && result.error.includes('not found')) {
+          this.showToast('⚠️', 'Request No Longer Available', 'This request may have been cancelled');
+
+          // Dismiss the notification if provided
+          if (notificationId) {
+            await firestoreSync.deleteNotification(notificationId);
+          }
+
+          await this.loadFriendRequests();
+          await this.loadNotifications();
+        } else {
+          this.showToast('❌', 'Error', result.error || 'Failed to decline request');
+        }
       }
     } catch (error) {
       console.error('Error declining friend request:', error);

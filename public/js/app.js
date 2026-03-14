@@ -2322,3 +2322,21 @@ if (document.readyState === 'loading') {
   window.app.init();
 }
 
+// Expose helper functions for testing (console access)
+window.getMyUserId = () => {
+  const user = getCurrentUser();
+  if (user) {
+    console.log('✅ Your User ID:', user.uid);
+    console.log('📧 Email:', user.email);
+    console.log('👤 Display Name:', user.displayName || 'Not set');
+    return user.uid;
+  } else {
+    console.log('❌ Not signed in');
+    return null;
+  }
+};
+
+// Expose socialUI and firestoreSync globally for inline onclick handlers and console debugging
+window.socialUI = socialUI;
+window.firestoreSync = firestoreSync;
+
