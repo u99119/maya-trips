@@ -24,6 +24,21 @@
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Header icons should be white */
+.app-header .btn-icon {
+  color: white;
+}
+
+.app-header .btn-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-header .btn-icon svg {
+  color: white;
+  stroke: white;
+}
+
+/* Non-header icons use text color */
 .btn-icon svg {
   color: var(--text-primary);
 }
@@ -716,7 +731,7 @@
 @media (max-width: 768px) {
   .notifications-panel-content,
   .friends-panel-content {
-    max-width: 100%;
+    max-width: 75vw; /* Leave 25% space on left */
   }
 
   .toast-container {

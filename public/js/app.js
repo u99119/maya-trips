@@ -24,6 +24,7 @@ import { tripImportUI } from './trip-import.js';
 import { initAuthUI } from './auth-ui.js';
 import { onAuthChange, getCurrentUser } from './auth.js';
 import firestoreSync from './firestore-sync.js';
+import syncDiagnostic from './sync-diagnostic.js';
 
 // Phase 2.4 & 2.5: Social Features
 import socialUI from './social-ui.js';
@@ -98,6 +99,9 @@ class App {
 
       // Initialize trip import UI (Phase 1.7)
       tripImportUI.init();
+
+      // Initialize sync diagnostic UI
+      this.initSyncDiagnosticUI();
 
       // Listen for segment completion to trigger sync (Phase 2.3)
       segmentTracker.on('segmentCompleted', async (segmentData) => {
@@ -702,9 +706,190 @@ class App {
     document.getElementById('bottomDrawer').style.display = 'block';
     document.getElementById('mapControls').style.display = 'flex';
 
-    // Update header
-    document.getElementById('routeName').textContent = this.routeConfig.name;
-    document.getElementById('tripNameHeader').textContent = this.currentTrip.tripName;
+    // Update header with route and trip information
+    // Line 1: Route name (where you're going)
+    // Line 2: Trip name (your specific journey instance)
+    const routeName = this.routeConfig.name || 'Loading...';
+    const tripName = this.currentTrip.tripName || 'Unnamed Trip';
+
+    // Line 1 (routeName element): Route name
+    const routeNameEl = document.getElementById('routeName');
+    routeNameEl.textContent = routeName.length > 48 ? routeName.substring(0, 48) + '...' : routeName;
+    routeNameEl.title = routeName; // Full name on hover
+
+    // Line 2 (tripNameHeader element): Trip name
+    const tripNameEl = document.getElementById('tripNameHeader');
+    tripNameEl.textContent = tripName.length > 48 ? tripName.substring(0, 48) + '...' : tripName;
+    tripNameEl.title = tripName; // Full name on hover
+  }
+
+  /**
+   * Initialize Sync Diagnostic UI
+   */
+  initSyncDiagnosticUI() {
+    const modal = document.getElementById('syncDiagnosticModal');
+    const overlay = document.getElementById('syncDiagnosticOverlay');
+    const closeBtn = document.getElementById('syncDiagnosticClose');
+    const closeBtnFooter = document.getElementById('btnCloseDiagnostic');
+    const runBtn = document.getElementById('btnRunDiagnostic');
+    const fixBtn = document.getElementById('btnFixSync');
+    const output = document.getElementById('syncDiagnosticOutput');
+
+    // Show modal function
+    const showModal = () => {
+      modal.style.display = 'flex';
+    };
+
+    // Hide modal function
+    const hideModal = () => {
+      modal.style.display = 'none';
+    };
+
+    // Close handlers
+    closeBtn?.addEventListener('click', hideModal);
+    closeBtnFooter?.addEventListener('click', hideModal);
+    overlay?.addEventListener('click', hideModal);
+
+    // Run diagnostic
+    runBtn?.addEventListener('click', async () => {
+      output.textContent = '🔄 Running diagnostic...\n\n';
+      try {
+        const result = await syncDiagnostic.runDiagnostic();
+
+        // Format output
+        let text = '🔍 SYNC DIAGNOSTIC RESULTS\n';
+        text += '='.repeat(50) + '\n\n';
+
+        if (result.success) {
+          text += `✅ User: ${result.user.email}\n`;
+          text += `   UID: ${result.user.uid}\n\n`;
+
+          text += `📱 Local IndexedDB: ${result.local.count} trips\n`;
+          result.local.trips.forEach(t => {
+            text += `   - ${t.name} (v${t.version})\n`;
+          });
+
+          text += `\n☁️  Firestore: ${result.firestore.count} trips\n`;
+          result.firestore.trips.forEach(t => {
+            text += `   - ${t.name} (v${t.version})\n`;
+          });
+
+          if (result.missingLocally.length > 0) {
+            text += `\n⚠️  ${result.missingLocally.length} trips in Firestore but NOT local:\n`;
+            result.missingLocally.forEach(t => {
+              text += `   - ${t.tripName}\n`;
+            });
+          }
+
+          if (result.missingInFirestore.length > 0) {
+            text += `\n⚠️  ${result.missingInFirestore.length} trips local but NOT in Firestore:\n`;
+            result.missingInFirestore.forEach(t => {
+              text += `   - ${t.tripName}\n`;
+            });
+          }
+
+          if (result.missingLocally.length === 0 && result.missingInFirestore.length === 0) {
+            text += '\n✅ All trips are synced!\n';
+          }
+        } else {
+          text += `❌ Error: ${result.error}\n`;
+        }
+
+        output.textContent = text;
+      } catch (error) {
+        output.textContent = `❌ Error running diagnostic:\n${error.message}`;
+      }
+    });
+
+    // Fix sync
+    fixBtn?.addEventListener('click', async () => {
+      output.textContent = '🔧 Fixing sync issues...\n\n';
+      try {
+        const success = await syncDiagnostic.fixSync();
+        if (success) {
+          output.textContent += '\n✅ Sync fixed! Refresh the page to see changes.';
+        } else {
+          output.textContent += '\n❌ Could not fix sync automatically. Check console for details.';
+        }
+      } catch (error) {
+        output.textContent = `❌ Error fixing sync:\n${error.message}`;
+      }
+    });
+
+    // Expose globally for easy access
+    window.showSyncDiagnostic = showModal;
+
+    // Add keyboard shortcut: Ctrl+Shift+D
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        showModal();
+      }
+    });
+
+    // Add triple-tap on status indicator to show diagnostic (for mobile)
+    const statusIndicator = document.getElementById('statusIndicator');
+    let tapCount = 0;
+    let tapTimer = null;
+
+    statusIndicator?.addEventListener('click', () => {
+      tapCount++;
+
+      if (tapCount === 1) {
+        tapTimer = setTimeout(() => {
+          tapCount = 0;
+        }, 500); // Reset after 500ms
+      } else if (tapCount === 3) {
+        clearTimeout(tapTimer);
+        tapCount = 0;
+        showModal();
+        // Auto-run diagnostic on mobile
+        setTimeout(() => {
+          runBtn?.click();
+        }, 100);
+      }
+    });
+
+    // Update status indicator based on online/offline state
+    this.updateStatusIndicator();
+    window.addEventListener('online', () => this.updateStatusIndicator());
+    window.addEventListener('offline', () => this.updateStatusIndicator());
+  }
+
+  /**
+   * Update status indicator (green/red dot with tooltip)
+   * GREEN = Offline Ready (PWA cached and ready)
+   * RED = Not Ready (error or missing data)
+   */
+  updateStatusIndicator() {
+    const statusIndicator = document.getElementById('statusIndicator');
+    if (!statusIndicator) return;
+
+    const isOnline = navigator.onLine;
+    const user = getCurrentUser();
+
+    // Determine status - GREEN for ready, RED for error
+    let statusClass = 'offline'; // Green by default
+    let tooltipText = 'Offline Ready';
+
+    if (isOnline && user) {
+      statusClass = 'online'; // Green - Online & Synced
+      tooltipText = 'Online & Synced';
+    } else if (isOnline && !user) {
+      statusClass = 'online'; // Green - Online (works without login)
+      tooltipText = 'Online (Not signed in)';
+    } else if (!isOnline && user) {
+      statusClass = 'offline'; // Green - Offline Ready
+      tooltipText = 'Offline Ready';
+    } else {
+      statusClass = 'offline'; // Green - Offline (works without login)
+      tooltipText = 'Offline Ready';
+    }
+
+    // Update class
+    statusIndicator.className = 'status-indicator ' + statusClass;
+
+    // Update tooltip
+    statusIndicator.title = tooltipText + ' (Triple-tap for sync diagnostic)';
   }
 
   /**

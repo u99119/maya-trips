@@ -162,6 +162,34 @@
     </div>
   </div>
 
+  <!-- Sync Diagnostic Modal -->
+  <div class="modal" id="syncDiagnosticModal" style="display: none;">
+    <div class="modal-overlay" id="syncDiagnosticOverlay"></div>
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>🔍 Sync Diagnostic</h2>
+        <button class="modal-close" id="syncDiagnosticClose">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="syncDiagnosticOutput" style="font-family: monospace; white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto;">
+          Click "Run Diagnostic" to check sync status...
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnRunDiagnostic">🔍 Run Diagnostic</button>
+        <button class="btn btn-primary" id="btnFixSync">🔧 Fix Sync</button>
+        <button class="btn btn-secondary" id="btnCloseDiagnostic">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Import Route Modal -->
   <div class="modal" id="importTripModal" style="display: none;">
     <div class="modal-overlay" id="importModalOverlay"></div>
@@ -412,19 +440,22 @@
             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
           </svg>
         </button>
-        <div id="mapAuthButtonContainer" class="map-auth-container">
-          <!-- Will be populated by auth.js based on login state -->
-        </div>
+        <!-- Switch Route Button -->
         <button class="btn-switch-route" id="btnSwitchRoute" title="Switch to different route">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="23 4 23 10 17 10"/>
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
           </svg>
         </button>
-      </div>
-      <div class="status-indicator" id="statusIndicator">
-        <span class="status-dot"></span>
-        <span class="status-text">Offline Ready</span>
+        <!-- Status Indicator (triple-tap to show sync diagnostic) -->
+        <div class="status-indicator" id="statusIndicator" title="Triple-tap for sync diagnostic">
+          <span class="status-dot"></span>
+          <span class="status-text">Offline Ready</span>
+        </div>
+        <!-- Username Button (moved to end for desktop) -->
+        <div id="mapAuthButtonContainer" class="map-auth-container">
+          <!-- Will be populated by auth.js based on login state -->
+        </div>
       </div>
     </div>
   </header>

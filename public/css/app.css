@@ -195,28 +195,7 @@ body {
   max-width: 60%;
 }
 
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 4px 12px;
-  border-radius: 12px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success-color);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+/* Status indicator styles moved to simplified header section (line ~1071) */
 
 /* Map Container */
 .map-container {
@@ -1015,19 +994,205 @@ input:checked + .toggle-slider:before {
   }
 }
 
-@media (max-width: 480px) {
+/* ========================================
+   SIMPLIFIED HEADER LAYOUT (Desktop & Mobile)
+   ======================================== */
+
+/* Desktop: Single-line flexbox layout */
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 15px;
+}
+
+.btn-back {
+  flex-shrink: 0;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0; /* Allow text truncation */
+  flex: 1;
+}
+
+.header-info .route-name,
+.header-info .trip-name {
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-name {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.trip-name {
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--text-secondary);
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Status Indicator: Show only colored dot */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.status-indicator:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #00e676; /* Bright neon green - highly visible on blue */
+  border: 2px solid white; /* White border for visibility */
+  box-shadow: 0 0 6px rgba(0, 230, 118, 0.6); /* Green glow for extra visibility */
+  transition: all 0.3s;
+}
+
+.status-indicator.offline .status-dot {
+  background: #00e676; /* Bright neon green - Offline Ready */
+  border-color: white;
+  box-shadow: 0 0 6px rgba(0, 230, 118, 0.6);
+}
+
+.status-indicator.online .status-dot {
+  background: #00e676; /* Bright neon green - Online */
+  border-color: white;
+  box-shadow: 0 0 6px rgba(0, 230, 118, 0.6);
+}
+
+.status-indicator.error .status-dot {
+  background: #ff1744; /* Bright neon red - Error/Not Ready */
+  border-color: white;
+  box-shadow: 0 0 6px rgba(255, 23, 68, 0.6); /* Red glow */
+}
+
+.status-text {
+  display: none; /* Hide text, show only dot */
+}
+
+/* Mobile: Ultra-compact 2-line layout */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0;
+    height: auto;
+  }
+
   .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    padding: 4px 6px;
+    gap: 2px;
+    flex-direction: column; /* Stack vertically */
+    align-items: stretch;
+  }
+
+  /* Line 1: [←] Route | Trip */
+  .header-content > .btn-back,
+  .header-content > .header-info {
+    order: 1; /* Both on line 1 */
+  }
+
+  .header-content > .btn-back {
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    padding: 6px;
+    z-index: 10;
+  }
+
+  .btn-back svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .header-info {
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 2px 0 2px 40px; /* Left padding for back button */
   }
 
   .route-name {
-    max-width: 100%;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .trip-name {
+    font-size: 11px;
+    font-weight: normal;
+    color: var(--text-secondary);
+    flex-shrink: 2; /* Shrinks more than route name */
+    min-width: 0;
+  }
+
+  /* Add separator between route and trip */
+  .route-name::after {
+    content: ' | ';
+    color: var(--text-secondary);
+    font-weight: normal;
+    margin: 0 2px;
+  }
+
+  /* Line 2: Buttons (right aligned) */
+  .header-actions {
+    order: 2;
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin: 0;
+    padding: 2px 0;
+  }
+
+  .btn-icon,
+  .btn-switch-route {
+    padding: 6px;
+  }
+
+  .btn-icon svg,
+  .btn-switch-route svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .map-user-btn {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-width: 2px; /* Keep white border visible */
   }
 
   .status-indicator {
-    font-size: 11px;
+    padding: 4px;
   }
 }
 
@@ -1840,11 +2005,11 @@ input:checked + .toggle-slider:before {
   transform: translateX(0);
 }
 
-/* Mobile: Make legend narrower (half width) */
+/* Mobile: Leave space on left */
 @media (max-width: 768px) {
   .legend-panel-content {
-    width: 200px;
-    max-width: 50vw;
+    width: 250px;
+    max-width: 75vw; /* Leave 25% space on left */
   }
 }
 
@@ -2012,11 +2177,11 @@ input:checked + .toggle-slider:before {
   transform: translateX(0);
 }
 
-/* Mobile: Make transport filter panel narrower */
+/* Mobile: Leave space on left */
 @media (max-width: 768px) {
   .transport-filter-panel-content {
-    width: 200px;
-    max-width: 50vw;
+    width: 250px;
+    max-width: 75vw; /* Leave 25% space on left */
   }
 }
 
