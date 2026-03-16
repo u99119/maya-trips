@@ -64,14 +64,15 @@ class TripManager {
 
   /**
    * Generate a default trip name
+   * Format: "My Trip - Mar 2026" (just date, since route name is shown separately)
    */
   generateTripName(routeConfig) {
-    const routeName = routeConfig.name || routeConfig.id;
-    const date = new Date().toLocaleDateString('en-US', { 
-      month: 'short', 
-      year: 'numeric' 
+    const date = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
-    return `${routeName} - ${date}`;
+    return `My Trip - ${date}`;
   }
 
   /**

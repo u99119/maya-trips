@@ -207,19 +207,34 @@ class FirestoreSync {
     const tripsRef = collection(db, 'users', this.userId, 'trips');
     const snapshot = await getDocs(tripsRef);
 
-    console.log(`📥 Found ${snapshot.size} trips in Firestore`);
+    console.log(`📥 Found ${snapshot.size} trips in Firestore for user: ${this.userId}`);
+
+    // Get all local trips for comparison
+    const localTrips = await storage.getAllTrips();
+    console.log(`📱 Found ${localTrips.length} trips in local IndexedDB`);
 
     for (const docSnap of snapshot.docs) {
       const firestoreTrip = docSnap.data();
       const localTrip = await storage.getTrip(firestoreTrip.tripId);
 
+      console.log(`🔄 Syncing trip: ${firestoreTrip.tripName} (${firestoreTrip.tripId})`);
+      console.log(`   Firestore version: ${firestoreTrip.syncVersion || 0}, Local version: ${localTrip?.syncVersion || 0}`);
+
       // Check if Firestore version is newer
-      if (!localTrip || this.isNewerVersion(firestoreTrip, localTrip)) {
-        // Update local trip
+      if (!localTrip) {
+        console.log(`   ➕ Creating new local trip (doesn't exist locally)`);
         await this.updateLocalTrip(firestoreTrip);
-        console.log(`✅ Updated local trip: ${firestoreTrip.tripName}`);
+        console.log(`   ✅ Created local trip: ${firestoreTrip.tripName}`);
+      } else if (this.isNewerVersion(firestoreTrip, localTrip)) {
+        console.log(`   🔄 Updating local trip (Firestore is newer)`);
+        await this.updateLocalTrip(firestoreTrip);
+        console.log(`   ✅ Updated local trip: ${firestoreTrip.tripName}`);
+      } else {
+        console.log(`   ⏭️  Skipping (local is up-to-date or newer)`);
       }
     }
+
+    console.log(`✅ Sync complete. Local trips: ${(await storage.getAllTrips()).length}`);
   }
 
   /**
