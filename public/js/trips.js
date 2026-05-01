@@ -289,9 +289,10 @@ class TripManager {
   }
 
   /**
-   * Delete a trip
+   * Delete a trip (from IndexedDB AND Firestore)
    */
   async deleteTrip(tripId) {
+    // Delete from local IndexedDB
     await storage.deleteTrip(tripId);
 
     // If deleting current trip, clear it
@@ -300,7 +301,14 @@ class TripManager {
       storage.setCurrentTripId(null);
     }
 
-    console.log('Trip deleted:', tripId);
+    // Also delete from Firestore (if sync is enabled)
+    try {
+      await firestoreSync.deleteTrip(tripId);
+      console.log('🗑️ Trip deleted from IndexedDB and Firestore:', tripId);
+    } catch (error) {
+      console.error('⚠️ Trip deleted locally but Firestore deletion failed:', error);
+      // Trip is deleted locally - Firestore deletion can be retried later
+    }
   }
 
   /**

@@ -63,39 +63,68 @@ service cloud.firestore {
       // ========================================
       // TRIPS SUBCOLLECTION
       // ========================================
-      
+
       match /trips/{tripId} {
+        // Helper function to check if user is a participant
+        // Note: Checking if user has a reference in their sharedWithMe collection
+        function isParticipantOfTrip() {
+          return exists(/databases/$(database)/documents/users/$(request.auth.uid)/sharedWithMe/$(tripId));
+        }
+
         // Users can read their own trips
-        allow read: if isOwner(userId);
-        
+        // OR if they have accepted the shared trip (exists in their sharedWithMe)
+        allow read: if isOwner(userId) ||
+                       (isAuthenticated() && isParticipantOfTrip());
+
         // Users can create trips in their own collection
-        allow create: if isOwner(userId) && 
+        allow create: if isOwner(userId) &&
                          hasRequiredFields(['tripId', 'routeId', 'tripName', 'status', 'createdAt']);
-        
+
         // Users can update their own trips
-        allow update: if isOwner(userId);
-        
+        // Participants can also update (for location broadcasting)
+        allow update: if isOwner(userId) ||
+                        (isAuthenticated() && isParticipantOfTrip());
+
         // Users can delete their own trips
         allow delete: if isOwner(userId);
-        
+
         // Trip segments subcollection
         match /segments/{segmentId} {
           allow read, write: if isOwner(userId);
         }
-        
+
         // Trip notes subcollection
         match /notes/{noteId} {
           allow read, write: if isOwner(userId);
         }
-        
+
         // Trip participants subcollection (Phase 2.5)
         match /participants/{participantId} {
           // Owner can read/write all participants
           allow read, write: if isOwner(userId);
-          
+
           // Participants can read their own participation record
           allow read: if isAuthenticated() && request.auth.uid == participantId;
         }
+      }
+
+      // ========================================
+      // SHARED WITH ME SUBCOLLECTION (Phase 2.5)
+      // Stores references to trips shared with this user
+      // ========================================
+
+      match /sharedWithMe/{tripId} {
+        // Users can read their own shared trips references
+        allow read: if isOwner(userId);
+
+        // Users can create entries when they accept a shared trip
+        allow create: if isOwner(userId);
+
+        // Users can update their shared trip references
+        allow update: if isOwner(userId);
+
+        // Users can remove shared trips (leave a trip)
+        allow delete: if isOwner(userId);
       }
       
       // ========================================
@@ -120,19 +149,22 @@ service cloud.firestore {
       // ========================================
       // NOTIFICATIONS SUBCOLLECTION (Phase 2.4)
       // ========================================
-      
+
       match /notifications/{notificationId} {
         // Users can read their own notifications
         allow read: if isOwner(userId);
-        
-        // System can create notifications (via Cloud Functions or client-side)
-        // Users can create notifications for others (e.g., friend requests)
-        allow create: if isAuthenticated() && 
-                         hasRequiredFields(['type', 'title', 'message', 'createdAt', 'read']);
-        
+
+        // Any authenticated user can create notifications for any user
+        // This allows: friend requests, trip shares, participant left, etc.
+        // Simplified rule - just check authentication and basic required fields
+        allow create: if isAuthenticated() &&
+                         request.resource.data.type != null &&
+                         request.resource.data.title != null &&
+                         request.resource.data.message != null;
+
         // Users can update their own notifications (mark as read)
         allow update: if isOwner(userId);
-        
+
         // Users can delete their own notifications
         allow delete: if isOwner(userId);
       }

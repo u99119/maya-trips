@@ -26,13 +26,15 @@ firestore/
 │       │       └── notes/    # Trip notes
 │       ├── friends/          # Subcollection: User's friends (Phase 2.4)
 │       │   └── {friendId}    # Friend relationship
-│       └── notifications/    # Subcollection: User's notifications (Phase 2.4)
-│           └── {notificationId}
+│       ├── notifications/    # Subcollection: User's notifications (Phase 2.4)
+│       │   └── {notificationId}
+│       └── sharedWithMe/     # Subcollection: Accepted shared trips (Phase 2.5)
+│           └── {tripId}      # Reference to trip in owner's collection
 │
 ├── friendRequests/           # Global friend requests (Phase 2.4)
 │   └── {requestId}
 │
-├── shared-trips/             # Shared trip access (Phase 2.5)
+├── shared-trips/             # Shared trip access (Phase 2.5) - OPTIONAL INDEX
 │   └── {tripId}/
 │       ├── metadata          # Trip owner, participants
 │       └── participants/     # Subcollection: Access control
@@ -41,6 +43,8 @@ firestore/
 └── routes/                   # Cached route configs (optional)
     └── {routeId}/
 ```
+
+**Note:** The `sharedWithMe` subcollection is crucial for Firestore security rules. It acts as a permission index - if a document exists in `users/{userId}/sharedWithMe/{tripId}`, that user has read access to the trip.
 
 ---
 
@@ -515,6 +519,48 @@ service cloud.firestore {
 
 ## 🎁 Phase 2.5: Trip Sharing
 
+### 6b. `users/{userId}/sharedWithMe/{tripId}` - Accepted Shared Trips
+
+**Purpose:** Tracks trips that have been shared with this user AND accepted. This collection serves as a permission index for Firestore security rules.
+
+**Document fields:**
+```javascript
+{
+  tripId: "trip_abc123",           // ID of the shared trip
+  ownerId: "user_xyz789",          // Owner's user ID
+  ownerName: "John Doe",           // Owner's display name
+  tripName: "Vaishno Devi Trip",   // Trip name
+  routeId: "vaishno-devi",         // Route ID
+  role: "active",                  // "active", "silent", "viewer"
+  status: "accepted",              // Always "accepted" in this collection
+  acceptedAt: Timestamp            // When user accepted the invitation
+}
+```
+
+**Why This Collection Exists:**
+Firestore security rules cannot iterate or query arrays. Instead of checking:
+```javascript
+// This DOESN'T work in Firestore rules
+allow read: if userId in resource.data.participants.map(p => p.userId);
+```
+
+We check for document existence:
+```javascript
+// This WORKS in Firestore rules
+function isParticipantOfTrip(tripId) {
+  return exists(/databases/$(database)/documents/users/$(request.auth.uid)/sharedWithMe/$(tripId));
+}
+allow read: if isOwner(userId) || isParticipantOfTrip(tripId);
+```
+
+**Lifecycle:**
+1. Owner shares trip → Notification sent to friend
+2. Friend accepts → Creates document in `sharedWithMe/{tripId}`
+3. Friend declines → No document created
+4. Friend leaves trip → Document deleted
+
+---
+
 ### 7. Updated `users/{userId}/trips/{tripId}`
 
 **New fields for sharing:**
@@ -561,10 +607,13 @@ service cloud.firestore {
 }
 ```
 
-**Participant Roles:**
-- **Owner**: Full control (edit, delete, manage participants)
-- **Participant**: Can add photos/notes, mark milestones
-- **Viewer**: Read-only access
+**Participant Roles (Updated 2026-04-04):**
+- **Owner**: Full control (edit, delete, manage participants), optionally shares location
+- **Active**: Shares location, sees other participants' dots, can mark milestones
+- **Silent**: Doesn't share location, doesn't see others, can mark milestones (privacy mode)
+- **Viewer**: Not traveling, watches from home, sees shared locations, cannot mark milestones
+
+**Fair Sharing Rule:** "If you share, you see. If you don't share, you don't see."
 
 ---
 

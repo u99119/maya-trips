@@ -73,16 +73,46 @@ class App {
       socialUI.init();
 
       // Initialize Firestore sync when user logs in (Phase 2.3)
+      // Store unsubscribe function for real-time listener
+      this.unsubscribeTripsListener = null;
+
       onAuthChange(async (user) => {
         if (user) {
           console.log('🔄 User logged in, initializing Firestore sync...');
           await firestoreSync.init(user);
+
+          // Start real-time listener for trip changes (handles deletions from other devices)
+          this.unsubscribeTripsListener = firestoreSync.listenToTrips((tripId, changeType, tripData) => {
+            console.log(`🔔 Trip change detected: ${changeType} - ${tripId}`);
+
+            if (changeType === 'removed') {
+              // Trip was deleted on another device - refresh UI immediately
+              console.log('🗑️ Trip deleted on another device, refreshing list...');
+              this.loadTripsList();
+
+              // If we're viewing this trip, go back to trip selection
+              const currentTrip = tripManager.getCurrentTrip();
+              if (currentTrip?.tripId === tripId) {
+                console.log('⚠️ Current trip was deleted, returning to trip selection...');
+                this.showTripSelection();
+              }
+            } else if (changeType === 'added' || changeType === 'modified') {
+              // Trip was added or modified - refresh UI
+              this.loadTripsList();
+            }
+          });
 
           // Refresh trips list after sync completes
           console.log('🔄 Refreshing trips list after Firestore sync...');
           await this.loadTripsList();
         } else {
           console.log('🔄 User logged out, sync disabled');
+
+          // Unsubscribe from real-time listener
+          if (this.unsubscribeTripsListener) {
+            this.unsubscribeTripsListener();
+            this.unsubscribeTripsListener = null;
+          }
 
           // Clear trips list and return to trip selection
           if (this.isMapView) {
@@ -195,6 +225,16 @@ class App {
     // Clear current trip from social UI (Phase 2.4 & 2.5)
     socialUI.setCurrentTrip(null);
 
+    // Stop location services for shared trips (Phase 2.5)
+    this.stopLocationServices();
+    this.sharedTripContext = null;
+    this.currentTrip = null;
+
+    // Clear participant dots
+    if (typeof layers !== 'undefined' && layers.clearParticipantDots) {
+      layers.clearParticipantDots();
+    }
+
     // Hide map view elements
     document.getElementById('appHeader').style.display = 'none';
     document.getElementById('map').style.display = 'none';
@@ -226,13 +266,27 @@ class App {
       return;
     }
 
-    const hasTrips = await tripManager.hasAnyTrips();
     const emptyState = document.getElementById('emptyState');
     const tripsList = document.getElementById('tripsList');
 
-    console.log('Loading trips list. Has trips:', hasTrips);
+    // Get all trips grouped by route
+    const groupedTrips = await tripManager.getAllTripsGrouped();
+    console.log('Grouped trips:', groupedTrips);
 
-    if (!hasTrips) {
+    // Get shared trips
+    let sharedTrips = [];
+    try {
+      sharedTrips = await firestoreSync.getSharedTrips();
+      console.log('Shared trips:', sharedTrips);
+    } catch (err) {
+      console.warn('Could not load shared trips:', err);
+    }
+
+    // Check if we have any trips at all
+    const hasAnyTrips = groupedTrips.length > 0 || sharedTrips.length > 0;
+    console.log('Loading trips list. My trips:', groupedTrips.length, 'Shared:', sharedTrips.length);
+
+    if (!hasAnyTrips) {
       emptyState.style.display = 'flex';
       tripsList.innerHTML = '';
       return;
@@ -240,28 +294,337 @@ class App {
 
     emptyState.style.display = 'none';
 
-    // Get all trips grouped by route
-    const groupedTrips = await tripManager.getAllTripsGrouped();
-    console.log('Grouped trips:', groupedTrips);
-
     // Render trips
     tripsList.innerHTML = '';
-    for (const group of groupedTrips) {
-      // Add route header
-      const routeHeader = document.createElement('h3');
-      routeHeader.className = 'route-group-header';
-      routeHeader.textContent = group.routeName;
-      routeHeader.style.cssText = 'margin: 20px 0 12px; font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;';
-      tripsList.appendChild(routeHeader);
 
-      // Add trip cards
-      for (const trip of group.trips) {
-        console.log('Creating trip card for:', trip.tripName);
-        const tripCard = this.createTripCard(trip);
-        tripsList.appendChild(tripCard);
+    // Count total trips
+    const myTripsCount = groupedTrips.reduce((sum, g) => sum + g.trips.length, 0);
+
+    // My Trips Section (collapsible)
+    if (groupedTrips.length > 0) {
+      const myTripsSection = this.createCollapsibleSection('my-trips', `📍 My Trips (${myTripsCount})`);
+      tripsList.appendChild(myTripsSection.header);
+      tripsList.appendChild(myTripsSection.content);
+
+      for (const group of groupedTrips) {
+        // Add route header
+        const routeHeader = document.createElement('h3');
+        routeHeader.className = 'route-group-header';
+        routeHeader.textContent = group.routeName;
+        myTripsSection.content.appendChild(routeHeader);
+
+        // Add trip cards
+        for (const trip of group.trips) {
+          console.log('Creating trip card for:', trip.tripName);
+          const tripCard = this.createTripCard(trip);
+          myTripsSection.content.appendChild(tripCard);
+        }
       }
     }
-    console.log('Trips list populated. Total cards:', tripsList.children.length);
+
+    // Shared with Me Section (collapsible)
+    if (sharedTrips.length > 0) {
+      const sharedSection = this.createCollapsibleSection('shared-trips', `🤝 Shared with Me (${sharedTrips.length})`);
+      sharedSection.header.classList.add('shared-section-header');
+      tripsList.appendChild(sharedSection.header);
+      tripsList.appendChild(sharedSection.content);
+
+      for (const trip of sharedTrips) {
+        console.log('Creating shared trip card for:', trip.tripName);
+        const tripCard = this.createSharedTripCard(trip);
+        sharedSection.content.appendChild(tripCard);
+      }
+    }
+
+    console.log('Trips list populated. My trips:', myTripsCount, 'Shared trips:', sharedTrips.length);
+  }
+
+  /**
+   * Create a collapsible section with header and content
+   */
+  createCollapsibleSection(id, title) {
+    const isCollapsed = localStorage.getItem(`section-${id}-collapsed`) === 'true';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = `trips-section-header ${isCollapsed ? 'collapsed' : ''}`;
+    header.dataset.sectionId = id;
+    header.innerHTML = `
+      <span class="section-toggle">${isCollapsed ? '▶' : '▼'}</span>
+      <span class="section-title">${title}</span>
+    `;
+
+    // Content container
+    const content = document.createElement('div');
+    content.className = 'trips-section-content';
+    content.id = `section-content-${id}`;
+    content.style.display = isCollapsed ? 'none' : 'block';
+
+    // Toggle click handler
+    header.addEventListener('click', () => {
+      const nowCollapsed = content.style.display !== 'none';
+      content.style.display = nowCollapsed ? 'none' : 'block';
+      header.classList.toggle('collapsed', nowCollapsed);
+      header.querySelector('.section-toggle').textContent = nowCollapsed ? '▶' : '▼';
+      localStorage.setItem(`section-${id}-collapsed`, nowCollapsed);
+    });
+
+    return { header, content };
+  }
+
+  /**
+   * Create shared trip card element
+   */
+  createSharedTripCard(trip) {
+    const card = document.createElement('div');
+    card.className = 'trip-card shared-trip-card';
+    card.dataset.tripId = trip.tripId;
+    card.dataset.ownerId = trip.ownerId;
+    card.dataset.isShared = 'true';
+
+    const roleClass = `role-${trip.role || 'active'}`;
+    const roleLabel = trip.role === 'viewer' ? 'Viewer' : trip.role === 'silent' ? 'Silent' : 'Active';
+
+    card.innerHTML = `
+      <div class="trip-card-header">
+        <div class="trip-card-title">
+          <h3>${trip.tripName}</h3>
+          <p>Shared by ${trip.ownerName || 'Unknown'}</p>
+        </div>
+        <div class="trip-card-actions">
+          <span class="role-badge ${roleClass}">${roleLabel}</span>
+          <button class="btn-icon-sm trip-leave-btn" title="Leave Trip" data-trip-id="${trip.tripId}" data-owner-id="${trip.ownerId}" data-trip-name="${trip.tripName}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="trip-card-meta">
+        <div class="trip-card-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>${trip.routeId || 'Unknown route'}</span>
+        </div>
+      </div>
+      <div class="trip-progress-bar">
+        <div class="progress-fill" style="width: 0%"></div>
+      </div>
+    `;
+
+    // Add click handler to open shared trip
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.trip-leave-btn')) {
+        this.openSharedTrip(trip.tripId, trip.ownerId);
+      }
+    });
+
+    // Add click handler for leave button
+    const leaveBtn = card.querySelector('.trip-leave-btn');
+    if (leaveBtn) {
+      leaveBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleLeaveSharedTrip(trip.tripId, trip.ownerId, trip.tripName);
+      });
+    }
+
+    return card;
+  }
+
+  /**
+   * Handle leaving a shared trip
+   */
+  async handleLeaveSharedTrip(tripId, ownerId, tripName) {
+    if (!confirm(`Are you sure you want to leave "${tripName}"?\n\nYou will need to be re-invited to access this trip again.`)) {
+      return;
+    }
+
+    try {
+      const result = await firestoreSync.leaveSharedTrip(tripId, ownerId, tripName);
+
+      if (result.success) {
+        // Refresh the trips list
+        await this.loadTripsList();
+
+        // Show success message
+        if (window.socialUI) {
+          window.socialUI.showToast('✅', 'Left Trip', `You have left "${tripName}"`);
+        }
+      } else {
+        alert(result.error || 'Failed to leave trip');
+      }
+    } catch (error) {
+      console.error('Error leaving shared trip:', error);
+      alert('Failed to leave trip');
+    }
+  }
+
+  /**
+   * Open a shared trip (loads from owner's Firestore)
+   */
+  async openSharedTrip(tripId, ownerId) {
+    try {
+      console.log('Opening shared trip:', tripId, 'from owner:', ownerId);
+      this.showLoading(true);
+
+      // Get shared trip info from our sharedWithMe collection
+      const sharedInfo = await firestoreSync.getSharedTripInfo(tripId);
+      if (!sharedInfo) {
+        throw new Error('Shared trip not found');
+      }
+
+      // Load the actual trip data from owner's Firestore
+      const tripData = await firestoreSync.loadSharedTrip(tripId, ownerId);
+      if (!tripData) {
+        throw new Error('Could not load trip data');
+      }
+
+      console.log('Loaded shared trip:', tripData.tripName, 'Role:', sharedInfo.role);
+
+      // Store shared trip context
+      this.sharedTripContext = {
+        isShared: true,
+        ownerId: ownerId,
+        ownerName: sharedInfo.ownerName,
+        role: sharedInfo.role,
+        tripId: tripId
+      };
+
+      // Set as current trip in trip manager (temporary, not saved to IndexedDB)
+      this.currentTrip = {
+        ...tripData,
+        isShared: true,
+        ownerId: ownerId,
+        myRole: sharedInfo.role
+      };
+
+      // Set current trip for social UI
+      socialUI.setCurrentTrip(tripId);
+
+      // Load route data
+      await this.loadRoute(this.currentTrip.routeId);
+
+      // Initialize map if needed
+      if (!this.map) {
+        await this.initMap();
+      } else {
+        this.updateMapForTrip();
+      }
+
+      // Load trip state (milestones, etc.) from shared trip
+      this.loadSharedTripState();
+
+      // Show map view
+      this.showMapView();
+
+      // Start location broadcasting if Active role
+      if (sharedInfo.role === 'active' || sharedInfo.role === 'owner') {
+        await this.startLocationBroadcasting(tripId, ownerId);
+      }
+
+      // Start listening to other participants' locations
+      if (sharedInfo.role === 'active' || sharedInfo.role === 'viewer' || sharedInfo.role === 'owner') {
+        await this.startLocationReceiving(tripId, ownerId);
+      }
+
+      this.showLoading(false);
+      console.log('✅ Shared trip opened successfully');
+    } catch (error) {
+      console.error('Error opening shared trip:', error);
+      this.showLoading(false);
+      alert('Failed to open shared trip: ' + error.message);
+    }
+  }
+
+  /**
+   * Load shared trip state (milestones, progress from owner's data)
+   */
+  loadSharedTripState() {
+    // Load trip settings (use defaults for shared trips)
+    document.getElementById('gpsToggle').checked = false;
+    document.getElementById('batterySaverToggle').checked = false;
+
+    const autoCenterBtn = document.getElementById('btnAutoCenter');
+    if (autoCenterBtn) {
+      autoCenterBtn.dataset.active = false;
+      autoCenterBtn.title = 'Auto-Center: OFF';
+    }
+
+    // Update header with shared trip info
+    this.updateHeaderForSharedTrip();
+
+    // Phase 1.6: For v2 routes, restore completed junctions from shared trip
+    if (this.useV2Architecture && this.currentTrip.completedSegments) {
+      this.currentTrip.completedSegments.forEach(seg => {
+        layers.markSegmentCompleted(seg.segmentId, seg.direction);
+      });
+    }
+  }
+
+  /**
+   * Update header to show shared trip info
+   */
+  updateHeaderForSharedTrip() {
+    const tripNameEl = document.getElementById('tripName');
+    const routeNameEl = document.getElementById('routeName');
+
+    if (tripNameEl && this.currentTrip) {
+      tripNameEl.textContent = this.currentTrip.tripName;
+    }
+
+    if (routeNameEl && this.routeConfig) {
+      const roleLabel = this.sharedTripContext?.role ? ` (${this.sharedTripContext.role})` : '';
+      const ownerLabel = this.sharedTripContext?.ownerName ? ` - by ${this.sharedTripContext.ownerName}` : '';
+      routeNameEl.textContent = this.routeConfig.name + ownerLabel + roleLabel;
+    }
+  }
+
+  /**
+   * Start broadcasting location for shared trip
+   */
+  async startLocationBroadcasting(tripId, ownerId) {
+    console.log('🛰️ Starting location broadcasting for shared trip');
+    // Implementation will be added below
+    this.locationBroadcaster = await firestoreSync.startLocationBroadcasting(tripId, ownerId);
+  }
+
+  /**
+   * Start receiving other participants' locations
+   */
+  async startLocationReceiving(tripId, ownerId) {
+    console.log('📡 Starting location receiving for shared trip');
+    // Implementation will be added below
+    this.locationReceiver = await firestoreSync.startLocationReceiving(tripId, ownerId, (participants) => {
+      this.updateParticipantDots(participants);
+    });
+  }
+
+  /**
+   * Update participant dots on map
+   */
+  updateParticipantDots(participants) {
+    // Implementation will be in layers.js
+    if (typeof layers !== 'undefined' && layers.updateParticipantDots) {
+      layers.updateParticipantDots(participants);
+    }
+  }
+
+  /**
+   * Stop location services when leaving shared trip
+   */
+  stopLocationServices() {
+    if (this.locationBroadcaster) {
+      this.locationBroadcaster.stop();
+      this.locationBroadcaster = null;
+    }
+    if (this.locationReceiver) {
+      this.locationReceiver();
+      this.locationReceiver = null;
+    }
   }
 
   /**

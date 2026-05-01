@@ -116,14 +116,19 @@ export async function signInWithEmail(email, password) {
 
 /**
  * Sign in with Google
+ * Uses 'select_account' prompt to always show account chooser
  */
 export async function signInWithGoogle() {
   try {
     const provider = new GoogleAuthProvider();
+    // Force account selection every time (don't auto-login with previous account)
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     const result = await signInWithPopup(auth, provider);
     console.log('✅ Signed in with Google:', result.user.email);
     return { success: true, user: result.user };
-    
+
   } catch (error) {
     console.error('❌ Google sign in error:', error);
     return { success: false, error: getErrorMessage(error) };

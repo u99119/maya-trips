@@ -130,6 +130,8 @@ export const NOTIFICATION_TYPES = {
   TRIP_INVITE_ACCEPTED: 'trip_invite_accepted',
   TRIP_INVITE_DECLINED: 'trip_invite_declined',
   TRIP_SHARED: 'trip_shared',
+  TRIP_SHARE_DECLINED: 'trip_share_declined',  // Participant declined invitation
+  PARTICIPANT_LEFT: 'participant_left',        // Participant left shared trip
   
   // Collaboration (Phase 3)
   PHOTO_ADDED: 'photo_added',
@@ -164,11 +166,19 @@ export const FRIEND_REQUEST_STATUS = {
 
 /**
  * Trip Participant Roles
+ *
+ * OWNER: Created the trip, full control, can share/manage
+ * ACTIVE: Participant who shares their location (sees other dots)
+ * SILENT: Participant who doesn't share location (doesn't see other dots), can mark milestones
+ * VIEWER: Not traveling, watches from home (sees others' dots, cannot mark milestones)
  */
 export const TRIP_ROLES = {
   OWNER: 'owner',
-  PARTICIPANT: 'participant',
-  VIEWER: 'viewer',
+  ACTIVE: 'active',      // Shares location, sees others, can mark milestones
+  SILENT: 'silent',      // No location sharing, doesn't see others, can mark milestones
+  VIEWER: 'viewer',      // Not traveling, sees others (if they share), cannot mark milestones
+  // Legacy - keep for backward compatibility
+  PARTICIPANT: 'active', // Maps to ACTIVE
 };
 
 /**
@@ -178,5 +188,16 @@ export const TRIP_VISIBILITY = {
   PRIVATE: 'private',
   FRIENDS: 'friends',
   PUBLIC: 'public',
+};
+
+/**
+ * Location Update Configuration
+ */
+export const LOCATION_CONFIG = {
+  UPDATE_INTERVAL_MOVING: 5 * 60 * 1000,  // 5 minutes when moving
+  UPDATE_INTERVAL_IDLE: 10 * 60 * 1000,   // 10 minutes when idle
+  PROXIMITY_THRESHOLD: 500,               // 500 meters for milestone alerts
+  MOVEMENT_THRESHOLD: 5,                  // 5 km/h to consider "moving"
+  MAX_PARTICIPANTS_DISPLAYED: 8,          // Max dots on map
 };
 
