@@ -890,6 +890,103 @@ class Layers {
   markJunctionsCompleted(junctionIds) {
     junctionIds.forEach(id => this.markJunctionCompleted(id));
   }
+
+  // ========================================
+  // PHASE 2.5: PARTICIPANT DOTS
+  // ========================================
+
+  /**
+   * Initialize participant markers layer group
+   */
+  initParticipantMarkers() {
+    if (!this.participantMarkers) {
+      this.participantMarkers = L.layerGroup();
+      if (this.map) {
+        this.participantMarkers.addTo(this.map);
+      }
+    }
+  }
+
+  /**
+   * Update participant dots on the map
+   * @param {Array} participants - Array of participants with location data
+   */
+  updateParticipantDots(participants) {
+    this.initParticipantMarkers();
+
+    // Clear existing markers
+    this.participantMarkers.clearLayers();
+
+    if (!participants || participants.length === 0) {
+      return;
+    }
+
+    console.log(`🔵 Rendering ${participants.length} participant dots`);
+
+    participants.forEach((participant, index) => {
+      if (!participant.location) return;
+
+      const { lat, lng } = participant.location;
+      const name = participant.name || participant.userName || 'Participant';
+      const initial = name.charAt(0).toUpperCase();
+
+      // Color based on index (max 8 participants)
+      const colors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4', '#FF5722', '#795548'];
+      const color = colors[index % colors.length];
+
+      // Create pulsating dot marker
+      const pulsingIcon = L.divIcon({
+        className: 'participant-dot-container',
+        html: `
+          <div class="participant-dot" style="--dot-color: ${color}">
+            <div class="participant-dot-pulse"></div>
+            <div class="participant-dot-center">${initial}</div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
+
+      const marker = L.marker([lat, lng], { icon: pulsingIcon });
+
+      // Add popup with participant info
+      const lastUpdate = participant.location.timestamp
+        ? new Date(participant.location.timestamp).toLocaleTimeString()
+        : 'Unknown';
+
+      marker.bindPopup(`
+        <div class="participant-popup">
+          <strong>${name}</strong><br>
+          <small>Last update: ${lastUpdate}</small>
+        </div>
+      `);
+
+      this.participantMarkers.addLayer(marker);
+    });
+  }
+
+  /**
+   * Clear all participant dots
+   */
+  clearParticipantDots() {
+    if (this.participantMarkers) {
+      this.participantMarkers.clearLayers();
+    }
+  }
+
+  /**
+   * Show/hide participant dots
+   * @param {boolean} visible - Whether to show dots
+   */
+  setParticipantDotsVisible(visible) {
+    if (this.participantMarkers) {
+      if (visible && this.map && !this.map.hasLayer(this.participantMarkers)) {
+        this.participantMarkers.addTo(this.map);
+      } else if (!visible && this.map && this.map.hasLayer(this.participantMarkers)) {
+        this.map.removeLayer(this.participantMarkers);
+      }
+    }
+  }
 }
 
 export default new Layers();

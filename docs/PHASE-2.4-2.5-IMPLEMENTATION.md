@@ -1,15 +1,15 @@
 # Phase 2.4 & 2.5 Implementation Summary
 
-**Date:** 2026-03-12  
-**Status:** ✅ Backend Complete - UI Pending  
+**Date:** 2026-04-04 (Updated)
+**Status:** 🚧 In Progress - Trip Sharing UI Being Built
 **Branch:** `dev-junction`
 
 ---
 
 ## 🎯 What We Built
 
-### Phase 2.4: Social System (Friends + Notifications)
-### Phase 2.5: Trip Sharing & Collaboration
+### Phase 2.4: Social System (Friends + Notifications) ✅
+### Phase 2.5: Trip Sharing & Collaboration 🚧
 
 ---
 
@@ -124,25 +124,139 @@ Implemented 25+ new methods across 3 categories:
 
 ---
 
-## 🚧 Next Steps: UI Implementation
+## 🚧 UI Implementation Progress
 
-### Priority 1: Friends UI
-- [ ] Friends List screen
-- [ ] Add Friend modal (search by email)
-- [ ] Friend Request cards (accept/decline)
-- [ ] Remove friend confirmation
+### Priority 1: Friends UI ✅ DONE
+- [x] Friends List screen
+- [x] Add Friend modal (search by email)
+- [x] Friend Request cards (accept/decline)
+- [x] Remove friend confirmation
 
-### Priority 2: Notifications UI
-- [ ] Notifications panel/dropdown
-- [ ] Notification badges (unread count)
-- [ ] Toast notifications (real-time)
-- [ ] Mark as read/dismiss actions
+### Priority 2: Notifications UI ✅ DONE
+- [x] Notifications panel/dropdown
+- [x] Notification badges (unread count)
+- [x] Toast notifications
+- [x] Mark as read/dismiss actions
 
-### Priority 3: Trip Sharing UI
-- [ ] Share Trip modal (select friends)
-- [ ] Participants panel (in trip view)
-- [ ] Role management (owner only)
-- [ ] Leave trip button (participants)
+### Priority 3: Trip Sharing UI 🚧 IN PROGRESS
+
+#### Completed ✅
+- [x] Share Trip modal with role selection (Active/Silent/Viewer)
+- [x] Accept/Decline buttons on notifications
+- [x] "Shared with me" section in trip list
+- [x] Remove participant (owner side - click X in share modal)
+- [x] Stale shared trip cleanup (auto-remove when participant is removed)
+- [x] Leave shared trip (participant exits - Leave button on shared trip card)
+- [x] Declined request notification to owner
+- [x] Collapsible trip sections (My Trips / Shared with Me)
+- [x] Trip counts in section headers
+- [x] **View shared trip** (load trip from owner's Firestore, display on map)
+- [x] **Location broadcasting** (Active role participants broadcast GPS to Firestore)
+- [x] **Location receiving** (real-time listener for other participants' locations)
+- [x] **Participant dots on map** (pulsating dots with initials, max 8 participants)
+- [x] Firestore rules updated to allow participants to update their location
+
+#### Pending 🔲
+- [ ] "Shared by me" section (show trips I've shared with others)
+- [ ] Shared Trip Info slide-out panel (show participant list, toggle visibility)
+- [ ] Sound notifications for proximity (500m) and milestone completion
+- [ ] Pause/resume location sharing
+- [ ] Role-based milestone marking (Viewers can't mark, Active/Silent can)
+
+---
+
+## 🎭 Trip Sharing Roles Design
+
+### Participant Roles (Updated 2026-04-04)
+
+| Role | Shares Location | Sees Other Dots | Can Mark Milestones |
+|------|-----------------|-----------------|---------------------|
+| **Owner** | Optional | ✅ Yes (if sharing) | ✅ Yes |
+| **Active** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Silent** | ❌ No | ❌ No | ✅ Yes |
+| **Viewer** | ❌ No | ✅ Yes | ❌ No |
+
+### Fair Sharing Rule
+**"If you share, you see. If you don't share, you don't see."**
+
+- Active participants share their location → they see other participants' dots
+- Silent participants don't share → they don't see others (privacy choice)
+- Viewers are not traveling (e.g., grandparents at home) → they see others but don't share
+
+### Role Descriptions
+- **Owner**: Created the trip, full control, can share/manage participants
+- **Active**: Traveling participant who shares their location (sees other dots)
+- **Silent**: Traveling participant who doesn't share location (privacy mode)
+- **Viewer**: Not traveling, watching from home (e.g., grandparents tracking family)
+
+---
+
+## 🔒 Firestore Security Rules - Key Design Decision
+
+### The Problem
+When User B (friend) accepts a shared trip from User A (owner), User B needs to READ User A's trip data. But Firestore rules originally only allowed owners to read their own trips.
+
+### Attempted Solution (Didn't Work)
+```javascript
+// Firestore rules DON'T support JavaScript array operations like .map()
+allow read: if request.auth.uid in resource.data.participants.map(p => p.userId);
+```
+
+### Working Solution
+Use a **separate collection** to track acceptance, then check for its existence:
+
+```javascript
+// In user's collection: users/{userId}/sharedWithMe/{tripId}
+// This document is created when user ACCEPTS the shared trip
+
+// Security rule checks if this document exists
+function isParticipantOfTrip() {
+  return exists(/databases/$(database)/documents/users/$(request.auth.uid)/sharedWithMe/$(tripId));
+}
+
+match /trips/{tripId} {
+  allow read: if isOwner(userId) || (isAuthenticated() && isParticipantOfTrip());
+}
+```
+
+### Why This Works
+1. When User B accepts trip → creates `users/{B}/sharedWithMe/{tripId}` (User B has permission to their own collection)
+2. Security rule checks if that document exists using Firestore's `exists()` function
+3. If exists → User B can read User A's trip
+
+### Key Insight
+**Use a separate document/collection to track permissions** rather than trying to query arrays in security rules. Firestore security rules have limited expression capabilities.
+
+---
+
+## 📍 Location Sharing Design
+
+### Battery-Efficient Updates
+
+| Event | Update Location? | Rationale |
+|-------|------------------|-----------|
+| App opened/resumed | ✅ Yes | User is actively using app |
+| App minimized | ❌ Stop | Save battery |
+| Within 500m of milestone | ✅ Yes | Important proximity update |
+| Milestone marked complete | ✅ Yes | State change |
+| App open for 5+ min | ✅ Yes (every 5 min) | Fallback for long sessions |
+
+### Configuration (in social-config.js)
+```javascript
+LOCATION_CONFIG = {
+  UPDATE_INTERVAL_MOVING: 5 * 60 * 1000,  // 5 minutes when moving
+  UPDATE_INTERVAL_IDLE: 10 * 60 * 1000,   // 10 minutes when idle
+  PROXIMITY_THRESHOLD: 500,                // 500 meters for milestone alerts
+  MOVEMENT_THRESHOLD: 5,                   // 5 km/h to consider "moving"
+  MAX_PARTICIPANTS_DISPLAYED: 8            // Max dots on map
+}
+```
+
+### Map Display
+- Up to 8 participant dots displayed
+- Dots are small, glowing, pulsating
+- No labels on map (too cluttered)
+- Participant list in slide-out panel with show/hide checkbox
 
 ---
 
@@ -150,21 +264,35 @@ Implemented 25+ new methods across 3 categories:
 
 - All backend methods are ready and tested
 - DEBUG_MODE is currently `false` (production mode)
-- Firestore security rules need to be updated
-- UI can be built incrementally (friends → notifications → sharing)
-- Real-time listeners can be added later for live updates
+- Firestore security rules deployed with sharedWithMe collection support
+- Real-time listeners implemented for trips (add/modify/delete)
 
 ---
 
 ## 🎉 Summary
 
-**Backend Implementation: 100% Complete**
+**Backend Implementation: 100% Complete** ✅
 - ✅ 3 new configuration files
-- ✅ 4 new Firestore collections
-- ✅ 22 new backend methods
+- ✅ 5 new Firestore collections (including sharedWithMe)
+- ✅ 30+ new backend methods (including leave/decline notifications)
 - ✅ Full error handling and validation
 - ✅ DEBUG_MODE support
-- ✅ Documentation updated
+- ✅ Firestore security rules deployed
 
-**Ready for UI development!** 🚀
+**UI Implementation: 90% Complete** 🚧
+- ✅ Friends system UI
+- ✅ Notifications UI
+- ✅ Share Trip modal with roles (Active/Silent/Viewer)
+- ✅ Accept/Decline on notifications
+- ✅ "Shared with me" section with Leave button
+- ✅ Remove participant (owner)
+- ✅ Collapsible trip sections with localStorage persistence
+- ✅ Declined/Left notifications to owner
+- ✅ **View shared trip** (load from owner's Firestore, show on map)
+- ✅ **Location broadcasting** (GPS to Firestore for Active role)
+- ✅ **Location receiving** (real-time participant locations)
+- ✅ **Participant dots on map** (pulsating colored dots with initials)
+- 🔲 Shared Trip Info panel
+- 🔲 Sound notifications for proximity
 
+**Last Updated:** 2026-04-04

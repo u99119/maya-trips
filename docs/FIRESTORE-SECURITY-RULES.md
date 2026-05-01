@@ -39,10 +39,10 @@ This document explains the Firestore security rules that protect user data and e
 ### 2. **`users/{userId}/trips/{tripId}`** - User Trips
 
 **Access Rules:**
-- ✅ **Read**: User can read their own trips
+- ✅ **Read**: User can read their own trips OR if they have accepted a shared trip (via `sharedWithMe` collection)
 - ✅ **Create**: User can create trips in their own collection
-- ✅ **Update**: User can update their own trips
-- ✅ **Delete**: User can delete their own trips
+- ✅ **Update**: User can update their own trips (only owner)
+- ✅ **Delete**: User can delete their own trips (only owner)
 
 **Required Fields on Create:**
 - `tripId`
@@ -59,7 +59,36 @@ This document explains the Firestore security rules that protect user data and e
 **Security:**
 - Trips are private by default
 - Only the owner can modify trip data
-- Participants can only view, not edit
+- Participants can READ if they have accepted the trip (checked via `sharedWithMe` collection)
+
+---
+
+### 2b. **`users/{userId}/sharedWithMe/{tripId}`** - Shared Trip References (NEW)
+
+**Purpose:** Tracks which trips have been shared with this user AND accepted.
+
+**Access Rules:**
+- ✅ **Read**: User can read their own shared trip references
+- ✅ **Create**: User can create when accepting a shared trip
+- ✅ **Update**: User can update their own references
+- ✅ **Delete**: User can delete (leave a shared trip)
+
+**Document Fields:**
+```javascript
+{
+  tripId: "trip_abc123",
+  ownerId: "user_xyz789",
+  ownerName: "John Doe",
+  tripName: "Vaishno Devi Trip",
+  routeId: "vaishno-devi",
+  role: "active", // "active", "silent", "viewer"
+  status: "accepted",
+  acceptedAt: Timestamp
+}
+```
+
+**Why This Collection Exists:**
+Firestore security rules cannot query arrays. Instead of checking `if userId in trip.participants[]`, we check `if exists(sharedWithMe/{tripId})`. This collection acts as a permission index.
 
 ---
 
@@ -305,6 +334,6 @@ After deploying, test the rules:
 
 ---
 
-**Last Updated:** 2026-03-12  
-**Version:** 1.0 (Phase 2.4 & 2.5)
+**Last Updated:** 2026-04-04
+**Version:** 1.1 (Added sharedWithMe collection for trip sharing permissions)
 

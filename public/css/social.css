@@ -95,8 +95,8 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 100%;
-  max-width: 400px;
+  width: 320px;
+  max-width: 85vw;
   height: 100%;
   background: var(--bg-primary);
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
@@ -634,6 +634,285 @@
   background-color: var(--bg-secondary);
 }
 
+/* Share Trip - My Settings */
+.share-my-settings {
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.share-toggle-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.share-toggle-row:last-child {
+  margin-bottom: 0;
+}
+
+.share-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.share-toggle input {
+  display: none;
+}
+
+.toggle-slider {
+  width: 40px;
+  height: 22px;
+  background: #ccc;
+  border-radius: 11px;
+  position: relative;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.share-toggle input:checked + .toggle-slider {
+  background: var(--primary-color);
+}
+
+.share-toggle input:checked + .toggle-slider::after {
+  transform: translateX(18px);
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toggle-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-left: 50px;
+}
+
+/* Role Badges */
+.role-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.role-owner {
+  background: #9c27b0;
+  color: white;
+}
+
+.role-badge.role-active {
+  background: #4caf50;
+  color: white;
+}
+
+.role-badge.role-silent {
+  background: #ff9800;
+  color: white;
+}
+
+.role-badge.role-viewer {
+  background: #2196f3;
+  color: white;
+}
+
+/* Role Legend */
+.share-role-legend {
+  background: rgba(0, 0, 0, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.share-role-legend h4 {
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.role-legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-legend-item .role-badge {
+  min-width: 60px;
+  text-align: center;
+}
+
+.role-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Role Selector in Friend Item */
+.friend-role-selector {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.role-select-btn {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-select-btn:hover {
+  background: #f0f0f0;
+}
+
+.role-select-btn.selected {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: white;
+}
+
+.role-select-btn.role-active.selected {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+
+.role-select-btn.role-silent.selected {
+  background: #ff9800;
+  border-color: #ff9800;
+}
+
+.role-select-btn.role-viewer.selected {
+  background: #2196f3;
+  border-color: #2196f3;
+}
+
+/* Participant Item with Role */
+.participant-role {
+  margin-left: auto;
+}
+
+/* ========================================
+   SHARED TRIP CARDS
+   ======================================== */
+
+.shared-trip-card {
+  border-left: 3px solid var(--primary-color);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(var(--primary-rgb), 0.05) 100%);
+}
+
+.shared-trip-card .trip-card-title p {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.shared-trip-card .trip-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-leave-btn {
+  background: transparent;
+  border: 1px solid #e57373;
+  color: #e57373;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trip-leave-btn:hover {
+  background: #e57373;
+  color: white;
+}
+
+/* Collapsible Trip Sections */
+.trips-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 12px;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.trips-section-header:hover {
+  background: var(--bg-tertiary, rgba(0, 0, 0, 0.05));
+}
+
+.trips-section-header.collapsed {
+  margin-bottom: 8px;
+}
+
+.trips-section-header .section-toggle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 16px;
+  text-align: center;
+}
+
+.trips-section-header .section-title {
+  flex: 1;
+}
+
+.trips-section-header.shared-section-header {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 8px 8px;
+  padding-top: 20px;
+}
+
+.trips-section-content {
+  margin-bottom: 8px;
+}
+
+.trips-section-content .route-group-header {
+  margin: 16px 0 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* ========================================
    TOAST NOTIFICATIONS
    ======================================== */
@@ -731,6 +1010,7 @@
 @media (max-width: 768px) {
   .notifications-panel-content,
   .friends-panel-content {
+    width: 280px;
     max-width: 75vw; /* Leave 25% space on left */
   }
 

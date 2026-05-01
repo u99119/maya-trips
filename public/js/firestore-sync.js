@@ -201,7 +201,7 @@ class FirestoreSync {
   }
 
   /**
-   * Pull trips from Firestore
+   * Pull trips from Firestore (handles additions, updates, AND deletions)
    */
   async pullTrips() {
     const tripsRef = collection(db, 'users', this.userId, 'trips');
@@ -213,8 +213,14 @@ class FirestoreSync {
     const localTrips = await storage.getAllTrips();
     console.log(`📱 Found ${localTrips.length} trips in local IndexedDB`);
 
+    // Create a Set of Firestore trip IDs for quick lookup
+    const firestoreTripIds = new Set();
+
+    // Process Firestore trips (add/update)
     for (const docSnap of snapshot.docs) {
       const firestoreTrip = docSnap.data();
+      firestoreTripIds.add(firestoreTrip.tripId);
+
       const localTrip = await storage.getTrip(firestoreTrip.tripId);
 
       console.log(`🔄 Syncing trip: ${firestoreTrip.tripName} (${firestoreTrip.tripId})`);
@@ -232,6 +238,22 @@ class FirestoreSync {
       } else {
         console.log(`   ⏭️  Skipping (local is up-to-date or newer)`);
       }
+    }
+
+    // IMPORTANT: Delete local trips that no longer exist in Firestore
+    // This handles the case where a trip was deleted on another device
+    let deletedCount = 0;
+    for (const localTrip of localTrips) {
+      if (!firestoreTripIds.has(localTrip.tripId)) {
+        // This trip exists locally but NOT in Firestore - it was deleted elsewhere
+        console.log(`🗑️ Deleting local trip (deleted from Firestore): ${localTrip.tripName} (${localTrip.tripId})`);
+        await storage.deleteTrip(localTrip.tripId);
+        deletedCount++;
+      }
+    }
+
+    if (deletedCount > 0) {
+      console.log(`🗑️ Removed ${deletedCount} locally-cached trips that were deleted from Firestore`);
     }
 
     console.log(`✅ Sync complete. Local trips: ${(await storage.getAllTrips()).length}`);
@@ -381,6 +403,65 @@ class FirestoreSync {
       console.error('❌ Error deleting trip from Firestore:', error);
       throw error;
     }
+  }
+
+  /**
+   * Listen to trips (real-time) - detects additions, updates, and DELETIONS
+   * This ensures deleted trips are immediately removed on all devices
+   * @param {Function} callback - Callback function (tripId, changeType: 'added'|'modified'|'removed')
+   * @returns {Function} Unsubscribe function
+   */
+  listenToTrips(callback) {
+    if (!this.userId) {
+      console.warn('Cannot listen to trips: not logged in');
+      return () => {};
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would listen to trips');
+      return () => {};
+    }
+
+    const tripsRef = collection(db, 'users', this.userId, 'trips');
+
+    const unsubscribe = onSnapshot(tripsRef,
+      async (snapshot) => {
+        // Process document changes
+        snapshot.docChanges().forEach(async (change) => {
+          const tripData = change.doc.data();
+          const tripId = tripData.tripId || change.doc.id;
+
+          if (change.type === 'added') {
+            console.log(`🔔 Real-time: Trip added - ${tripData.tripName}`);
+            // Add to IndexedDB if not exists
+            const localTrip = await storage.getTrip(tripId);
+            if (!localTrip) {
+              await this.updateLocalTrip(tripData);
+              callback?.(tripId, 'added', tripData);
+            }
+          } else if (change.type === 'modified') {
+            console.log(`🔔 Real-time: Trip modified - ${tripData.tripName}`);
+            // Update in IndexedDB if Firestore is newer
+            const localTrip = await storage.getTrip(tripId);
+            if (!localTrip || this.isNewerVersion(tripData, localTrip)) {
+              await this.updateLocalTrip(tripData);
+              callback?.(tripId, 'modified', tripData);
+            }
+          } else if (change.type === 'removed') {
+            console.log(`🔔 Real-time: Trip DELETED - ${tripData.tripName || tripId}`);
+            // DELETE from IndexedDB immediately!
+            await storage.deleteTrip(tripId);
+            callback?.(tripId, 'removed', tripData);
+          }
+        });
+      },
+      (error) => {
+        console.error('❌ Error listening to trips:', error);
+      }
+    );
+
+    console.log('🎧 Started real-time trips listener');
+    return unsubscribe;
   }
 
   /**
@@ -1600,16 +1681,20 @@ class FirestoreSync {
         return { success: false, error: 'Not logged in' };
       }
 
-      // Add participant
+      // Add participant (use Date.now() instead of serverTimestamp() - can't use serverTimestamp inside arrays)
+      const now = Date.now();
       const newParticipant = {
-        userId: friendId,
+        odid: friendId,
+        odiduserId: friendId,
+        userId: friendId,  // Primary field for lookup
         email: friendData.friendEmail,
         name: friendData.friendName,
         photoURL: friendData.friendPhotoURL,
         role: role,
-        addedAt: serverTimestamp(),
+        status: 'pending', // pending until friend accepts
+        addedAt: now,
         addedBy: this.userId,
-        lastActive: serverTimestamp()
+        lastActive: now
       };
 
       participants.push(newParticipant);
@@ -1623,7 +1708,7 @@ class FirestoreSync {
         lastActivityBy: this.userId
       });
 
-      // Create notification for friend
+      // Create notification for friend (include all data needed to accept without reading trip)
       await this.createNotification(friendId, {
         type: NOTIFICATION_TYPES.TRIP_SHARED,
         priority: NOTIFICATION_PRIORITY.NORMAL,
@@ -1635,9 +1720,11 @@ class FirestoreSync {
         relatedUserPhotoURL: currentUser.photoURL || '',
         relatedTripId: tripId,
         relatedTripName: tripData.tripName,
+        relatedTripRouteId: tripData.routeId,
+        relatedRole: role,  // Role assigned by owner
         actionUrl: `/trips/${tripId}`,
         actionType: 'view_trip',
-        actionData: { tripId }
+        actionData: { tripId, role, routeId: tripData.routeId }
       });
 
       // Update friend's sharedTripsCount
@@ -1651,6 +1738,58 @@ class FirestoreSync {
     } catch (error) {
       console.error('❌ Error sharing trip:', error);
       return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get participants of a trip
+   * @param {string} tripId - Trip ID
+   * @returns {Promise<Array>} Array of participants
+   */
+  async getTripParticipants(tripId) {
+    if (!this.userId) {
+      console.warn('Cannot get participants: not logged in');
+      return [];
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would get participants for trip:', tripId);
+      return [];
+    }
+
+    try {
+      const tripRef = doc(db, 'users', this.userId, 'trips', tripId);
+      const tripDoc = await getDoc(tripRef);
+
+      if (!tripDoc.exists()) {
+        console.warn('Trip not found:', tripId);
+        return [];
+      }
+
+      const tripData = tripDoc.data();
+      const participants = tripData.participants || [];
+
+      console.log('📋 Raw participants from Firestore:', participants);
+
+      // Format participants for UI (handle legacy field names)
+      return participants.map(p => {
+        const userId = p.userId || p.odid || p.odId;
+        console.log('Mapping participant:', p.name, 'userId:', userId);
+        return {
+          odid: p.odid || p.odId || p.userId,
+          userId: userId,  // Try all possible field names
+          userName: p.name || p.userName || 'Unknown',
+          userEmail: p.email || p.userEmail || '',
+          userPhotoURL: p.photoURL || p.userPhotoURL || '',
+          role: p.role || 'active',
+          status: p.status || 'pending',
+          addedAt: p.addedAt,
+          lastActive: p.lastActive
+        };
+      });
+    } catch (error) {
+      console.error('❌ Error getting trip participants:', error);
+      return [];
     }
   }
 
@@ -1685,8 +1824,12 @@ class FirestoreSync {
         return { success: false, error: 'Only trip owner can remove participants' };
       }
 
-      // Remove participant
-      const participants = (tripData.participants || []).filter(p => p.userId !== participantId);
+      // Remove participant (check both userId and odid fields for compatibility)
+      const participants = (tripData.participants || []).filter(
+        p => p.userId !== participantId && p.odid !== participantId
+      );
+
+      console.log(`Removing participant ${participantId}. Before: ${tripData.participants?.length || 0}, After: ${participants.length}`);
 
       await updateDoc(tripRef, {
         participants: participants,
@@ -1703,7 +1846,147 @@ class FirestoreSync {
   }
 
   /**
-   * Get shared trips (trips shared with current user)
+   * Accept a shared trip invitation
+   * NOTE: Uses notification data to avoid reading owner's trip (permission issue)
+   * @param {string} tripId - Trip ID
+   * @param {string} ownerId - Owner's user ID
+   * @param {object} notificationData - Data from the notification (tripName, routeId, role, ownerName)
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async acceptSharedTrip(tripId, ownerId, notificationData = {}) {
+    if (!this.userId) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would accept shared trip:', tripId);
+      return { success: true };
+    }
+
+    try {
+      // Create a reference in current user's sharedWithMe collection
+      // (User has permission to write to their own data)
+      // Use data from notification - no need to read owner's trip!
+      const sharedRef = doc(db, 'users', this.userId, 'sharedWithMe', tripId);
+      await setDoc(sharedRef, {
+        tripId: tripId,
+        ownerId: ownerId,
+        ownerName: notificationData.ownerName || ownerId,
+        tripName: notificationData.tripName || 'Shared Trip',
+        routeId: notificationData.routeId || '',
+        role: notificationData.role || 'active',
+        acceptedAt: serverTimestamp(),
+        status: 'accepted'
+      });
+
+      console.log('✅ Shared trip accepted:', tripId);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error accepting shared trip:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Decline a shared trip invitation
+   * NOTE: We just don't create a sharedWithMe entry - no need to modify owner's data
+   * @param {string} tripId - Trip ID
+   * @param {string} ownerId - Owner's user ID
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async declineSharedTrip(tripId, ownerId, notificationData = {}) {
+    if (!this.userId) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would decline shared trip:', tripId);
+      return { success: true };
+    }
+
+    try {
+      // Delete any existing sharedWithMe entry
+      const sharedRef = doc(db, 'users', this.userId, 'sharedWithMe', tripId);
+      await deleteDoc(sharedRef).catch(() => {}); // Ignore if doesn't exist
+
+      // Send notification to owner that invitation was declined
+      const currentUser = getCurrentUser();
+      const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Someone';
+
+      await this.createNotification(ownerId, {
+        type: NOTIFICATION_TYPES.TRIP_SHARE_DECLINED,
+        priority: NOTIFICATION_PRIORITY.LOW,
+        title: 'Invitation Declined',
+        message: `${userName} declined your invitation to trip: ${notificationData.tripName || 'Shared Trip'}`,
+        icon: '❌',
+        relatedUserId: this.userId,
+        relatedUserName: userName,
+        relatedUserPhotoURL: currentUser?.photoURL || '',
+        relatedTripId: tripId,
+        relatedTripName: notificationData.tripName || 'Shared Trip',
+        actionType: 'remove_participant',
+        actionData: { tripId, participantId: this.userId }
+      });
+
+      console.log('✅ Shared trip declined, owner notified:', tripId);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error declining shared trip:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Leave a shared trip (participant exits)
+   * @param {string} tripId - Trip ID
+   * @param {string} ownerId - Owner's user ID
+   * @param {string} tripName - Trip name for notification
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async leaveSharedTrip(tripId, ownerId, tripName = 'Shared Trip') {
+    if (!this.userId) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!ENABLE_SYNC) {
+      console.log('🔄 [DEBUG] Would leave shared trip:', tripId);
+      return { success: true };
+    }
+
+    try {
+      // Delete sharedWithMe entry
+      const sharedRef = doc(db, 'users', this.userId, 'sharedWithMe', tripId);
+      await deleteDoc(sharedRef);
+
+      // Send notification to owner
+      const currentUser = getCurrentUser();
+      const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Someone';
+
+      await this.createNotification(ownerId, {
+        type: NOTIFICATION_TYPES.PARTICIPANT_LEFT,
+        priority: NOTIFICATION_PRIORITY.NORMAL,
+        title: 'Participant Left',
+        message: `${userName} left the shared trip: ${tripName}`,
+        icon: '👋',
+        relatedUserId: this.userId,
+        relatedUserName: userName,
+        relatedUserPhotoURL: currentUser?.photoURL || '',
+        relatedTripId: tripId,
+        relatedTripName: tripName,
+        actionType: 'remove_participant',
+        actionData: { tripId, participantId: this.userId }
+      });
+
+      console.log('✅ Left shared trip, owner notified:', tripId);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error leaving shared trip:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get trips shared with current user (from sharedWithMe collection)
    * @returns {Promise<Array>} Array of shared trip objects
    */
   async getSharedTrips() {
@@ -1717,38 +2000,56 @@ class FirestoreSync {
     }
 
     try {
-      // Query all users' trips where current user is a participant
-      // Note: This is a simplified version. In production, you'd want to use
-      // a separate shared-trips collection for better query performance
-      const usersRef = collection(db, 'users');
-      const usersSnapshot = await getDocs(usersRef);
+      // Get from user's sharedWithMe collection (efficient query)
+      const sharedRef = collection(db, 'users', this.userId, 'sharedWithMe');
+      const snapshot = await getDocs(sharedRef);
 
       const sharedTrips = [];
 
-      for (const userDoc of usersSnapshot.docs) {
-        const userId = userDoc.id;
-        if (userId === this.userId) continue; // Skip own trips
+      for (const docSnap of snapshot.docs) {
+        const sharedData = docSnap.data();
 
-        const tripsRef = collection(db, 'users', userId, 'trips');
-        const tripsSnapshot = await getDocs(tripsRef);
+        // Get the actual trip data from owner's collection
+        try {
+          const tripRef = doc(db, 'users', sharedData.ownerId, 'trips', sharedData.tripId);
+          const tripDoc = await getDoc(tripRef);
 
-        tripsSnapshot.forEach((tripDoc) => {
-          const tripData = tripDoc.data();
-          const participants = tripData.participants || [];
+          if (tripDoc.exists()) {
+            const tripData = tripDoc.data();
+            const participants = tripData.participants || [];
 
-          // Check if current user is a participant
-          const isParticipant = participants.some(p => p.userId === this.userId);
-          if (isParticipant) {
-            sharedTrips.push({
-              id: tripDoc.id,
-              ownerId: userId,
-              ...tripData
-            });
+            // Check if user is still a participant (owner might have removed them)
+            const isStillParticipant = participants.some(
+              p => p.userId === this.userId || p.odid === this.userId
+            );
+
+            if (isStillParticipant) {
+              sharedTrips.push({
+                id: sharedData.tripId,
+                tripId: sharedData.tripId,
+                ownerId: sharedData.ownerId,
+                ownerName: sharedData.ownerName,
+                role: sharedData.role,
+                status: sharedData.status,
+                isShared: true, // Flag to indicate this is a shared trip
+                ...tripData
+              });
+            } else {
+              // User was removed from trip - clean up stale sharedWithMe entry
+              console.log(`🗑️ Cleaning up stale shared trip (removed by owner): ${sharedData.tripId}`);
+              await deleteDoc(docSnap.ref);
+            }
+          } else {
+            // Trip was deleted - clean up stale sharedWithMe entry
+            console.log(`🗑️ Cleaning up stale shared trip (trip deleted): ${sharedData.tripId}`);
+            await deleteDoc(docSnap.ref);
           }
-        });
+        } catch (err) {
+          console.warn('Could not load shared trip:', sharedData.tripId, err);
+        }
       }
 
-      console.log(`📥 Loaded ${sharedTrips.length} shared trips`);
+      console.log(`📥 Loaded ${sharedTrips.length} shared trips (accepted)`);
       return sharedTrips;
     } catch (error) {
       console.error('❌ Error getting shared trips:', error);
@@ -1810,47 +2111,186 @@ class FirestoreSync {
     }
   }
 
-  /**
-   * Leave shared trip (remove self as participant)
-   * @param {string} tripId - Trip ID
-   * @param {string} ownerId - Trip owner's user ID
-   * @returns {Promise<{success: boolean, error?: string}>}
-   */
-  async leaveSharedTrip(tripId, ownerId) {
-    if (!this.userId) {
-      return { success: false, error: 'Not logged in' };
-    }
+  // ========================================
+  // PHASE 2.5: SHARED TRIP VIEWING & LOCATION
+  // ========================================
 
-    if (!ENABLE_SYNC) {
-      console.log('🔄 [DEBUG] Would leave shared trip:', tripId);
-      return { success: true };
+  /**
+   * Get shared trip info from user's sharedWithMe collection
+   * @param {string} tripId - Trip ID
+   * @returns {Promise<object|null>} Shared trip info or null
+   */
+  async getSharedTripInfo(tripId) {
+    if (!this.userId) return null;
+
+    try {
+      const sharedRef = doc(db, 'users', this.userId, 'sharedWithMe', tripId);
+      const sharedDoc = await getDoc(sharedRef);
+
+      if (!sharedDoc.exists()) {
+        return null;
+      }
+
+      return sharedDoc.data();
+    } catch (error) {
+      console.error('❌ Error getting shared trip info:', error);
+      return null;
     }
+  }
+
+  /**
+   * Load shared trip data from owner's Firestore
+   * @param {string} tripId - Trip ID
+   * @param {string} ownerId - Owner's user ID
+   * @returns {Promise<object|null>} Trip data or null
+   */
+  async loadSharedTrip(tripId, ownerId) {
+    if (!this.userId) return null;
 
     try {
       const tripRef = doc(db, 'users', ownerId, 'trips', tripId);
       const tripDoc = await getDoc(tripRef);
 
       if (!tripDoc.exists()) {
-        return { success: false, error: 'Trip not found' };
+        return null;
       }
 
-      const tripData = tripDoc.data();
-
-      // Remove self from participants
-      const participants = (tripData.participants || []).filter(p => p.userId !== this.userId);
-
-      await updateDoc(tripRef, {
-        participants: participants,
-        lastActivity: serverTimestamp(),
-        lastActivityBy: this.userId
-      });
-
-      console.log('✅ Left shared trip:', tripId);
-      return { success: true };
+      console.log('📥 Loaded shared trip from owner:', ownerId);
+      return tripDoc.data();
     } catch (error) {
-      console.error('❌ Error leaving shared trip:', error);
-      return { success: false, error: error.message };
+      console.error('❌ Error loading shared trip:', error);
+      return null;
     }
+  }
+
+  /**
+   * Start broadcasting location to shared trip
+   * @param {string} tripId - Trip ID
+   * @param {string} ownerId - Owner's user ID
+   * @returns {object} Controller with stop() method
+   */
+  async startLocationBroadcasting(tripId, ownerId) {
+    if (!this.userId || !ENABLE_SYNC) {
+      return { stop: () => {} };
+    }
+
+    let watchId = null;
+    let intervalId = null;
+    let lastBroadcast = 0;
+    const MIN_INTERVAL = 30000; // Min 30 seconds between updates
+    const MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes max
+
+    const broadcastLocation = async (position) => {
+      const now = Date.now();
+      if (now - lastBroadcast < MIN_INTERVAL) return; // Throttle updates
+
+      try {
+        const tripRef = doc(db, 'users', ownerId, 'trips', tripId);
+        const tripDoc = await getDoc(tripRef);
+
+        if (!tripDoc.exists()) return;
+
+        const tripData = tripDoc.data();
+        const participants = tripData.participants || [];
+
+        // Find and update current user's location
+        const participantIndex = participants.findIndex(
+          p => p.userId === this.userId || p.odid === this.userId
+        );
+
+        if (participantIndex !== -1) {
+          participants[participantIndex].location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            heading: position.coords.heading,
+            speed: position.coords.speed,
+            timestamp: now
+          };
+          participants[participantIndex].lastActive = now;
+          participants[participantIndex].status = 'online';
+
+          await updateDoc(tripRef, { participants });
+          lastBroadcast = now;
+          console.log('📍 Location broadcasted');
+        }
+      } catch (error) {
+        console.error('❌ Error broadcasting location:', error);
+      }
+    };
+
+    // Start watching position
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        broadcastLocation,
+        (error) => console.warn('Geolocation error:', error),
+        { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 }
+      );
+
+      // Also broadcast every 5 minutes as fallback
+      intervalId = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(broadcastLocation);
+      }, MAX_INTERVAL);
+
+      console.log('🛰️ Location broadcasting started');
+    }
+
+    // Broadcast on visibility change (app opened/resumed)
+    const visibilityHandler = () => {
+      if (document.visibilityState === 'visible') {
+        navigator.geolocation?.getCurrentPosition(broadcastLocation);
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    return {
+      stop: () => {
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+        if (intervalId) clearInterval(intervalId);
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        console.log('🛰️ Location broadcasting stopped');
+      }
+    };
+  }
+
+  /**
+   * Start receiving other participants' locations
+   * @param {string} tripId - Trip ID
+   * @param {string} ownerId - Owner's user ID
+   * @param {Function} callback - Called with array of participants when locations update
+   * @returns {Function} Unsubscribe function
+   */
+  startLocationReceiving(tripId, ownerId, callback) {
+    if (!this.userId || !ENABLE_SYNC) {
+      return () => {};
+    }
+
+    const tripRef = doc(db, 'users', ownerId, 'trips', tripId);
+
+    const unsubscribe = onSnapshot(tripRef, (docSnap) => {
+      if (!docSnap.exists()) return;
+
+      const tripData = docSnap.data();
+      const participants = tripData.participants || [];
+
+      // Filter to only participants with location data (excluding self)
+      const locatedParticipants = participants
+        .filter(p => {
+          const isMe = p.userId === this.userId || p.odid === this.userId;
+          const hasLocation = p.location && p.location.lat && p.location.lng;
+          const isRecent = p.location && (Date.now() - p.location.timestamp < 30 * 60 * 1000); // Within 30 min
+          return !isMe && hasLocation && isRecent;
+        })
+        .slice(0, 8); // Max 8 dots
+
+      console.log(`📡 Received ${locatedParticipants.length} participant locations`);
+      callback(locatedParticipants);
+    }, (error) => {
+      console.error('❌ Error receiving locations:', error);
+    });
+
+    console.log('📡 Location receiving started');
+    return unsubscribe;
   }
 }
 

@@ -232,12 +232,17 @@ class SocialUI {
       // Then load the notifications
       const notifications = await firestoreSync.getNotifications();
 
+      // Store notifications for later access (e.g., when accepting shared trips)
+      this.notifications = notifications;
+
       if (notifications.length === 0) {
         body.innerHTML = '';
         if (emptyState) {
           body.appendChild(emptyState);
           emptyState.style.display = 'flex';
         }
+        // Still update badge even when no notifications!
+        this.updateNotificationBadge();
         return;
       }
 
@@ -301,6 +306,29 @@ class SocialUI {
         </div>
       `;
     }
+
+    // Trip shared notification - Accept/Decline buttons
+    if (notif.type === NOTIFICATION_TYPES.TRIP_SHARED) {
+      return `
+        <div class="notification-actions">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); socialUI.acceptSharedTrip('${notif.relatedTripId}', '${notif.relatedUserId}', '${notif.id}')">Accept</button>
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); socialUI.declineSharedTrip('${notif.relatedTripId}', '${notif.relatedUserId}', '${notif.id}')">Decline</button>
+        </div>
+      `;
+    }
+
+    // Participant declined or left - Remove from participants button
+    if (notif.type === NOTIFICATION_TYPES.TRIP_SHARE_DECLINED ||
+        notif.type === NOTIFICATION_TYPES.PARTICIPANT_LEFT) {
+      const participantId = notif.actionData?.participantId || notif.relatedUserId;
+      return `
+        <div class="notification-actions">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); socialUI.removeParticipantFromNotification('${notif.relatedTripId}', '${participantId}', '${notif.id}')">Remove from Trip</button>
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); socialUI.dismissNotification('${notif.id}')">Dismiss</button>
+        </div>
+      `;
+    }
+
     return '';
   }
 
@@ -355,6 +383,101 @@ class SocialUI {
    */
   async deleteNotification(notificationId) {
     await this.dismissNotification(notificationId);
+  }
+
+  /**
+   * Accept a shared trip invitation
+   */
+  async acceptSharedTrip(tripId, ownerId, notificationId) {
+    try {
+      // Find the notification to get the full data
+      const notification = this.notifications?.find(n => n.id === notificationId);
+
+      // Build notification data for acceptSharedTrip
+      const notificationData = {
+        tripName: notification?.relatedTripName || notification?.actionData?.tripName || 'Shared Trip',
+        routeId: notification?.relatedTripRouteId || notification?.actionData?.routeId || '',
+        role: notification?.relatedRole || notification?.actionData?.role || 'active',
+        ownerName: notification?.relatedUserName || ''
+      };
+
+      console.log('Accepting shared trip with data:', notificationData);
+
+      const result = await firestoreSync.acceptSharedTrip(tripId, ownerId, notificationData);
+
+      if (result.success) {
+        // Delete the notification
+        await firestoreSync.deleteNotification(notificationId);
+        await this.loadNotifications();
+        // Explicitly update badge to ensure it reflects current state
+        await this.updateNotificationBadge();
+        this.showToast('✅', 'Trip Accepted', 'You can now view this trip');
+
+        // Refresh trips list if on main screen
+        if (window.app && typeof window.app.loadTripsList === 'function') {
+          await window.app.loadTripsList();
+        }
+      } else {
+        this.showToast('❌', 'Error', result.error || 'Failed to accept trip');
+      }
+    } catch (error) {
+      console.error('Error accepting shared trip:', error);
+      this.showToast('❌', 'Error', 'Failed to accept trip');
+    }
+  }
+
+  /**
+   * Decline a shared trip invitation
+   */
+  async declineSharedTrip(tripId, ownerId, notificationId) {
+    try {
+      // Find the notification to get the full data
+      const notification = this.notifications?.find(n => n.id === notificationId);
+
+      // Build notification data for declineSharedTrip
+      const notificationData = {
+        tripName: notification?.relatedTripName || notification?.actionData?.tripName || 'Shared Trip',
+      };
+
+      const result = await firestoreSync.declineSharedTrip(tripId, ownerId, notificationData);
+
+      if (result.success) {
+        // Delete the notification
+        await firestoreSync.deleteNotification(notificationId);
+        await this.loadNotifications();
+        // Explicitly update badge to ensure it reflects current state
+        await this.updateNotificationBadge();
+        this.showToast('✅', 'Trip Declined', 'Invitation removed');
+      } else {
+        this.showToast('❌', 'Error', result.error || 'Failed to decline trip');
+      }
+    } catch (error) {
+      console.error('Error declining shared trip:', error);
+      this.showToast('❌', 'Error', 'Failed to decline trip');
+    }
+  }
+
+  /**
+   * Remove participant from trip (triggered from notification)
+   */
+  async removeParticipantFromNotification(tripId, participantId, notificationId) {
+    try {
+      // This is called on the owner's device, so they have permission
+      const result = await firestoreSync.removeParticipant(tripId, participantId);
+
+      if (result.success) {
+        // Delete the notification
+        await firestoreSync.deleteNotification(notificationId);
+        await this.loadNotifications();
+        await this.updateNotificationBadge();
+        this.showToast('✅', 'Participant Removed', 'Participant has been removed from the trip');
+      } else {
+        this.showToast('❌', 'Error', result.error || 'Failed to remove participant');
+      }
+    } catch (error) {
+      console.error('Error removing participant from notification:', error);
+      this.showToast('❌', 'Error', 'Failed to remove participant');
+    }
   }
 
   /**
@@ -1137,20 +1260,14 @@ class SocialUI {
 
       friendsList.innerHTML = availableFriends.map(friend => this.renderFriendSelectItem(friend)).join('');
 
-      // Add click handlers
-      availableFriends.forEach(friend => {
-        const elem = document.getElementById(`share-friend-${friend.id}`);
-        if (elem) {
-          elem.addEventListener('click', () => this.shareWithFriend(friend));
-        }
-      });
+      // Note: Click handlers are now inline in renderFriendSelectItem (role buttons + share button)
     } catch (error) {
       console.error('Error loading share trip data:', error);
     }
   }
 
   /**
-   * Render participant
+   * Render participant with role badge
    */
   renderParticipant(participant) {
     const initials = this.getInitials(participant.userName);
@@ -1160,14 +1277,16 @@ class SocialUI {
 
     const user = getCurrentUser();
     const isOwner = user && participant.userId === user.uid;
+    const roleClass = `role-${participant.role || 'active'}`;
+    const roleLabel = this.getRoleLabel(participant.role);
 
     return `
       <div class="participant-item">
         <div class="participant-avatar">${avatar}</div>
         <div class="participant-info">
           <h4 class="participant-name">${participant.userName}${isOwner ? ' (You)' : ''}</h4>
-          <p class="participant-role">${participant.role}</p>
         </div>
+        <span class="role-badge ${roleClass}">${roleLabel}</span>
         ${!isOwner ? `
           <div class="participant-actions">
             <button class="btn-icon-sm danger" onclick="socialUI.removeParticipant('${participant.userId}')" title="Remove">
@@ -1183,7 +1302,21 @@ class SocialUI {
   }
 
   /**
-   * Render friend select item
+   * Get human-readable role label
+   */
+  getRoleLabel(role) {
+    const labels = {
+      'owner': 'Owner',
+      'active': 'Active',
+      'silent': 'Silent',
+      'viewer': 'Viewer',
+      'participant': 'Active' // Legacy mapping
+    };
+    return labels[role] || 'Active';
+  }
+
+  /**
+   * Render friend select item with role buttons
    */
   renderFriendSelectItem(friend) {
     const initials = this.getInitials(friend.friendName);
@@ -1192,29 +1325,74 @@ class SocialUI {
       : initials;
 
     return `
-      <div class="friend-select-item" id="share-friend-${friend.id}">
+      <div class="friend-select-item" id="share-friend-${friend.id}" data-friend-id="${friend.friendId}">
         <div class="friend-avatar">${avatar}</div>
         <div class="friend-info">
           <h4 class="friend-name">${friend.friendName}</h4>
-          <p class="friend-email">${friend.friendEmail}</p>
+        </div>
+        <div class="friend-role-selector">
+          <button class="role-select-btn role-active selected"
+                  data-role="active"
+                  onclick="socialUI.selectRole(event, '${friend.id}', 'active')"
+                  title="Shares location, sees others">Active</button>
+          <button class="role-select-btn role-silent"
+                  data-role="silent"
+                  onclick="socialUI.selectRole(event, '${friend.id}', 'silent')"
+                  title="No location, can mark milestones">Silent</button>
+          <button class="role-select-btn role-viewer"
+                  data-role="viewer"
+                  onclick="socialUI.selectRole(event, '${friend.id}', 'viewer')"
+                  title="Watch from home">Viewer</button>
+          <button class="btn-icon-sm primary"
+                  onclick="socialUI.shareWithFriendRole('${friend.id}', '${friend.friendId}', '${friend.friendName}')"
+                  title="Share">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
         </div>
       </div>
     `;
   }
 
   /**
-   * Share trip with friend
+   * Select role for a friend (before sharing)
    */
-  async shareWithFriend(friend) {
+  selectRole(event, friendElementId, role) {
+    event.stopPropagation();
+    const container = document.getElementById(`share-friend-${friendElementId}`);
+    if (!container) return;
+
+    // Remove selected from all role buttons
+    container.querySelectorAll('.role-select-btn').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+
+    // Add selected to clicked button
+    event.target.classList.add('selected');
+
+    // Store selected role on the container
+    container.dataset.selectedRole = role;
+  }
+
+  /**
+   * Share trip with friend using selected role
+   */
+  async shareWithFriendRole(friendElementId, friendId, friendName) {
+    const container = document.getElementById(`share-friend-${friendElementId}`);
+    const role = container?.dataset.selectedRole || 'active';
+
     try {
       const result = await firestoreSync.shareTrip(
         this.currentTripId,
-        friend.friendId,
-        'participant'
+        friendId,
+        role
       );
 
       if (result.success) {
-        this.showToast('✅', 'Trip Shared', `Shared with ${friend.friendName}`);
+        const roleLabel = this.getRoleLabel(role);
+        this.showToast('✅', 'Trip Shared', `${friendName} invited as ${roleLabel}`);
         await this.loadShareTripData();
       } else {
         this.showToast('❌', 'Error', result.error || 'Failed to share trip');
@@ -1223,6 +1401,13 @@ class SocialUI {
       console.error('Error sharing trip:', error);
       this.showToast('❌', 'Error', 'Failed to share trip');
     }
+  }
+
+  /**
+   * Share trip with friend (legacy - uses default role)
+   */
+  async shareWithFriend(friend) {
+    await this.shareWithFriendRole(friend.id, friend.friendId, friend.friendName);
   }
 
   /**
